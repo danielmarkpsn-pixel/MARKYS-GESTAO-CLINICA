@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {
@@ -18,6 +20,9 @@ class MarkysApplicationTests {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockitoBean
+    private JdbcTemplate jdbcTemplate;
+
     @Test
     void healthEndpointIsPublic() throws Exception {
         mockMvc.perform(get("/api/v1/health"))
@@ -27,8 +32,21 @@ class MarkysApplicationTests {
     }
 
     @Test
-    void applicationRoutesAreClosedUntilAuthenticationIsImplemented() throws Exception {
+    void clinicalRoutesRequireAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/patients"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void currentUserRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/me"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void csrfBootstrapIsPublic() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/csrf"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").isNotEmpty());
     }
 }
