@@ -14,10 +14,11 @@ Após aplicar as migrações Flyway, envie para a API:
 
 `POST /api/v1/auth/setup`
 
-Campos: `clinicName`, `fullName`, `email` e `password`. A senha deve ter ao menos 12 caracteres. A configuração só é aceita enquanto não existir nenhuma clínica ou usuário; ela cria a primeira clínica e seu administrador e inicia a sessão.
+Campos: `clinicName`, `fullName`, `email` e `password`. A senha deve ter ao menos 12 caracteres e no máximo 72 bytes UTF-8 (limite do BCrypt). A configuração só é aceita enquanto não existir nenhuma clínica ou usuário; ela cria a primeira clínica e seu administrador e inicia a sessão.
 
 ## Autenticação
 
+- `GET /api/v1/auth/setup-status`: informa se o primeiro cadastro ainda está disponível.
 - `GET /api/v1/auth/csrf`: inicializa e retorna o token CSRF.
 - `POST /api/v1/auth/login`: autentica e cria sessão HTTP.
 - `GET /api/v1/auth/me`: retorna usuário, vínculos e clínica ativa.
