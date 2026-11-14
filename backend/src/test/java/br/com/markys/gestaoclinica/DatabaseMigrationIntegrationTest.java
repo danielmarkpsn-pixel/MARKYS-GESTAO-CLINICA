@@ -71,10 +71,20 @@ class DatabaseMigrationIntegrationTest {
         UUID patientB = UUID.randomUUID();
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
 
+        // The postgres container's bootstrap user is a superuser and bypasses RLS.
+        // Exercise the policies as a dedicated non-owner, non-superuser runtime role.
+        jdbc.execute("CREATE ROLE markys_rls_test NOLOGIN NOSUPERUSER NOBYPASSRLS");
+        jdbc.execute("GRANT SELECT, INSERT ON patients TO markys_rls_test");
+        Boolean bypassesRls = jdbc.queryForObject(
+            "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = 'markys_rls_test'",
+            Boolean.class);
+        assertThat(bypassesRls).isFalse();
+
         int[] visibleCounts = tx.execute(status -> {
             jdbc.update("INSERT INTO clinics (id, name, status) VALUES (?, ?, 'ACTIVE')", clinicA, "RLS Clínica A");
             jdbc.update("INSERT INTO clinics (id, name, status) VALUES (?, ?, 'ACTIVE')", clinicB, "RLS Clínica B");
 
+            jdbc.execute("SET LOCAL ROLE markys_rls_test");
             jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicA.toString());
             jdbc.update("INSERT INTO patients (id, clinic_id, full_name) VALUES (?, ?, ?)", patientA, clinicA, "Paciente A");
 
