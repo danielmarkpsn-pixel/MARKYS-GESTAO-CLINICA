@@ -17,6 +17,24 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: markys
+          POSTGRES_USER: markys
+          POSTGRES_PASSWORD: markys_test_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U markys -d markys"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: jdbc:postgresql://localhost:5432/markys
+      DATABASE_USERNAME: markys
+      DATABASE_PASSWORD: markys_test_only
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -24,6 +42,6 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - name: Verify backend
+      - name: Verify backend and PostgreSQL migrations
         working-directory: backend
-        run: mvn -B verify
+        run: mvn -B verify -Dmarkys.db.integration=true
