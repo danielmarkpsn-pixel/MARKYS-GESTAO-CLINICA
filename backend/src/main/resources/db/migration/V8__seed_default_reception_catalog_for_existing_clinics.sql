@@ -1,3 +1,9 @@
+-- This migration runs with the schema-owner role. Temporarily remove FORCE so the
+-- one-time backfill can seed all existing tenants; restore FORCE before commit.
+ALTER TABLE clinic_rooms NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE service_types NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE exam_catalog NO FORCE ROW LEVEL SECURITY;
+
 -- Backfill the default reception catalog for clinics created before this migration.
 WITH defaults(name) AS (
     VALUES
@@ -109,3 +115,7 @@ SELECT c.id, d.category, d.name, r.id, d.sort_order
     SELECT 1 FROM exam_catalog e
      WHERE e.clinic_id=c.id AND e.category=d.category AND lower(e.name)=lower(d.name)
  );
+
+ALTER TABLE clinic_rooms FORCE ROW LEVEL SECURITY;
+ALTER TABLE service_types FORCE ROW LEVEL SECURITY;
+ALTER TABLE exam_catalog FORCE ROW LEVEL SECURITY;
