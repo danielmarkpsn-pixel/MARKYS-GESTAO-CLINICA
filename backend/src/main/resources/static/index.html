@@ -486,8 +486,13 @@
     $("masterTools").classList.toggle("hidden", !isMaster);
     const activeMembership = (data.memberships || []).find(item => item.clinic_id === data.activeClinicId);
     const canUseReception = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION"].includes(activeMembership.role);
+    const canUsePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION", "PROFESSIONAL"].includes(activeMembership.role);
+    const canManagePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION"].includes(activeMembership.role);
     $("receptionWorkspace").classList.toggle("hidden", !canUseReception);
-    if (canUseReception) loadCatalog();
+    $("patientWorkspace").classList.toggle("hidden", !canUsePatients);
+    $("patientForm").classList.toggle("hidden", !canManagePatients);
+    if (canUseReception) loadCatalog().then(() => { if (canUsePatients) loadPatients(); });
+    else if (canUsePatients) loadPatients();
     $("sessionHint").classList.toggle("hidden", isMaster);
     $("sessionName").textContent = data.fullName + (isMaster ? " • MASTER" : "");
     $("sessionEmail").textContent = data.email;
