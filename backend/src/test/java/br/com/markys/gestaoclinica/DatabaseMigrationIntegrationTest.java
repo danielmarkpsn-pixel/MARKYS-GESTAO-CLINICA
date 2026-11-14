@@ -103,6 +103,9 @@ class DatabaseMigrationIntegrationTest {
 
         assertThat(visibleCounts).containsExactly(1, 1);
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> tx.executeWithoutResult(status -> {
+            // Each transaction starts as the connection user again; re-enter the restricted role
+            // so this assertion exercises RLS rather than the CI bootstrap superuser.
+            jdbc.execute("SET LOCAL ROLE markys_rls_test");
             jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicA.toString());
             jdbc.update("INSERT INTO patients (id, clinic_id, full_name) VALUES (?, ?, ?)",
                 UUID.randomUUID(), clinicB, "Tentativa cross-tenant");
