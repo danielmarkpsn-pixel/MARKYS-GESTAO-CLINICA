@@ -41,9 +41,10 @@ public class SecurityConfig {
     UserDetailsService userDetailsService(JdbcTemplate jdbc) {
         return email -> jdbc.query(
             """
-            SELECT email, password_hash, status, locked_until
-              FROM app_users
-             WHERE lower(email) = lower(?)
+            SELECT u.email, u.password_hash, u.status, u.locked_until,
+                   EXISTS (SELECT 1 FROM platform_admins pa WHERE pa.user_id = u.id) AS is_master
+              FROM app_users u
+             WHERE lower(u.email) = lower(?)
             """,
             rs -> {
                 if (!rs.next()) {
@@ -54,7 +55,7 @@ public class SecurityConfig {
                 boolean locked = lockedUntil != null && lockedUntil.isAfter(OffsetDateTime.now());
                 return User.withUsername(rs.getString("email"))
                     .password(rs.getString("password_hash"))
-                    .authorities("ROLE_USER")
+                    .authorities(rs.getBoolean("is_master") ? new String[] {"ROLE_USER", "ROLE_MASTER"} : new String[] {"ROLE_USER"})
                     .disabled(!active)
                     .accountLocked(locked)
                     .build();
@@ -130,6 +131,7 @@ public class SecurityConfig {
                     "/api/v1/auth/login",
                     "/api/v1/auth/setup"
                 ).permitAll()
+                .requestMatchers("/api/v1/master/**").hasRole("MASTER")
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.deny()))
