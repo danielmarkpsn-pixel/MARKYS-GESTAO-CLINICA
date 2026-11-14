@@ -1,5 +1,6 @@
 package br.com.markys.gestaoclinica.api;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -81,6 +82,9 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
+        if (body.password().getBytes(StandardCharsets.UTF_8).length > 72) {
+            return ResponseEntity.badRequest().body(Map.of("error", "A senha deve ter no máximo 72 bytes em UTF-8."));
+        }
         // Serialize first-run requests so two administrators cannot bootstrap two tenants concurrently.
         jdbc.execute("LOCK TABLE clinics IN EXCLUSIVE MODE");
         Long users = jdbc.queryForObject("SELECT count(*) FROM app_users", Long.class);
@@ -175,6 +179,10 @@ public class AuthController {
         HttpServletResponse response
     ) {
         String email = rawEmail.trim().toLowerCase(Locale.ROOT);
+        if (password.getBytes(StandardCharsets.UTF_8).length > 72) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "E-mail ou senha inválidos."));
+        }
         try {
             Authentication result = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(email, password)
@@ -280,7 +288,7 @@ public class AuthController {
         @NotBlank @Size(max = 180) String clinicName,
         @NotBlank @Size(max = 180) String fullName,
         @NotBlank @Email @Size(max = 254) String email,
-        @NotBlank @Size(min = 12, max = 200) String password
+        @NotBlank @Size(min = 12, max = 72) String password
     ) {}
 
     public record ClinicSelectionRequest(@jakarta.validation.constraints.NotNull UUID clinicId) {}
