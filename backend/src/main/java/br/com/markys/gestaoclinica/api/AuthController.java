@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -119,11 +120,41 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> me(Authentication authentication) {
+    public ResponseEntity<?> me(Authentication authentication, HttpSession session) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(userProfile(authentication.getName()));
+        return ResponseEntity.ok(userProfile(authentication.getName(), session));
+    }
+
+    @PostMapping("/select-clinic")
+    public ResponseEntity<?> selectClinic(
+        @Valid @RequestBody ClinicSelectionRequest body,
+        Authentication authentication,
+        HttpSession session
+    ) {
+        Long membershipCount = jdbc.queryForObject(
+            """
+            SELECT count(*)
+              FROM clinic_memberships m
+              JOIN app_users u ON u.id = m.user_id
+              JOIN clinics c ON c.id = m.clinic_id
+             WHERE lower(u.email) = lower(?)
+               AND m.clinic_id = ?
+               AND m.status = 'ACTIVE'
+               AND c.status = 'ACTIVE'
+               AND u.status = 'ACTIVE'
+            """,
+            Long.class,
+            authentication.getName(),
+            body.clinicId()
+        );
+        if (membershipCount == null || membershipCount != 1) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Você não possui acesso ativo a esta clínica."));
+        }
+        session.setAttribute("MARKYS_ACTIVE_CLINIC_ID", body.clinicId().toString());
+        return ResponseEntity.ok(userProfile(authentication.getName(), session));
     }
 
     @PostMapping("/logout")
@@ -160,11 +191,18 @@ public class AuthController {
             if (request.getSession(false) != null) {
                 request.changeSessionId();
             }
+            HttpSession session = request.getSession();
+            List<Map<String, Object>> memberships = membershipsFor(email);
+            if (memberships.size() == 1) {
+                session.setAttribute("MARKYS_ACTIVE_CLINIC_ID", memberships.getFirst().get("clinic_id").toString());
+            } else {
+                session.removeAttribute("MARKYS_ACTIVE_CLINIC_ID");
+            }
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(result);
             SecurityContextHolder.setContext(context);
             securityContextRepository.saveContext(context, request, response);
-            return ResponseEntity.ok(userProfile(email));
+            return ResponseEntity.ok(userProfile(email, session));
         } catch (AuthenticationException ex) {
             jdbc.update(
                 """
@@ -191,7 +229,7 @@ public class AuthController {
         }
     }
 
-    private Map<String, Object> userProfile(String email) {
+    private Map<String, Object> userProfile(String email, HttpSession session) {
         List<Map<String, Object>> users = jdbc.queryForList(
             """
             SELECT id, full_name, email
@@ -205,23 +243,30 @@ public class AuthController {
             throw new BadCredentialsException("Usuário não encontrado.");
         }
         Map<String, Object> user = users.getFirst();
-        List<Map<String, Object>> memberships = jdbc.queryForList(
+        List<Map<String, Object>> memberships = membershipsFor(email);
+        Map<String, Object> profile = new java.util.LinkedHashMap<>();
+        profile.put("userId", user.get("id"));
+        profile.put("fullName", user.get("full_name"));
+        profile.put("email", user.get("email"));
+        profile.put("memberships", memberships);
+        profile.put("activeClinicId", session.getAttribute("MARKYS_ACTIVE_CLINIC_ID"));
+        return profile;
+    }
+
+    private List<Map<String, Object>> membershipsFor(String email) {
+        return jdbc.queryForList(
             """
             SELECT m.id AS membership_id, c.id AS clinic_id, c.name AS clinic_name, m.role
               FROM clinic_memberships m
+              JOIN app_users u ON u.id = m.user_id
               JOIN clinics c ON c.id = m.clinic_id
-             WHERE m.user_id = ?
+             WHERE lower(u.email) = lower(?)
+               AND u.status = 'ACTIVE'
                AND m.status = 'ACTIVE'
                AND c.status = 'ACTIVE'
              ORDER BY c.name
             """,
-            user.get("id")
-        );
-        return Map.of(
-            "userId", user.get("id"),
-            "fullName", user.get("full_name"),
-            "email", user.get("email"),
-            "memberships", memberships
+            email
         );
     }
 
@@ -236,4 +281,6 @@ public class AuthController {
         @NotBlank @Email @Size(max = 254) String email,
         @NotBlank @Size(min = 12, max = 200) String password
     ) {}
+
+    public record ClinicSelectionRequest(@jakarta.validation.constraints.NotNull UUID clinicId) {}
 }
