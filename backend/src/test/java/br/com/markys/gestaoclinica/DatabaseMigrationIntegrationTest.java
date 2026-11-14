@@ -65,7 +65,7 @@ class DatabaseMigrationIntegrationTest {
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(7);
+        assertThat(migrationCount).isEqualTo(8);
         assertThat(authColumns).isEqualTo(4);
         assertThat(clinicalTables).isEqualTo(9);
         assertThat(masterTables).isEqualTo(1);
