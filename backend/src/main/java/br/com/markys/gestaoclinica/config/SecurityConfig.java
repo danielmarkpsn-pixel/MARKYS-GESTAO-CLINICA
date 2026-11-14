@@ -129,6 +129,7 @@ public class SecurityConfig {
                     "/api/v1/auth/csrf",
                     "/api/v1/auth/setup-status",
                     "/api/v1/auth/login",
+                    "/api/v1/auth/master-bootstrap",
                     "/api/v1/auth/setup"
                 ).permitAll()
                 .requestMatchers("/api/v1/master/**").hasRole("MASTER")
