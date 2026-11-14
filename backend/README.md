@@ -20,7 +20,8 @@ Campos: `clinicName`, `fullName`, `email` e `password`. A senha deve ter ao meno
 
 - `GET /api/v1/auth/csrf`: inicializa e retorna o token CSRF.
 - `POST /api/v1/auth/login`: autentica e cria sessão HTTP.
-- `GET /api/v1/auth/me`: retorna usuário e vínculos ativos com clínicas.
+- `GET /api/v1/auth/me`: retorna usuário, vínculos e clínica ativa.
+- `POST /api/v1/auth/select-clinic`: seleciona uma clínica à qual o usuário possui vínculo ativo.
 - `POST /api/v1/auth/logout`: encerra a sessão.
 
 A sessão usa cookie HttpOnly, SameSite=Lax e proteção CSRF por cookie/header. Em produção, habilite HTTPS e defina `SESSION_COOKIE_SECURE=true`. O frontend deve enviar cookies nas chamadas same-origin e enviar o valor de `XSRF-TOKEN` no header `X-XSRF-TOKEN` em operações POST/PUT/PATCH/DELETE.
@@ -29,6 +30,6 @@ Após cinco falhas consecutivas, a conta é bloqueada por 15 minutos. Respostas 
 
 ## Segurança e estágio
 
-As rotas clínicas permanecem protegidas por autenticação. O contexto de clínica e a autorização por perfil precisam ser aplicados a cada API clínica antes de habilitar dados reais. O login inicial não representa, isoladamente, autorização multi-clínica completa.
+As rotas clínicas permanecem protegidas por autenticação. O contexto de clínica e a autorização por perfil precisam ser aplicados a cada API clínica antes de habilitar dados reais. A seleção de clínica fica guardada na sessão e é validada contra o vínculo ativo do usuário. As APIs clínicas ainda precisam consumir esse contexto e aplicar as permissões do perfil antes de liberar operações.
 
 Não exponha a API sem HTTPS, segredos de produção e isolamento de tenant validado. Não use dados reais de pacientes até a conclusão da homologação de segurança.
