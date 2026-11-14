@@ -124,6 +124,19 @@ class DatabaseMigrationIntegrationTest {
             "SELECT role FROM clinic_memberships m JOIN app_users u ON u.id=m.user_id WHERE lower(u.email)=lower(?)",
             String.class, "admin@clinica.test")).isEqualTo("CLINIC_ADMIN");
 
+        MvcResult clinicAdminLogin = mockMvc.perform(post("/api/v1/auth/login")
+                .cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"email":"admin@clinica.test","password":"SenhaLocalSegura123!"}
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.globalRole").value("USER"))
+            .andReturn();
+        MockHttpSession clinicAdminSession = (MockHttpSession) clinicAdminLogin.getRequest().getSession(false);
+        mockMvc.perform(get("/api/v1/master/clinics").session(clinicAdminSession))
+            .andExpect(status().isForbidden());
+
         mockMvc.perform(post("/api/v1/auth/master-bootstrap")
                 .cookie(csrfCookie).header("X-XSRF-TOKEN", token)
                 .header("X-MARKYS-BOOTSTRAP-TOKEN", "integration-test-bootstrap-secret")
