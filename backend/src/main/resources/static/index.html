@@ -167,7 +167,8 @@
               <h4>Exames solicitados</h4>
               <div id="patientExamChoices" class="catalog-list"></div>
             </div>
-            <button class="primary" type="submit" style="grid-column:1/-1">Cadastrar paciente e enviar para a fila</button>
+            <button id="patientSubmit" class="primary" type="submit" style="grid-column:1/-1">Cadastrar paciente e enviar para a fila</button>
+            <button id="cancelPatientEdit" class="secondary hidden" type="button" style="grid-column:1/-1;margin-top:0">Cancelar edição</button>
           </form>
           <div class="catalog-card" style="margin-top:12px">
             <h4>Pacientes cadastrados</h4>
@@ -341,6 +342,14 @@
     try { await catalogRequest("/api/v1/clinic/catalog/exams", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ category: $("examCategory").value, name: $("examName").value, roomId: $("examRoom").value }) }); $("examName").value = ""; await loadCatalog(); }
     catch (error) { catalogMessage(error.message); } finally { button.disabled = false; }
   });
+  let editingPatientId = null;
+  const resetPatientForm = () => {
+    $("patientForm").reset(); editingPatientId = null;
+    $("patientCpf").disabled = false; $("patientCpf").placeholder = "000.000.000-00";
+    $("patientServiceType").required = true;
+    $("patientSubmit").textContent = "Cadastrar paciente e enviar para a fila";
+    $("cancelPatientEdit").classList.add("hidden"); calculatePatientAge();
+  };
   const patientMessage = (message, ok = false) => {
     const el = $("patientMessage"); el.textContent = message;
     el.className = "catalog-message" + (ok ? " ok" : "");
@@ -402,31 +411,62 @@
       if (!items.length) list.textContent = "Nenhum paciente cadastrado.";
     } catch (error) { patientMessage(error.message); }
   };
+  const editPatient = async id => {
+    try {
+      const patient = await catalogRequest("/api/v1/clinic/patients/" + id);
+      editingPatientId = id;
+      $("patientName").value = patient.full_name || "";
+      $("patientBirth").value = patient.birth_date || ""; calculatePatientAge();
+      $("patientSex").value = patient.sex || "";
+      $("patientInsurance").value = patient.insurance_name || "";
+      $("patientJob").value = patient.job_title || "";
+      $("patientCpf").value = ""; $("patientCpf").disabled = true;
+      $("patientCpf").placeholder = "CPF protegido — não editável";
+      $("patientServiceType").value = patient.serviceTypeId || "";
+      $("patientServiceType").required = false;
+      const selected = new Set(patient.examIds || []);
+      $("patientExamChoices").querySelectorAll("input[type=checkbox]").forEach(input => { input.checked = selected.has(input.value); });
+      $("patientSubmit").textContent = "Salvar alterações";
+      $("cancelPatientEdit").classList.remove("hidden");
+      $("patientName").focus(); patientMessage("Editando cadastro. O CPF permanece protegido.");
+    } catch (error) { patientMessage(error.message); }
+  };
+  $("cancelPatientEdit").addEventListener("click", resetPatientForm);
   $("patientForm").addEventListener("submit", async event => {
     event.preventDefault();
-    const form = event.currentTarget; const button = form.querySelector("button[type=submit]");
+    const form = event.currentTarget; const button = $("patientSubmit");
     button.disabled = true; patientMessage("");
     const examIds = [...$("patientExamChoices").querySelectorAll("input:checked")].map(input => input.value);
     const payload = {
-      fullName: $("patientName").value.trim(), cpf: $("patientCpf").value,
+      fullName: $("patientName").value.trim(),
       birthDate: $("patientBirth").value || null, sex: $("patientSex").value || null,
       insuranceName: $("patientInsurance").value, jobTitle: $("patientJob").value,
-      serviceTypeId: $("patientServiceType").value, examIds
+      serviceTypeId: $("patientServiceType").value || null, examIds
     };
     try {
-      const result = await catalogRequest("/api/v1/clinic/patients", {
-        method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload)
-      });
+      let patientId = editingPatientId;
+      let successMessage;
+      if (editingPatientId) {
+        const result = await catalogRequest("/api/v1/clinic/patients/" + editingPatientId, {
+          method: "PUT", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload)
+        });
+        successMessage = result.message;
+      } else {
+        const result = await catalogRequest("/api/v1/clinic/patients", {
+          method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({...payload, cpf: $("patientCpf").value})
+        });
+        patientId = result.patientId; successMessage = result.message;
+      }
       let uploadWarning = "";
       const pdf = $("patientPdf").files[0];
       if (pdf) {
         try {
           const data = new FormData(); data.append("file", pdf);
-          await catalogRequest("/api/v1/clinic/patients/" + result.patientId + "/documents", {method:"POST", body:data});
-        } catch (uploadError) { uploadWarning = " Paciente cadastrado, mas o PDF não foi anexado: " + uploadError.message; }
+          await catalogRequest("/api/v1/clinic/patients/" + patientId + "/documents", {method:"POST", body:data});
+        } catch (uploadError) { uploadWarning = " O cadastro foi salvo, mas o PDF não foi anexado: " + uploadError.message; }
       }
-      form.reset(); calculatePatientAge();
-      patientMessage(result.message + uploadWarning, !uploadWarning); await loadPatients();
+      resetPatientForm(); patientMessage(successMessage + uploadWarning, !uploadWarning); await loadPatients();
     } catch (error) { patientMessage(error.message); }
     finally { button.disabled = false; }
   });
