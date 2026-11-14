@@ -83,7 +83,7 @@ Regras obrigatórias:
 
 O desenho definitivo será refinado após mapear todos os campos e regras dos formulários atuais. Não será feita migração automática de dados de teste ou JSON sem inventário, cópia de segurança e validação de integridade.
 
-## 4. Plano de execução — sete etapas
+## 4. Plano de execução — oito etapas
 
 1. **Auditoria aprofundada:** inventariar todas as telas, campos, rotas, estados, arquivos, regras e dependências; registrar o comportamento atual como referência.
 2. **Diagnóstico e especificação:** classificar lacunas, definir papéis, permissões, modelo multi-clínica, política de dados e critérios de aceite.
