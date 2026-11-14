@@ -1,7 +1,6 @@
 # MARKYS Gestão Clínica — Auditoria e plano de evolução
 
-**Branch de trabalho:** `migration/java-springboot-foundation`  
-**Branch preservada:** `main`  
+**Branch oficial de trabalho:** `main`  
 **Escopo desta entrega:** auditoria inicial baseada nos arquivos atualmente disponíveis na raiz e plano de migração. Nenhuma tela ou fluxo existente foi removido ou reescrito.
 
 ## 1. Estado atual observado
@@ -89,10 +88,11 @@ O desenho definitivo será refinado após mapear todos os campos e regras dos fo
 1. **Auditoria aprofundada:** inventariar todas as telas, campos, rotas, estados, arquivos, regras e dependências; registrar o comportamento atual como referência.
 2. **Diagnóstico e especificação:** classificar lacunas, definir papéis, permissões, modelo multi-clínica, política de dados e critérios de aceite.
 3. **Fundação Java sem quebrar a interface:** criar projeto Spring Boot, configuração, API versionada, PostgreSQL, Flyway, health checks e ambiente Docker.
-4. **Segurança e multi-tenancy:** login, gestão de sessão/token, perfis, vínculo com clínica, autorização em todas as rotas, auditoria e testes negativos de isolamento.
-5. **Migração incremental dos módulos:** profissionais e configurações; pacientes; fila e chamadas; triagem; prontuário/atendimento; anexos e mídia. A cada módulo, comparar comportamento e dados com a versão de referência.
-6. **Testes e preparação de produção:** testes unitários, integração, API, concorrência, autorização, isolamento entre clínicas, backup/restauração, desempenho e revisão de segurança.
-7. **VPS e homologação externa:** provisionar Linux, Docker, PostgreSQL, domínio/HTTPS, firewall, segredos, backups, monitoramento e rotina de atualização/rollback; validar acessos de clínicas distintas.
+4. **Administração da plataforma:** conta global MASTER criada uma única vez por token de bootstrap protegido; somente MASTER cria, consulta, ativa e suspende clínicas. Cada clínica recebe seu primeiro usuário `CLINIC_ADMIN`, sem acesso às demais clínicas.
+5. **Segurança e multi-tenancy:** login, gestão de sessão/token, perfis, vínculo com clínica, autorização em todas as rotas, auditoria e testes negativos de isolamento.
+6. **Migração incremental dos módulos:** profissionais e configurações; pacientes; fila e chamadas; triagem; prontuário/atendimento; anexos e mídia. A cada módulo, comparar comportamento e dados com a versão de referência.
+7. **Testes e preparação de produção:** testes unitários, integração, API, concorrência, autorização, isolamento entre clínicas, backup/restauração, desempenho e revisão de segurança.
+8. **VPS e homologação externa:** provisionar Linux, Docker, PostgreSQL, domínio/HTTPS, firewall, segredos, backups, monitoramento e rotina de atualização/rollback; validar acessos de clínicas distintas.
 
 ## 5. Critérios mínimos de aceite
 
@@ -113,4 +113,4 @@ Dados de saúde são dados pessoais sensíveis. Antes de produção, a clínica 
 
 Esta primeira entrega foi baseada na leitura do README, páginas HTML principais, script PowerShell e arquivos de inicialização encontrados na raiz. Ainda falta inventariar integralmente todos os scripts inline, recursos auxiliares, regras de negócio de cada tela, arquivos de dados de exemplo, configuração de CI e histórico de alterações. Por isso, este documento é a linha de base técnica, não uma declaração de que a auditoria funcional e de segurança está concluída.
 
-**Regra de preservação:** não alterar diretamente a `main`; toda evolução ocorre nesta branch de migração, com commits pequenos e verificáveis. Nenhuma funcionalidade existente deve ser removida sem equivalência implementada e testada.
+**Regra de preservação:** evolução autorizada diretamente na `main`, com commits pequenos e verificáveis. Nenhuma funcionalidade existente deve ser removida sem equivalência implementada e testada.
