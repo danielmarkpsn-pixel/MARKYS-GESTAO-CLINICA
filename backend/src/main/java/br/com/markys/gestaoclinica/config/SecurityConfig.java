@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -75,8 +76,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    TenantContextFilter tenantContextFilter(JdbcTemplate jdbc) {
-        return new TenantContextFilter(jdbc);
+    TenantContextFilter tenantContextFilter(JdbcTemplate jdbc, PlatformTransactionManager transactionManager) {
+        return new TenantContextFilter(jdbc, transactionManager);
     }
 
     @Bean
