@@ -92,7 +92,7 @@ public class PatientController {
     @PostMapping
     @Transactional
     public ResponseEntity<?> create(Authentication auth, @Valid @RequestBody PatientRequest body) {
-        if (!canAccess(auth)) return forbidden();
+        if (!canManage(auth)) return forbidden();
         if (!protection.isConfigured()) return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
             .body(Map.of("error", "Cadastro de CPF indisponível. O servidor precisa configurar as chaves de proteção."));
         String cpf = normalizeCpf(body.cpf());
@@ -170,7 +170,7 @@ public class PatientController {
     @Transactional
     public ResponseEntity<?> uploadDocument(Authentication auth, @PathVariable UUID id,
                                              @RequestParam("file") MultipartFile file) {
-        if (!canAccess(auth)) return forbidden();
+        if (!canManage(auth)) return forbidden();
         UUID clinic = TenantContext.requireClinicId();
         if (jdbc.queryForObject("SELECT count(*) FROM patients WHERE clinic_id=? AND id=? AND status='ACTIVE'",
                 Integer.class, clinic, id) == 0) return ResponseEntity.notFound().build();
@@ -231,7 +231,7 @@ public class PatientController {
     @Transactional
     public ResponseEntity<?> update(Authentication auth, @PathVariable UUID id,
                                     @Valid @RequestBody PatientUpdateRequest body) {
-        if (!canAccess(auth)) return forbidden();
+        if (!canManage(auth)) return forbidden();
         UUID clinic = TenantContext.requireClinicId();
         if (body.birthDate() != null && body.birthDate().isAfter(LocalDate.now())) {
             return ResponseEntity.badRequest().body(Map.of("error", "A data de nascimento não pode estar no futuro."));
@@ -291,6 +291,15 @@ public class PatientController {
              WHERE lower(u.email)=lower(?) AND m.clinic_id=? AND m.status='ACTIVE' AND u.status='ACTIVE'
             """, String.class, auth.getName(), TenantContext.requireClinicId())
             .stream().anyMatch(role -> List.of("CLINIC_ADMIN", "RECEPTION", "PROFESSIONAL").contains(role));
+    }
+
+    private boolean canManage(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) return false;
+        return jdbc.queryForList("""
+            SELECT m.role FROM clinic_memberships m JOIN app_users u ON u.id=m.user_id
+             WHERE lower(u.email)=lower(?) AND m.clinic_id=? AND m.status='ACTIVE' AND u.status='ACTIVE'
+            """, String.class, auth.getName(), TenantContext.requireClinicId())
+            .stream().anyMatch(role -> List.of("CLINIC_ADMIN", "RECEPTION").contains(role));
     }
 
     private ResponseEntity<Map<String,String>> forbidden() {
