@@ -43,6 +43,8 @@
     .session p{margin:0 0 16px;color:var(--muted);font-size:13px}
     .clinic{padding:12px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;font-size:13px}
     .role{font-size:10px;font-weight:800;color:#1769aa;background:#e8f3fb;border-radius:20px;padding:5px 8px;white-space:nowrap}
+    .clinic-action{border:1px solid var(--line);background:white;color:var(--blue);border-radius:7px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer}
+    .clinic-action.active{background:#eaf7ef;border-color:#cde8d6;color:#267043;cursor:default}
     .secondary{border:1px solid var(--line);background:white;color:var(--blue);border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;margin-top:18px}
     @media(max-width:760px){body{padding:14px}.shell{grid-template-columns:1fr;min-height:0}.brand{padding:28px 28px 24px}.brand-copy{margin:35px 0 25px}.brand h1{font-size:29px}.brand-foot{display:none}.panel{padding:32px 26px 36px}}
   </style>
@@ -150,7 +152,23 @@
       const role = document.createElement("span");
       role.className = "role";
       role.textContent = String(item.role).replaceAll("_", " ");
-      row.append(name, role);
+      const active = item.clinic_id === data.activeClinicId;
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "clinic-action" + (active ? " active" : "");
+      action.textContent = active ? "Clínica ativa" : "Selecionar";
+      action.disabled = active;
+      action.addEventListener("click", async () => {
+        action.disabled = true;
+        try {
+          const updated = await post("/api/v1/auth/select-clinic", { clinicId: item.clinic_id });
+          showSession(updated);
+        } catch (error) {
+          action.disabled = false;
+          notice(error.message);
+        }
+      });
+      row.append(name, role, action);
       $("clinics").append(row);
     });
   };
