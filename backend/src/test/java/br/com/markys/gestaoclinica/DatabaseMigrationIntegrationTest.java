@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -247,6 +248,25 @@ class DatabaseMigrationIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
                 .contentType(MediaType.APPLICATION_PDF));
+
+        mockMvc.perform(put("/api/v1/clinic/patients/{id}", patientId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "fullName":"Paciente Atualizado",
+                      "birthDate":"1990-05-20",
+                      "insuranceName":"Convênio Atualizado",
+                      "jobTitle":"Técnico Sênior",
+                      "serviceTypeId":"%s",
+                      "examIds":[]
+                    }
+                    """.formatted(serviceTypeId)))
+            .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("SELECT full_name FROM patients WHERE id=?", String.class, patientId))
+            .isEqualTo("Paciente Atualizado");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM queue_entry_exams WHERE clinic_id=?",
+            Integer.class, clinicId)).isZero();
 
         mockMvc.perform(post("/api/v1/auth/master-bootstrap")
                 .cookie(csrfCookie).header("X-XSRF-TOKEN", token)
