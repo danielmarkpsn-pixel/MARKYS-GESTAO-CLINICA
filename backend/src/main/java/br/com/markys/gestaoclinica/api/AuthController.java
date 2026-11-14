@@ -157,6 +157,9 @@ public class AuthController {
                 """,
                 email
             );
+            if (request.getSession(false) != null) {
+                request.changeSessionId();
+            }
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(result);
             SecurityContextHolder.setContext(context);
@@ -178,7 +181,8 @@ public class AuthController {
                 """,
                 email
             );
-            throw new BadCredentialsException("E-mail ou senha inválidos.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "E-mail ou senha inválidos."));
         } catch (RuntimeException ex) {
             if (ex instanceof BadCredentialsException) {
                 throw ex;
