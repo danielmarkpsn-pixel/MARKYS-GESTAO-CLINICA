@@ -381,7 +381,23 @@
         const birth = item.birth_date ? new Date(item.birth_date + "T00:00:00").toLocaleDateString("pt-BR") : "Nascimento não informado";
         info.textContent = item.full_name + " • " + birth + " • " + (item.insurance_name || "Sem convênio");
         const status = document.createElement("small"); status.textContent = item.active_queue_entries + " na fila";
-        row.append(info, status); list.append(row);
+        row.append(info, status);
+        if (Number(item.document_count) > 0) {
+          const view = document.createElement("button"); view.type = "button"; view.textContent = "Ver PDF";
+          view.addEventListener("click", async () => {
+            try {
+              const docs = await catalogRequest("/api/v1/clinic/patients/" + item.id + "/documents");
+              const doc = docs[0]; if (!doc) return;
+              const response = await fetch("/api/v1/clinic/patients/" + item.id + "/documents/" + doc.id, {credentials:"same-origin"});
+              if (!response.ok) throw new Error("Não foi possível abrir o documento.");
+              const blob = await response.blob(); const url = URL.createObjectURL(blob);
+              const link = document.createElement("a"); link.href = url; link.download = "documento-paciente.pdf";
+              document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+            } catch (error) { patientMessage(error.message); }
+          });
+          row.append(view);
+        }
+        list.append(row);
       });
       if (!items.length) list.textContent = "Nenhum paciente cadastrado.";
     } catch (error) { patientMessage(error.message); }
@@ -401,7 +417,16 @@
       const result = await catalogRequest("/api/v1/clinic/patients", {
         method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload)
       });
-      form.reset(); calculatePatientAge(); patientMessage(result.message, true); await loadPatients();
+      let uploadWarning = "";
+      const pdf = $("patientPdf").files[0];
+      if (pdf) {
+        try {
+          const data = new FormData(); data.append("file", pdf);
+          await catalogRequest("/api/v1/clinic/patients/" + result.patientId + "/documents", {method:"POST", body:data});
+        } catch (uploadError) { uploadWarning = " Paciente cadastrado, mas o PDF não foi anexado: " + uploadError.message; }
+      }
+      form.reset(); calculatePatientAge();
+      patientMessage(result.message + uploadWarning, !uploadWarning); await loadPatients();
     } catch (error) { patientMessage(error.message); }
     finally { button.disabled = false; }
   });
