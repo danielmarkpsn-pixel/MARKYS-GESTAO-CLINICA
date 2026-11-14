@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: markys-postgres-dev
+    environment:
+      POSTGRES_DB: markys
+      POSTGRES_USER: markys
+      POSTGRES_PASSWORD: markys_dev_only
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - markys_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U markys -d markys"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+volumes:
+  markys_pgdata:
