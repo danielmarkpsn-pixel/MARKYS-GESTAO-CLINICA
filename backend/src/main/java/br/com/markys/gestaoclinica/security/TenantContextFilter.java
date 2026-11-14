@@ -27,6 +27,7 @@ public class TenantContextFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         return !path.startsWith(request.getContextPath() + "/api/v1/")
             || path.startsWith(request.getContextPath() + "/api/v1/auth/")
+            || path.startsWith(request.getContextPath() + "/api/v1/master/")
             || path.equals(request.getContextPath() + "/api/v1/health");
     }
 
