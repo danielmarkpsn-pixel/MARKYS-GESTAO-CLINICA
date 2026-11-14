@@ -101,10 +101,13 @@ class DatabaseMigrationIntegrationTest {
 
     @Test
     void masterBootstrapCreatesGlobalAdminAndMasterCanProvisionClinic() throws Exception {
-        jdbc.update("DELETE FROM platform_admins");
-        jdbc.update("DELETE FROM clinic_memberships");
-        jdbc.update("DELETE FROM app_users");
-        jdbc.update("DELETE FROM clinics");
+        // Test cleanup is intentionally explicit: TRUNCATE is not filtered by RLS,
+        // unlike DELETE, and CASCADE clears tenant-owned rows before parent clinics.
+        jdbc.execute("""
+            TRUNCATE TABLE clinical_notes, encounters, triage_records, queue_entries,
+                clinic_rooms, professionals, patients, platform_admins,
+                clinic_memberships, app_users, clinics CASCADE
+            """);
 
         MvcResult csrfResult = mockMvc.perform(get("/api/v1/auth/csrf"))
             .andExpect(status().isOk()).andReturn();
