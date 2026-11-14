@@ -302,7 +302,7 @@
     });
     if (!items.length) list.textContent = "Nenhum cadastro realizado.";
   };
-  let currentCatalog = { rooms: [], serviceTypes: [], exams: [] };
+  let currentCatalog = { rooms: [], serviceTypes: [], exams: [] };\n  let canManagePatientRecords = false;
   const loadCatalog = async () => {
     try {
       const data = await catalogRequest("/api/v1/clinic/catalog");
@@ -488,6 +488,7 @@
     const canUseReception = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION"].includes(activeMembership.role);
     const canUsePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION", "PROFESSIONAL"].includes(activeMembership.role);
     const canManagePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION"].includes(activeMembership.role);
+    canManagePatientRecords = canManagePatients;
     $("receptionWorkspace").classList.toggle("hidden", !canUseReception);
     $("patientWorkspace").classList.toggle("hidden", !canUsePatients);
     $("patientForm").classList.toggle("hidden", !canManagePatients);
