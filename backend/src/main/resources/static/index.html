@@ -322,7 +322,8 @@
         const option = document.createElement("option"); option.value = room.id; option.textContent = room.name; roomSelect.append(option);
       });
       if ([...roomSelect.options].some(option => option.value === selected)) roomSelect.value = selected;
-      loadPatientChoices();\n      catalogMessage("Cadastros carregados.", true);
+      loadPatientChoices();
+      catalogMessage("Cadastros carregados.", true);
     } catch (error) { catalogMessage(error.message); }
   };
   $("roomForm").addEventListener("submit", async event => {
