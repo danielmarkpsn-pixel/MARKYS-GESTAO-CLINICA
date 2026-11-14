@@ -3,6 +3,7 @@ package br.com.markys.gestaoclinica.config;
 import java.time.OffsetDateTime;
 
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -97,10 +98,13 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         SecurityContextRepository securityContextRepository,
-        TenantContextFilter tenantContextFilter
+        TenantContextFilter tenantContextFilter,
+        @Value("${SESSION_COOKIE_SECURE:false}") boolean secureCookies
     ) throws Exception {
+        CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfRepository.setCookieCustomizer(cookie -> cookie.secure(secureCookies).sameSite("Lax").path("/"));
         return http
-            .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+            .csrf(csrf -> csrf.csrfTokenRepository(csrfRepository))
             .securityContext(context -> context.securityContextRepository(securityContextRepository))
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
