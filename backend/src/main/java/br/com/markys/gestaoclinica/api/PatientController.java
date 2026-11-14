@@ -51,7 +51,7 @@ public class PatientController {
         UUID clinic = TenantContext.requireClinicId();
         return ResponseEntity.ok(jdbc.queryForList("""
             SELECT p.id, p.full_name, p.birth_date, p.sex, p.insurance_name, p.job_title,
-                   p.status, p.created_at,
+                   p.status, p.created_at,\n                   (SELECT count(*) FROM patient_documents d WHERE d.clinic_id=p.clinic_id AND d.patient_id=p.id) AS document_count,
                    (SELECT count(*) FROM queue_entries q WHERE q.clinic_id=p.clinic_id
                      AND q.patient_id=p.id AND q.status IN ('WAITING','CALLED','IN_SERVICE')) AS active_queue_entries
               FROM patients p
