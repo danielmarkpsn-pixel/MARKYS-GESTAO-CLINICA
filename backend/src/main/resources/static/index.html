@@ -302,7 +302,8 @@
     });
     if (!items.length) list.textContent = "Nenhum cadastro realizado.";
   };
-  let currentCatalog = { rooms: [], serviceTypes: [], exams: [] };\n  let canManagePatientRecords = false;
+  let currentCatalog = { rooms: [], serviceTypes: [], exams: [] };
+  let canManagePatientRecords = false;
   const loadCatalog = async () => {
     try {
       const data = await catalogRequest("/api/v1/clinic/catalog");
