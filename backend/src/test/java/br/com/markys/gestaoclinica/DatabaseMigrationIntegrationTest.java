@@ -59,7 +59,7 @@ class DatabaseMigrationIntegrationTest {
 
         assertThat(migrationCount).isEqualTo(6);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(5);
+        assertThat(clinicalTables).isEqualTo(7);
         assertThat(masterTables).isEqualTo(1);
     }
 
