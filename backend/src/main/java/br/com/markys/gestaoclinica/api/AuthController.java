@@ -63,9 +63,8 @@ public class AuthController {
 
     @GetMapping("/setup-status")
     public Map<String, Boolean> setupStatus() {
-        Long clinics = jdbc.queryForObject("SELECT count(*) FROM clinics", Long.class);
-        Long users = jdbc.queryForObject("SELECT count(*) FROM app_users", Long.class);
-        boolean available = (clinics == null || clinics == 0) && (users == null || users == 0);
+        Long masters = jdbc.queryForObject("SELECT count(*) FROM platform_admins", Long.class);
+        boolean available = masters == null || masters == 0;
         return Map.of("available", available);
     }
 
