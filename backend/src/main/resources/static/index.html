@@ -77,7 +77,7 @@
         <p class="sub" id="subheading">Entre com seu e-mail e senha para acessar o MARKYS.</p>
         <div class="tabs" role="tablist" aria-label="Tipo de acesso">
           <button id="loginTab" class="active" type="button" role="tab" aria-selected="true">Entrar</button>
-          <button id="setupTab" type="button" role="tab" aria-selected="false">Primeiro acesso</button>
+          <button id="setupTab" type="button" role="tab" aria-selected="false">Criar MASTER</button>
         </div>
         <div id="notice" class="notice" role="status" aria-live="polite"></div>
         <form id="loginForm">
@@ -86,13 +86,13 @@
           <button class="primary" type="submit">Acessar minha conta</button>
         </form>
         <form id="setupForm" class="hidden">
-          <div class="field"><label for="clinicName">Nome da clínica</label><input id="clinicName" maxlength="180" autocomplete="organization" required></div>
-          <div class="field"><label for="fullName">Nome do administrador</label><input id="fullName" maxlength="180" autocomplete="name" required></div>
-          <div class="field"><label for="setupEmail">E-mail</label><input id="setupEmail" type="email" maxlength="254" autocomplete="email" required></div>
-          <div class="field"><label for="setupPassword">Senha (mínimo 12 caracteres)</label><input id="setupPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></div>
-          <button class="primary" type="submit">Criar clínica e administrador</button>
+          <div class="field"><label for="bootstrapToken">Token de inicialização fornecido pelo servidor</label><input id="bootstrapToken" type="password" autocomplete="off" required></div>
+          <div class="field"><label for="fullName">Seu nome</label><input id="fullName" maxlength="180" autocomplete="name" required></div>
+          <div class="field"><label for="setupEmail">Seu e-mail de acesso</label><input id="setupEmail" type="email" maxlength="254" autocomplete="email" required></div>
+          <div class="field"><label for="setupPassword">Senha MASTER (mínimo 12 caracteres)</label><input id="setupPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></div>
+          <button class="primary" type="submit">Criar minha conta MASTER</button>
         </form>
-        <p class="hint">O primeiro cadastro só pode ser realizado uma vez, antes da criação de qualquer clínica ou usuário.</p>
+        <p class="hint">A criação do MASTER exige o token secreto configurado no servidor e só pode ser concluída uma vez.</p>
       </div>
       <div id="sessionPanel" class="hidden">
         <h2>Acesso confirmado</h2>
@@ -140,8 +140,8 @@
     $("setupTab").classList.toggle("active", setup);
     $("loginTab").setAttribute("aria-selected", String(!setup));
     $("setupTab").setAttribute("aria-selected", String(setup));
-    $("heading").textContent = setup ? "Configure sua clínica" : "Bem-vindo de volta";
-    $("subheading").textContent = setup ? "Crie a primeira clínica e a conta do administrador principal." : "Entre com seu e-mail e senha para acessar o MARKYS.";
+    $("heading").textContent = setup ? "Configuração do MASTER" : "Bem-vindo de volta";
+    $("subheading").textContent = setup ? "Crie a conta global que administrará as clínicas da plataforma." : "Entre com seu e-mail e senha para acessar o MARKYS.";
     clearNotice();
   };
   const csrf = async () => {
@@ -293,14 +293,43 @@
       password: $("loginPassword").value
     });
   });
-  $("setupForm").addEventListener("submit", event => {
+  $("setupForm").addEventListener("submit", async event => {
     event.preventDefault();
-    submit(event.currentTarget, "/api/v1/auth/setup", {
-      clinicName: $("clinicName").value,
-      fullName: $("fullName").value,
-      email: $("setupEmail").value,
-      password: $("setupPassword").value
-    });
+    const form = event.currentTarget;
+    const button = form.querySelector("button[type=submit]");
+    button.disabled = true;
+    clearNotice();
+    try {
+      const token = await csrf();
+      const response = await fetch("/api/v1/auth/master-bootstrap", {
+        method: "POST", credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": token,
+          "X-MARKYS-BOOTSTRAP-TOKEN": $("bootstrapToken").value
+        },
+        body: JSON.stringify({
+          fullName: $("fullName").value,
+          email: $("setupEmail").value,
+          password: $("setupPassword").value
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Não foi possível criar a conta MASTER.");
+      form.reset();
+      setMode("login");
+      notice("Conta MASTER criada. Entre com seu e-mail e senha.", "ok");
+      fetch("/api/v1/auth/setup-status", { credentials: "same-origin" })
+    .then(response => response.ok ? response.json() : null)
+    .then(data => {
+      if (data && data.available) $("setupTab").classList.remove("hidden");
+    })
+    .catch(() => $("setupTab").classList.add("hidden"));
+    } catch (error) {
+      notice(error.message);
+    } finally {
+      button.disabled = false;
+    }
   });
   $("logoutButton").addEventListener("click", async () => {
     try {
