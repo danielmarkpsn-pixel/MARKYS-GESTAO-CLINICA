@@ -79,6 +79,8 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
+        // Serialize first-run requests so two administrators cannot bootstrap two tenants concurrently.
+        jdbc.execute("LOCK TABLE clinics IN EXCLUSIVE MODE");
         Long users = jdbc.queryForObject("SELECT count(*) FROM app_users", Long.class);
         Long clinics = jdbc.queryForObject("SELECT count(*) FROM clinics", Long.class);
         if (users != null && users > 0 || clinics != null && clinics > 0) {
@@ -172,6 +174,7 @@ public class AuthController {
                        END
                  WHERE lower(email) = lower(?)
                    AND status = 'ACTIVE'
+                   AND (locked_until IS NULL OR locked_until <= now())
                 """,
                 email
             );
