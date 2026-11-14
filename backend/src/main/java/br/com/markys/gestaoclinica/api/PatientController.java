@@ -198,6 +198,11 @@ public class PatientController {
         @Size(max=180) String insuranceName,
         @Size(max=160) String jobTitle
     ) {}
+    @ExceptionHandler(InvalidRequest.class)
+    public ResponseEntity<Map<String,String>> invalidRequest(InvalidRequest ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+    }
+
     private static final class InvalidRequest extends RuntimeException {
         InvalidRequest(String message) { super(message); }
     }
