@@ -2,6 +2,7 @@ package br.com.markys.gestaoclinica.config;
 
 import java.time.OffsetDateTime;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -73,6 +74,13 @@ public class SecurityConfig {
     @Bean
     TenantContextFilter tenantContextFilter(JdbcTemplate jdbc) {
         return new TenantContextFilter(jdbc);
+    }
+
+    @Bean
+    FilterRegistrationBean<TenantContextFilter> tenantContextFilterRegistration(TenantContextFilter filter) {
+        FilterRegistrationBean<TenantContextFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
