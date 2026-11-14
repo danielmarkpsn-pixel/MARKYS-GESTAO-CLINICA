@@ -16,6 +16,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -29,6 +32,9 @@ class DatabaseMigrationIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @Test
     void allClinicAuthenticationAndMasterMigrationsApplyOnPostgresql() {
@@ -49,10 +55,46 @@ class DatabaseMigrationIntegrationTest {
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(4);
+        assertThat(migrationCount).isEqualTo(5);
         assertThat(authColumns).isEqualTo(4);
         assertThat(clinicalTables).isEqualTo(5);
         assertThat(masterTables).isEqualTo(1);
+    }
+
+    @Test
+    void postgresRowLevelSecurityHidesOtherClinicPatientsAndRejectsCrossTenantWrites() {
+        UUID clinicA = UUID.randomUUID();
+        UUID clinicB = UUID.randomUUID();
+        UUID patientA = UUID.randomUUID();
+        UUID patientB = UUID.randomUUID();
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+
+        int[] visibleCounts = tx.execute(status -> {
+            jdbc.update("INSERT INTO clinics (id, name, status) VALUES (?, ?, 'ACTIVE')", clinicA, "RLS Clínica A");
+            jdbc.update("INSERT INTO clinics (id, name, status) VALUES (?, ?, 'ACTIVE')", clinicB, "RLS Clínica B");
+
+            jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicA.toString());
+            jdbc.update("INSERT INTO patients (id, clinic_id, full_name) VALUES (?, ?, ?)", patientA, clinicA, "Paciente A");
+
+            jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicB.toString());
+            jdbc.update("INSERT INTO patients (id, clinic_id, full_name) VALUES (?, ?, ?)", patientB, clinicB, "Paciente B");
+
+            jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicA.toString());
+            Integer clinicAVisible = jdbc.queryForObject(
+                "SELECT count(*) FROM patients WHERE id IN (?, ?)", Integer.class, patientA, patientB);
+
+            jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicB.toString());
+            Integer clinicBVisible = jdbc.queryForObject(
+                "SELECT count(*) FROM patients WHERE id IN (?, ?)", Integer.class, patientA, patientB);
+            return new int[] { clinicAVisible, clinicBVisible };
+        });
+
+        assertThat(visibleCounts).containsExactly(1, 1);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> tx.executeWithoutResult(status -> {
+            jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicA.toString());
+            jdbc.update("INSERT INTO patients (id, clinic_id, full_name) VALUES (?, ?, ?)",
+                UUID.randomUUID(), clinicB, "Tentativa cross-tenant");
+        })).isInstanceOf(DataAccessException.class);
     }
 
     @Test
