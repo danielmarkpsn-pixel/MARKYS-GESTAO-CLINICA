@@ -18,6 +18,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import br.com.markys.gestaoclinica.security.TenantContextFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -70,6 +72,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    TenantContextFilter tenantContextFilter(JdbcTemplate jdbc) {
+        return new TenantContextFilter(jdbc);
+    }
+
+    @Bean
     SecurityContextRepository securityContextRepository() {
         return new HttpSessionSecurityContextRepository();
     }
@@ -82,7 +89,8 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
         HttpSecurity http,
-        SecurityContextRepository securityContextRepository
+        SecurityContextRepository securityContextRepository,
+        TenantContextFilter tenantContextFilter
     ) throws Exception {
         return http
             .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
@@ -109,6 +117,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.deny()))
+            .addFilterAfter(tenantContextFilter, AuthorizationFilter.class)
             .build();
     }
 }
