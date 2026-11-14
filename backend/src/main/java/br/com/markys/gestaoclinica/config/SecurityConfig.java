@@ -1,14 +1,13 @@
 package br.com.markys.gestaoclinica.config;
 
 import java.time.OffsetDateTime;
-import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -26,11 +25,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    @Bean
-    JdbcTemplate jdbcTemplate(DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
@@ -64,13 +58,13 @@ public class SecurityConfig {
 
     @Bean
     AuthenticationManager authenticationManager(
-        AuthenticationConfiguration configuration,
         UserDetailsService userDetailsService,
         PasswordEncoder passwordEncoder
-    ) throws Exception {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+    ) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
-        return new org.springframework.security.authentication.ProviderManager(provider);
+        return new ProviderManager(provider);
     }
 
     @Bean
@@ -109,10 +103,7 @@ public class SecurityConfig {
                 ).permitAll()
                 .anyRequest().authenticated()
             )
-            .headers(headers -> headers
-                .frameOptions(frame -> frame.deny())
-                .contentTypeOptions(options -> {})
-            )
+            .headers(headers -> headers.frameOptions(frame -> frame.deny()))
             .build();
     }
 }
