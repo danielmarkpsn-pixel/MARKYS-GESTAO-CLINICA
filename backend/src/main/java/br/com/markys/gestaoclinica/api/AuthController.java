@@ -84,52 +84,9 @@ public class AuthController {
     }
 
     @PostMapping("/setup")
-    @Transactional
-    public ResponseEntity<?> setup(
-        @Valid @RequestBody SetupRequest body,
-        HttpServletRequest request,
-        HttpServletResponse response
-    ) {
-        if (body.password().getBytes(StandardCharsets.UTF_8).length > 72) {
-            return ResponseEntity.badRequest().body(Map.of("error", "A senha deve ter no máximo 72 bytes em UTF-8."));
-        }
-        // Serialize first-run requests so two administrators cannot bootstrap two tenants concurrently.
-        jdbc.execute("LOCK TABLE clinics IN EXCLUSIVE MODE");
-        Long users = jdbc.queryForObject("SELECT count(*) FROM app_users", Long.class);
-        Long clinics = jdbc.queryForObject("SELECT count(*) FROM clinics", Long.class);
-        if (users != null && users > 0 || clinics != null && clinics > 0) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of("error", "A configuração inicial já foi concluída."));
-        }
-
-        UUID clinicId = UUID.randomUUID();
-        UUID userId = UUID.randomUUID();
-        UUID membershipId = UUID.randomUUID();
-        String email = body.email().trim().toLowerCase(Locale.ROOT);
-
-        jdbc.update(
-            """
-            INSERT INTO clinics (id, name, status)
-            VALUES (?, ?, 'ACTIVE')
-            """,
-            clinicId, body.clinicName().trim()
-        );
-        jdbc.update(
-            """
-            INSERT INTO app_users (id, full_name, email, password_hash, status)
-            VALUES (?, ?, ?, ?, 'ACTIVE')
-            """,
-            userId, body.fullName().trim(), email, passwordEncoder.encode(body.password())
-        );
-        jdbc.update(
-            """
-            INSERT INTO clinic_memberships (id, clinic_id, user_id, role, status)
-            VALUES (?, ?, ?, 'CLINIC_ADMIN', 'ACTIVE')
-            """,
-            membershipId, clinicId, userId
-        );
-
-        return authenticate(email, body.password(), request, response);
+    public ResponseEntity<?> setupDisabled() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+            .body(Map.of("error", "O cadastro de clínicas é exclusivo do administrador MASTER."));
     }
 
     @GetMapping("/me")
@@ -265,6 +222,18 @@ public class AuthController {
         profile.put("userId", user.get("id"));
         profile.put("fullName", user.get("full_name"));
         profile.put("email", user.get("email"));
+        Boolean master = jdbc.queryForObject(
+            """
+            SELECT EXISTS (
+                SELECT 1 FROM platform_admins pa
+                JOIN app_users u ON u.id = pa.user_id
+                WHERE lower(u.email) = lower(?)
+            )
+            """,
+            Boolean.class,
+            email
+        );
+        profile.put("globalRole", Boolean.TRUE.equals(master) ? "MASTER" : "USER");
         profile.put("memberships", memberships);
         profile.put("activeClinicId", session.getAttribute("MARKYS_ACTIVE_CLINIC_ID"));
         return profile;
