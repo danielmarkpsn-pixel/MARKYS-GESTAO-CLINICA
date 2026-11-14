@@ -46,6 +46,17 @@
     .clinic-action{border:1px solid var(--line);background:white;color:var(--blue);border-radius:7px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer}
     .clinic-action.active{background:#eaf7ef;border-color:#cde8d6;color:#267043;cursor:default}
     .secondary{border:1px solid var(--line);background:white;color:var(--blue);border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;margin-top:18px}
+    #setupTab{display:none}
+    .master-tools{margin-top:20px;border-top:1px solid var(--line);padding-top:18px}
+    .master-tools h3{font-size:16px;color:var(--navy);margin:0 0 12px}
+    .master-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .master-form .field{margin:0}
+    .master-form .wide{grid-column:1/-1}
+    .master-form input{height:40px}
+    .master-form button{grid-column:1/-1}
+    .clinic-card{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:13px}
+    .clinic-card small{display:block;color:var(--muted);margin-top:4px}
+    @media(max-width:520px){.master-form{grid-template-columns:1fr}.master-form .wide{grid-column:auto}}
     @media(max-width:760px){body{padding:14px}.shell{grid-template-columns:1fr;min-height:0}.brand{padding:28px 28px 24px}.brand-copy{margin:35px 0 25px}.brand h1{font-size:29px}.brand-foot{display:none}.panel{padding:32px 26px 36px}}
   </style>
 </head>
@@ -92,7 +103,20 @@
           <strong style="font-size:12px;color:#38546e">Clínicas vinculadas</strong>
           <div id="clinics"></div>
         </div>
-        <p class="hint">Os módulos clínicos serão conectados gradualmente a esta autenticação durante a migração.</p>
+        <div id="masterTools" class="master-tools hidden">
+          <h3>Administração da plataforma</h3>
+          <p class="sub">Cadastre clínicas e seus administradores locais. Cada administrador terá acesso somente à própria clínica.</p>
+          <form id="masterClinicForm" class="master-form">
+            <div class="field wide"><label for="newClinicName">Nome da clínica</label><input id="newClinicName" maxlength="180" required></div>
+            <div class="field"><label for="newAdminName">Administrador local</label><input id="newAdminName" maxlength="180" required></div>
+            <div class="field"><label for="newAdminEmail">E-mail do administrador</label><input id="newAdminEmail" type="email" maxlength="254" required></div>
+            <div class="field wide"><label for="newAdminPassword">Senha inicial (mínimo 12 caracteres)</label><input id="newAdminPassword" type="password" minlength="12" maxlength="72" required></div>
+            <button class="primary" type="submit">Criar clínica e administrador</button>
+          </form>
+          <h3 style="margin-top:22px">Clínicas cadastradas</h3>
+          <div id="masterClinicList"></div>
+        </div>
+        <p class="hint" id="sessionHint">Os módulos clínicos serão conectados gradualmente a esta autenticação durante a migração.</p>
         <button id="logoutButton" class="secondary" type="button">Encerrar sessão</button>
       </div>
     </section>
@@ -138,12 +162,63 @@
     if (!response.ok) throw new Error(data.error || "Não foi possível concluir a operação.");
     return data;
   };
+  const masterRequest = async (path, options = {}) => {
+    const headers = { ...(options.headers || {}) };
+    if (options.method && options.method !== "GET") headers["X-XSRF-TOKEN"] = await csrf();
+    const response = await fetch(path, { credentials: "same-origin", ...options, headers });
+    const data = response.status === 204 ? null : await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Não foi possível concluir a operação.");
+    return data;
+  };
+  const loadMasterClinics = async () => {
+    const items = await masterRequest("/api/v1/master/clinics");
+    const list = $("masterClinicList");
+    list.replaceChildren();
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "clinic-card";
+      const info = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = item.name;
+      const meta = document.createElement("small");
+      meta.textContent = "Administradores: " + item.administrators + " • Usuários ativos: " + item.active_users + " • Status: " + item.status;
+      info.append(title, meta);
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "clinic-action";
+      action.textContent = item.status === "ACTIVE" ? "Suspender" : "Reativar";
+      action.addEventListener("click", async () => {
+        action.disabled = true;
+        try {
+          await masterRequest("/api/v1/master/clinics/" + item.id + "/status", {
+            method: "PATCH", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: item.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE" })
+          });
+          await loadMasterClinics();
+        } catch (error) {
+          notice(error.message);
+          action.disabled = false;
+        }
+      });
+      card.append(info, action);
+      list.append(card);
+    });
+    if (!items.length) list.textContent = "Nenhuma clínica cadastrada.";
+  };
   const showSession = data => {
     $("authPanel").classList.add("hidden");
     $("sessionPanel").classList.remove("hidden");
-    $("sessionName").textContent = data.fullName;
+    const isMaster = data.globalRole === "MASTER";
+    $("masterTools").classList.toggle("hidden", !isMaster);
+    $("sessionHint").classList.toggle("hidden", isMaster);
+    $("sessionName").textContent = data.fullName + (isMaster ? " • MASTER" : "");
     $("sessionEmail").textContent = data.email;
     $("clinics").replaceChildren();
+    if (isMaster) {
+      $("clinics").textContent = "Administrador global da plataforma — sem vínculo a uma clínica.";
+      loadMasterClinics().catch(error => notice(error.message));
+      return;
+    }
     (data.memberships || []).forEach(item => {
       const row = document.createElement("div");
       row.className = "clinic";
@@ -185,6 +260,30 @@
       button.disabled = false;
     }
   };
+  $("masterClinicForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = event.currentTarget.querySelector("button[type=submit]");
+    button.disabled = true;
+    clearNotice();
+    try {
+      const data = await masterRequest("/api/v1/master/clinics", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clinicName: $("newClinicName").value,
+          adminName: $("newAdminName").value,
+          adminEmail: $("newAdminEmail").value,
+          adminPassword: $("newAdminPassword").value
+        })
+      });
+      event.currentTarget.reset();
+      notice(data.message + " Compartilhe as credenciais iniciais com o administrador por um canal seguro.", "ok");
+      await loadMasterClinics();
+    } catch (error) {
+      notice(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  });
   $("loginTab").addEventListener("click", () => setMode("login"));
   $("setupTab").addEventListener("click", () => setMode("setup"));
   $("loginForm").addEventListener("submit", event => {
@@ -214,12 +313,7 @@
       notice(error.message);
     }
   });
-  fetch("/api/v1/auth/setup-status", { credentials: "same-origin" })
-    .then(response => response.ok ? response.json() : null)
-    .then(data => {
-      if (data && !data.available) $("setupTab").classList.add("hidden");
-    })
-    .catch(() => {});
+  $("setupTab").classList.add("hidden");
   fetch("/api/v1/auth/me", { credentials: "same-origin" })
     .then(response => response.ok ? response.json() : null)
     .then(data => { if (data) showSession(data); })
