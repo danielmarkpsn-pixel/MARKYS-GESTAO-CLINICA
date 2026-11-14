@@ -89,10 +89,14 @@ public class TenantContextFilter extends OncePerRequestFilter {
 
                     if (allowed == null || allowed != 1) {
                         session.removeAttribute(SESSION_CLINIC_KEY);
-                        response.sendError(
-                            HttpServletResponse.SC_FORBIDDEN,
-                            "O vínculo com a clínica não está mais ativo."
-                        );
+                        try {
+                            response.sendError(
+                                HttpServletResponse.SC_FORBIDDEN,
+                                "O vínculo com a clínica não está mais ativo."
+                            );
+                        } catch (IOException ex) {
+                            throw new FilterExecutionException(ex);
+                        }
                         return;
                     }
 
