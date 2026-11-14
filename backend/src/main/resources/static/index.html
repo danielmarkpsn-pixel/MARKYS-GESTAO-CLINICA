@@ -346,6 +346,8 @@
   const resetPatientForm = () => {
     $("patientForm").reset(); editingPatientId = null;
     $("patientCpf").disabled = false; $("patientCpf").placeholder = "000.000.000-00";
+    $("patientServiceType").disabled = false;
+    $("patientExamChoices").querySelectorAll("input[type=checkbox]").forEach(input => input.disabled = false);
     $("patientServiceType").required = true;
     $("patientSubmit").textContent = "Cadastrar paciente e enviar para a fila";
     $("cancelPatientEdit").classList.add("hidden"); calculatePatientAge();
@@ -424,6 +426,9 @@
       $("patientCpf").placeholder = "CPF protegido — não editável";
       $("patientServiceType").value = patient.serviceTypeId || "";
       $("patientServiceType").required = false;
+      const canEditQueue = !!patient.serviceTypeId;
+      $("patientServiceType").disabled = !canEditQueue;
+      $("patientExamChoices").querySelectorAll("input[type=checkbox]").forEach(input => input.disabled = !canEditQueue);
       const selected = new Set(patient.examIds || []);
       $("patientExamChoices").querySelectorAll("input[type=checkbox]").forEach(input => { input.checked = selected.has(input.value); });
       $("patientSubmit").textContent = "Salvar alterações";
