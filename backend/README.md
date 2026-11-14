@@ -30,6 +30,6 @@ Após cinco falhas consecutivas, a conta é bloqueada por 15 minutos. Respostas 
 
 ## Segurança e estágio
 
-As rotas clínicas permanecem protegidas por autenticação. O contexto de clínica e a autorização por perfil precisam ser aplicados a cada API clínica antes de habilitar dados reais. A seleção de clínica fica guardada na sessão e é validada contra o vínculo ativo do usuário. As APIs clínicas ainda precisam consumir esse contexto e aplicar as permissões do perfil antes de liberar operações.
+As rotas clínicas permanecem protegidas por autenticação. O contexto de clínica e a autorização por perfil precisam ser aplicados a cada API clínica antes de habilitar dados reais. A seleção de clínica fica guardada na sessão e é validada contra o vínculo ativo do usuário. O filtro de segurança valida esse vínculo em cada rota protegida de API e disponibiliza o identificador por `TenantContext.requireClinicId()`. Cada novo repositório/serviço clínico deve obrigatoriamente filtrar por esse identificador e aplicar as permissões do perfil antes de liberar operações.
 
 Não exponha a API sem HTTPS, segredos de produção e isolamento de tenant validado. Não use dados reais de pacientes até a conclusão da homologação de segurança.
