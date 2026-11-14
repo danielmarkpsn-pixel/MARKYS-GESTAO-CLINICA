@@ -122,6 +122,7 @@ public class SecurityConfig {
                     "/actuator/health",
                     "/actuator/health/**",
                     "/api/v1/auth/csrf",
+                    "/api/v1/auth/setup-status",
                     "/api/v1/auth/login",
                     "/api/v1/auth/setup"
                 ).permitAll()
