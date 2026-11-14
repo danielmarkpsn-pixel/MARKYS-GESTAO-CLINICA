@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,10 +23,16 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-@SpringBootTest(properties = "MARKYS_MASTER_BOOTSTRAP_TOKEN=integration-test-bootstrap-secret")
+@SpringBootTest(properties = {
+    "MARKYS_MASTER_BOOTSTRAP_TOKEN=integration-test-bootstrap-secret",
+    "MARKYS_PII_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "MARKYS_PII_FINGERPRINT_KEY=AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=",
+    "MARKYS_PRIVATE_STORAGE_PATH=/tmp/markys-test-private"
+})
 @AutoConfigureMockMvc
 @EnabledIfSystemProperty(named = "markys.db.integration", matches = "true")
 class DatabaseMigrationIntegrationTest {
@@ -196,6 +203,50 @@ class DatabaseMigrationIntegrationTest {
         MockHttpSession clinicAdminSession = (MockHttpSession) clinicAdminLogin.getRequest().getSession(false);
         mockMvc.perform(get("/api/v1/master/clinics").session(clinicAdminSession))
             .andExpect(status().isForbidden());
+
+        UUID clinicId = jdbc.queryForObject("SELECT id FROM clinics WHERE name=?", UUID.class, "Clínica de Teste");
+        UUID serviceTypeId = jdbc.queryForObject(
+            "SELECT id FROM service_types WHERE clinic_id=? AND name=?", UUID.class, clinicId, "Admissional");
+        UUID examId = jdbc.queryForObject(
+            "SELECT id FROM exam_catalog WHERE clinic_id=? AND name=?", UUID.class, clinicId, "Tórax PA");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM clinic_rooms WHERE clinic_id=?", Integer.class, clinicId)).isEqualTo(10);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM service_types WHERE clinic_id=?", Integer.class, clinicId)).isEqualTo(9);
+
+        MvcResult patientResult = mockMvc.perform(post("/api/v1/clinic/patients")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "fullName":"Paciente de Integração",
+                      "cpf":"529.982.247-25",
+                      "birthDate":"1990-05-20",
+                      "insuranceName":"Convênio Teste",
+                      "jobTitle":"Técnico",
+                      "serviceTypeId":"%s",
+                      "examIds":["%s"]
+                    }
+                    """.formatted(serviceTypeId, examId)))
+            .andExpect(status().isCreated())
+            .andReturn();
+        UUID patientId = UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            patientResult.getResponse().getContentAsString(), "$.patientId"));
+        assertThat(jdbc.queryForObject("SELECT document_ciphertext IS NOT NULL FROM patients WHERE id=?",
+            Boolean.class, patientId)).isTrue();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM queue_entry_exams WHERE clinic_id=?",
+            Integer.class, clinicId)).isEqualTo(1);
+
+        MockMultipartFile pdf = new MockMultipartFile("file", "ficha.pdf", "application/pdf",
+            "%PDF-1.4\nMARKYS TEST\n%%EOF".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        MvcResult documentResult = mockMvc.perform(multipart("/api/v1/clinic/patients/{id}/documents", patientId)
+                .file(pdf).session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token))
+            .andExpect(status().isCreated()).andReturn();
+        UUID documentId = UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            documentResult.getResponse().getContentAsString(), "$.id"));
+        mockMvc.perform(get("/api/v1/clinic/patients/{id}/documents/{documentId}", patientId, documentId)
+                .session(clinicAdminSession))
+            .andExpect(status().isOk())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                .contentType(MediaType.APPLICATION_PDF));
 
         mockMvc.perform(post("/api/v1/auth/master-bootstrap")
                 .cookie(csrfCookie).header("X-XSRF-TOKEN", token)
