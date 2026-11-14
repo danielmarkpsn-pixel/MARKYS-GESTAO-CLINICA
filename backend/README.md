@@ -56,3 +56,24 @@ Após cinco falhas consecutivas, a conta é bloqueada por 15 minutos. Respostas 
 As rotas clínicas permanecem protegidas por autenticação. O contexto de clínica e a autorização por perfil precisam ser aplicados a cada API clínica antes de habilitar dados reais. A seleção de clínica fica guardada na sessão e é validada contra o vínculo ativo do usuário. O filtro de segurança valida esse vínculo em cada rota protegida de API, abre uma transação para a requisição e define `app.current_clinic_id` de forma transacional. A migration V5 ativa e força Row-Level Security (RLS) no PostgreSQL para pacientes, profissionais, salas, fila, triagem, atendimentos e notas clínicas. Mesmo que uma consulta esqueça o filtro `clinic_id`, o banco restringe as linhas ao tenant da transação. `TenantContext.requireClinicId()` também disponibiliza o identificador para a camada de serviço. Cada novo repositório/serviço clínico ainda deve filtrar explicitamente pelo tenant e aplicar as permissões do perfil.
 
 Não exponha a API sem HTTPS, segredos de produção e isolamento de tenant validado. Não use dados reais de pacientes até a conclusão da homologação de segurança.
+
+## Cadastro de pacientes e proteção de dados
+
+O cadastro de pacientes usa a API tenant-scoped `/api/v1/clinic/patients`. CPF nunca é persistido em texto aberto: o servidor exige duas chaves independentes, uma para AES-256-GCM e outra para HMAC-SHA-256 (deduplicação). Gere-as fora do repositório:
+
+```bash
+openssl rand -base64 32
+openssl rand -base64 32
+```
+
+Configure os resultados como variáveis secretas do ambiente do backend:
+
+- `MARKYS_PII_ENCRYPTION_KEY`: chave Base64 de 32 bytes para criptografia autenticada.
+- `MARKYS_PII_FINGERPRINT_KEY`: chave Base64 independente de 32 bytes para o fingerprint do CPF.
+- `MARKYS_PRIVATE_STORAGE_PATH`: diretório persistente e privado para PDFs; padrão `/var/lib/markys/private`.
+
+As chaves devem ser diferentes, estáveis entre reinicializações e armazenadas em secret manager. Não as gere a cada inicialização, não as versione e não as coloque no frontend. Perder/rotacionar essas chaves exige um plano formal de recriptografia dos dados existentes.
+
+O upload aceita somente PDF com assinatura de arquivo validada, até 10 MB. Os arquivos são gravados fora do diretório estático e só podem ser baixados por endpoint autenticado e autorizado da mesma clínica. Em produção, monte `MARKYS_PRIVATE_STORAGE_PATH` em volume persistente, criptografado e incluído no plano de backup/restauração. Não habilite dados reais até validar permissões do volume, backup, recuperação e configuração das chaves.
+
+O formulário calcula a idade no navegador a partir da data de nascimento; a idade não é armazenada. O cadastro cria o paciente e sua entrada na fila em uma transação, registrando snapshots de nomes de exames e salas para preservar o histórico.
