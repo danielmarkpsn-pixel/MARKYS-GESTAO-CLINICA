@@ -2,6 +2,8 @@ package br.com.markys.gestaoclinica.api;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -70,6 +72,7 @@ public class MasterClinicController {
             INSERT INTO clinic_memberships (id, clinic_id, user_id, role, status)
             VALUES (?, ?, ?, 'CLINIC_ADMIN', 'ACTIVE')
             """, membershipId, clinicId, userId);
+        seedClinicCatalog(clinicId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
             "clinicId", clinicId,
@@ -78,6 +81,62 @@ public class MasterClinicController {
             "message", "Clínica e administrador local criados."
         ));
     }
+
+
+    private void seedClinicCatalog(UUID clinicId) {
+        Map<String, UUID> rooms = new HashMap<>();
+        List<String> roomNames = List.of(
+            "RAIO X", "COLETA / LABORATÓRIO", "AUDIOMETRIA", "EXAMES COMPLEMENTARES",
+            "CONSULTA MÉDICA", "COLETA DE PCCU", "PROCEDIMENTOS", "TRIAGEM", "ULTRASSOM", "FISIOTERAPIA"
+        );
+        for (String name : roomNames) {
+            UUID roomId = UUID.randomUUID();
+            jdbc.update("INSERT INTO clinic_rooms (id, clinic_id, name) VALUES (?, ?, ?)", roomId, clinicId, name);
+            rooms.put(name, roomId);
+        }
+
+        List<String> serviceTypes = List.of(
+            "Admissional", "Demissional", "Periódico", "Retorno", "Mudança de riscos",
+            "Particular", "Pontual", "Consulta Ocupacional", "Concurso"
+        );
+        for (int i = 0; i < serviceTypes.size(); i++) {
+            jdbc.update("INSERT INTO service_types (clinic_id, name, sort_order) VALUES (?, ?, ?)",
+                clinicId, serviceTypes.get(i), i);
+        }
+
+        List<ExamSeed> exams = new ArrayList<>();
+        addExams(exams, "RAIO_X", "RAIO X",
+            "Tórax PA", "Tórax Perfil", "Tórax OIT", "Tórax AP", "Coluna Lombar", "Coluna Lombo Sacra",
+            "Coluna Total", "Coluna Cervical", "Coluna Torácica", "Coluna Dorsal", "Ombros", "Ombro D",
+            "Ombro E", "Mãos", "Mão D", "Mão E", "Joelhos", "Joelhos D", "Joelhos E", "Punhos", "Punhos D", "Punhos E");
+        addExams(exams, "LABORATORIO", "COLETA / LABORATÓRIO",
+            "Coleta de sangue", "Hemograma C.", "Glicose", "Creatinina", "Tipagem S.", "Beta", "Colesterol",
+            "Colinesterase", "Cultura F", "EPF", "EAS", "Acetona", "Teste Ergonométrico", "Acetona na Urina",
+            "Ácido Mandélico", "Hemoglobina Glicada", "Lipidograma", "Chumbo na Urina", "Micológico",
+            "Toxicológico", "Triglicerídeos", "TGO", "TGP", "Chumbo sanguíneo", "Hepatite HBsAg",
+            "Hepatite Anti-HBs", "Hepatite Anti-HCV", "Hepatite B - ANTI-HBC TOTAL", "Metil etil cetona",
+            "Ácido metil-hipúrico", "Ácido hipúrico", "Ácido delta-aminolevulínico");
+        addExams(exams, "AUDIOMETRIA", "AUDIOMETRIA",
+            "Audiometria", "Audiometria Tonal", "Audiometria Vocal", "Audiometria Ocupacional",
+            "Audiometria Concurso", "Teste Otoneurológico", "Teste Vestibular");
+        addExams(exams, "COMPLEMENTAR", "EXAMES COMPLEMENTARES",
+            "EEG", "ECG", "Espirometria", "Acuidade", "Acuidade com percepção de cores",
+            "Av Psico", "Mapa 24h", "Holter 24h", "Risco Cirúrgico");
+
+        for (int i = 0; i < exams.size(); i++) {
+            ExamSeed exam = exams.get(i);
+            jdbc.update("""
+                INSERT INTO exam_catalog (clinic_id, category, name, room_id, sort_order)
+                VALUES (?, ?, ?, ?, ?)
+                """, clinicId, exam.category(), exam.name(), rooms.get(exam.roomName()), i);
+        }
+    }
+
+    private static void addExams(List<ExamSeed> target, String category, String roomName, String... names) {
+        for (String name : names) target.add(new ExamSeed(category, roomName, name));
+    }
+
+    private record ExamSeed(String category, String roomName, String name) {}
 
     @PatchMapping("/clinics/{clinicId}/status")
     public ResponseEntity<?> updateStatus(
