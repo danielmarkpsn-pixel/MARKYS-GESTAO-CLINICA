@@ -61,6 +61,14 @@ public class AuthController {
         this.logoutHandler = logoutHandler;
     }
 
+    @GetMapping("/setup-status")
+    public Map<String, Boolean> setupStatus() {
+        Long clinics = jdbc.queryForObject("SELECT count(*) FROM clinics", Long.class);
+        Long users = jdbc.queryForObject("SELECT count(*) FROM app_users", Long.class);
+        boolean available = (clinics == null || clinics == 0) && (users == null || users == 0);
+        return Map.of("available", available);
+    }
+
     @GetMapping("/csrf")
     public Map<String, String> csrf(CsrfToken token) {
         return Map.of("token", token.getToken());
