@@ -1,6 +1,7 @@
 package br.com.markys.gestaoclinica.api;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -92,7 +93,7 @@ public class AuthController {
         UUID clinicId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         UUID membershipId = UUID.randomUUID();
-        String email = body.email().trim().toLowerCase();
+        String email = body.email().trim().toLowerCase(Locale.ROOT);
 
         jdbc.update(
             """
@@ -173,7 +174,7 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
-        String email = rawEmail.trim().toLowerCase();
+        String email = rawEmail.trim().toLowerCase(Locale.ROOT);
         try {
             Authentication result = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(email, password)
