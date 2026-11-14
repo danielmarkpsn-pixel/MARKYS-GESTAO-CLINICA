@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102b52">
+  <title>MARKYS | Gestão Clínica</title>
+  <style>
+    :root{color-scheme:light;--navy:#102b52;--blue:#1769aa;--sky:#eaf4fc;--ink:#18314e;--muted:#6b7d90;--line:#dce6ef;--white:#fff}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(135deg,#eef6fd 0%,#f7f9fc 48%,#e5f0fa 100%);display:grid;place-items:center;padding:28px}
+    .shell{width:min(100%,980px);min-height:600px;display:grid;grid-template-columns: .92fr 1.08fr;background:var(--white);border:1px solid rgba(16,43,82,.08);border-radius:24px;overflow:hidden;box-shadow:0 24px 70px rgba(18,49,82,.14)}
+    .brand{background:linear-gradient(155deg,#102b52,#145b91 68%,#1c78b6);color:white;padding:52px 44px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+    .brand:after{content:"";position:absolute;width:360px;height:360px;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-180px;bottom:-140px;box-shadow:0 0 0 34px rgba(255,255,255,.035),0 0 0 72px rgba(255,255,255,.025)}
+    .logo{display:flex;align-items:center;gap:13px;position:relative;z-index:1}
+    .mark{width:46px;height:46px;border:1px solid rgba(255,255,255,.45);border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:19px;letter-spacing:-1px;background:rgba(255,255,255,.1)}
+    .logo strong{font-size:21px;letter-spacing:2px}
+    .logo span{display:block;font-size:11px;letter-spacing:2.1px;opacity:.72;margin-top:3px}
+    .brand-copy{position:relative;z-index:1;margin:60px 0}
+    .eyebrow{font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:#b9d9f3;font-weight:700}
+    .brand h1{font-size:36px;line-height:1.13;letter-spacing:-1.2px;margin:18px 0 16px;max-width:350px}
+    .brand p{color:#d6e8f7;line-height:1.7;font-size:14px;max-width:330px;margin:0}
+    .brand-foot{font-size:11px;color:#c2d9ec;position:relative;z-index:1}
+    .panel{padding:48px 52px;display:flex;flex-direction:column;justify-content:center}
+    .panel h2{font-size:27px;letter-spacing:-.7px;margin:0 0 8px;color:var(--navy)}
+    .sub{font-size:13px;color:var(--muted);margin:0 0 28px;line-height:1.6}
+    .tabs{display:flex;gap:7px;padding:5px;background:#f0f5fa;border-radius:12px;margin-bottom:25px}
+    .tabs button{flex:1;border:0;background:transparent;padding:11px 12px;border-radius:9px;font-weight:700;font-size:13px;color:#6a7c8e;cursor:pointer}
+    .tabs button.active{background:white;color:var(--blue);box-shadow:0 2px 8px rgba(20,57,92,.09)}
+    .field{margin-bottom:16px}
+    label{display:block;font-size:12px;font-weight:700;color:#314d69;margin-bottom:7px}
+    input{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;padding:0 13px;font:inherit;font-size:14px;color:var(--ink);outline:none;transition:.15s}
+    input:focus{border-color:#438cc4;box-shadow:0 0 0 3px rgba(67,140,196,.12)}
+    .primary{width:100%;height:48px;border:0;border-radius:10px;background:linear-gradient(100deg,#1769aa,#2385c1);color:white;font-size:14px;font-weight:750;letter-spacing:.2px;cursor:pointer;margin-top:5px;box-shadow:0 7px 16px rgba(23,105,170,.18)}
+    .primary:disabled{opacity:.65;cursor:wait}
+    .notice{display:none;border-radius:10px;padding:12px 14px;margin:0 0 18px;font-size:13px;line-height:1.5}
+    .notice.error{display:block;background:#fff1f0;color:#a12c27;border:1px solid #f3d0cc}
+    .notice.ok{display:block;background:#edf8f1;color:#21633c;border:1px solid #cfe9d8}
+    .hint{font-size:11px;color:#8493a1;line-height:1.6;margin-top:18px;text-align:center}
+    .hidden{display:none!important}
+    .session{border:1px solid var(--line);border-radius:15px;padding:20px;background:#fbfdff}
+    .session h3{margin:0 0 5px;color:var(--navy);font-size:18px}
+    .session p{margin:0 0 16px;color:var(--muted);font-size:13px}
+    .clinic{padding:12px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;font-size:13px}
+    .role{font-size:10px;font-weight:800;color:#1769aa;background:#e8f3fb;border-radius:20px;padding:5px 8px;white-space:nowrap}
+    .secondary{border:1px solid var(--line);background:white;color:var(--blue);border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;margin-top:18px}
+    @media(max-width:760px){body{padding:14px}.shell{grid-template-columns:1fr;min-height:0}.brand{padding:28px 28px 24px}.brand-copy{margin:35px 0 25px}.brand h1{font-size:29px}.brand-foot{display:none}.panel{padding:32px 26px 36px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <aside class="brand">
+      <div class="logo"><div class="mark">M</div><div><strong>MARKYS</strong><span>GESTÃO CLÍNICA</span></div></div>
+      <div class="brand-copy">
+        <div class="eyebrow">Plataforma de gestão</div>
+        <h1>Organização e cuidado em cada atendimento.</h1>
+        <p>Um ambiente integrado para clínicas, equipes e profissionais de saúde, com acesso individual e dados separados por clínica.</p>
+      </div>
+      <div class="brand-foot">Acesso seguro • Ambiente multi-clínica</div>
+    </aside>
+    <section class="panel">
+      <div id="authPanel">
+        <h2 id="heading">Bem-vindo de volta</h2>
+        <p class="sub" id="subheading">Entre com seu e-mail e senha para acessar o MARKYS.</p>
+        <div class="tabs" role="tablist" aria-label="Tipo de acesso">
+          <button id="loginTab" class="active" type="button" role="tab" aria-selected="true">Entrar</button>
+          <button id="setupTab" type="button" role="tab" aria-selected="false">Primeiro acesso</button>
+        </div>
+        <div id="notice" class="notice" role="status" aria-live="polite"></div>
+        <form id="loginForm">
+          <div class="field"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="username" maxlength="254" required></div>
+          <div class="field"><label for="loginPassword">Senha</label><input id="loginPassword" type="password" autocomplete="current-password" maxlength="200" required></div>
+          <button class="primary" type="submit">Acessar minha conta</button>
+        </form>
+        <form id="setupForm" class="hidden">
+          <div class="field"><label for="clinicName">Nome da clínica</label><input id="clinicName" maxlength="180" autocomplete="organization" required></div>
+          <div class="field"><label for="fullName">Nome do administrador</label><input id="fullName" maxlength="180" autocomplete="name" required></div>
+          <div class="field"><label for="setupEmail">E-mail</label><input id="setupEmail" type="email" maxlength="254" autocomplete="email" required></div>
+          <div class="field"><label for="setupPassword">Senha (mínimo 12 caracteres)</label><input id="setupPassword" type="password" minlength="12" maxlength="200" autocomplete="new-password" required></div>
+          <button class="primary" type="submit">Criar clínica e administrador</button>
+        </form>
+        <p class="hint">O primeiro cadastro só pode ser realizado uma vez, antes da criação de qualquer clínica ou usuário.</p>
+      </div>
+      <div id="sessionPanel" class="hidden">
+        <h2>Acesso confirmado</h2>
+        <p class="sub">Sua sessão está ativa no MARKYS.</p>
+        <div class="session">
+          <h3 id="sessionName"></h3>
+          <p id="sessionEmail"></p>
+          <strong style="font-size:12px;color:#38546e">Clínicas vinculadas</strong>
+          <div id="clinics"></div>
+        </div>
+        <p class="hint">Os módulos clínicos serão conectados gradualmente a esta autenticação durante a migração.</p>
+        <button id="logoutButton" class="secondary" type="button">Encerrar sessão</button>
+      </div>
+    </section>
+  </main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const notice = (message, type = "error") => {
+    $("notice").textContent = message;
+    $("notice").className = "notice " + type;
+  };
+  const clearNotice = () => {
+    $("notice").textContent = "";
+    $("notice").className = "notice";
+  };
+  const setMode = mode => {
+    const setup = mode === "setup";
+    $("loginForm").classList.toggle("hidden", setup);
+    $("setupForm").classList.toggle("hidden", !setup);
+    $("loginTab").classList.toggle("active", !setup);
+    $("setupTab").classList.toggle("active", setup);
+    $("loginTab").setAttribute("aria-selected", String(!setup));
+    $("setupTab").setAttribute("aria-selected", String(setup));
+    $("heading").textContent = setup ? "Configure sua clínica" : "Bem-vindo de volta";
+    $("subheading").textContent = setup ? "Crie a primeira clínica e a conta do administrador principal." : "Entre com seu e-mail e senha para acessar o MARKYS.";
+    clearNotice();
+  };
+  const csrf = async () => {
+    const response = await fetch("/api/v1/auth/csrf", { credentials: "same-origin" });
+    if (!response.ok) throw new Error("Não foi possível iniciar a proteção da sessão.");
+    const data = await response.json();
+    return data.token;
+  };
+  const post = async (path, body) => {
+    const token = await csrf();
+    const response = await fetch(path, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": token },
+      body: JSON.stringify(body)
+    });
+    const data = response.status === 204 ? null : await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Não foi possível concluir a operação.");
+    return data;
+  };
+  const showSession = data => {
+    $("authPanel").classList.add("hidden");
+    $("sessionPanel").classList.remove("hidden");
+    $("sessionName").textContent = data.fullName;
+    $("sessionEmail").textContent = data.email;
+    $("clinics").replaceChildren();
+    (data.memberships || []).forEach(item => {
+      const row = document.createElement("div");
+      row.className = "clinic";
+      const name = document.createElement("span");
+      name.textContent = item.clinic_name;
+      const role = document.createElement("span");
+      role.className = "role";
+      role.textContent = String(item.role).replaceAll("_", " ");
+      row.append(name, role);
+      $("clinics").append(row);
+    });
+  };
+  const submit = async (form, path, payload) => {
+    const button = form.querySelector("button[type=submit]");
+    button.disabled = true;
+    clearNotice();
+    try {
+      const data = await post(path, payload);
+      showSession(data);
+    } catch (error) {
+      notice(error.message || "Ocorreu um erro inesperado.");
+    } finally {
+      button.disabled = false;
+    }
+  };
+  $("loginTab").addEventListener("click", () => setMode("login"));
+  $("setupTab").addEventListener("click", () => setMode("setup"));
+  $("loginForm").addEventListener("submit", event => {
+    event.preventDefault();
+    submit(event.currentTarget, "/api/v1/auth/login", {
+      email: $("loginEmail").value,
+      password: $("loginPassword").value
+    });
+  });
+  $("setupForm").addEventListener("submit", event => {
+    event.preventDefault();
+    submit(event.currentTarget, "/api/v1/auth/setup", {
+      clinicName: $("clinicName").value,
+      fullName: $("fullName").value,
+      email: $("setupEmail").value,
+      password: $("setupPassword").value
+    });
+  });
+  $("logoutButton").addEventListener("click", async () => {
+    try {
+      await post("/api/v1/auth/logout", {});
+      $("sessionPanel").classList.add("hidden");
+      $("authPanel").classList.remove("hidden");
+      setMode("login");
+      notice("Sessão encerrada.", "ok");
+    } catch (error) {
+      notice(error.message);
+    }
+  });
+  fetch("/api/v1/auth/me", { credentials: "same-origin" })
+    .then(response => response.ok ? response.json() : null)
+    .then(data => { if (data) showSession(data); })
+    .catch(() => {});
+})();
+</script>
+</body>
+</html>
