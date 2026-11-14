@@ -1,7 +1,9 @@
 package br.com.markys.gestaoclinica.api;
 
 import java.time.LocalDate;
-import java.time.Period;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -14,6 +16,10 @@ import jakarta.validation.constraints.Size;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
@@ -21,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import br.com.markys.gestaoclinica.security.PatientDataProtection;
+import br.com.markys.gestaoclinica.security.PatientDocumentStorage;
 import br.com.markys.gestaoclinica.security.TenantContext;
 
 @RestController
@@ -29,10 +36,13 @@ public class PatientController {
     private static final Pattern CPF = Pattern.compile("\\d{11}");
     private final JdbcTemplate jdbc;
     private final PatientDataProtection protection;
+    private final PatientDocumentStorage documentStorage;
 
-    public PatientController(JdbcTemplate jdbc, PatientDataProtection protection) {
+    public PatientController(JdbcTemplate jdbc, PatientDataProtection protection,
+                             PatientDocumentStorage documentStorage) {
         this.jdbc = jdbc;
         this.protection = protection;
+        this.documentStorage = documentStorage;
     }
 
     @GetMapping
@@ -122,6 +132,81 @@ public class PatientController {
             "patientId", patientId, "queueEntryId", queueId,
             "message", "Paciente cadastrado e encaminhado para a fila."
         ));
+    }
+
+    @GetMapping("/{id}/documents")
+    public ResponseEntity<?> documents(Authentication auth, @PathVariable UUID id) {
+        if (!canAccess(auth)) return forbidden();
+        UUID clinic = TenantContext.requireClinicId();
+        if (jdbc.queryForObject("SELECT count(*) FROM patients WHERE clinic_id=? AND id=?", Integer.class, clinic, id) == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(jdbc.queryForList("""
+            SELECT id, original_file_name, file_size, created_at
+              FROM patient_documents WHERE clinic_id=? AND patient_id=?
+             ORDER BY created_at DESC
+            """, clinic, id));
+    }
+
+    @PostMapping(value = "/{id}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Transactional
+    public ResponseEntity<?> uploadDocument(Authentication auth, @PathVariable UUID id,
+                                             @RequestParam("file") MultipartFile file) {
+        if (!canAccess(auth)) return forbidden();
+        UUID clinic = TenantContext.requireClinicId();
+        if (jdbc.queryForObject("SELECT count(*) FROM patients WHERE clinic_id=? AND id=? AND status='ACTIVE'",
+                Integer.class, clinic, id) == 0) return ResponseEntity.notFound().build();
+        String key = null;
+        try {
+            key = documentStorage.store(file);
+            UUID membership = currentMembership(auth, clinic);
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(file.getBytes());
+            String originalName = file.getOriginalFilename() == null ? "documento.pdf"
+                : file.getOriginalFilename().replaceAll("[\\r\\n\\\"/]", "_");
+            if (originalName.length() > 180) originalName = originalName.substring(originalName.length() - 180);
+            UUID documentId = UUID.randomUUID();
+            jdbc.update("""
+                INSERT INTO patient_documents
+                    (id, clinic_id, patient_id, storage_key, original_file_name, content_type,
+                     file_size, sha256, uploaded_by_membership_id)
+                VALUES (?, ?, ?, ?, ?, 'application/pdf', ?, ?, ?)
+                """, documentId, clinic, id, key, originalName, file.getSize(), digest, membership);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "id", documentId, "fileName", originalName, "message", "PDF anexado com segurança."
+            ));
+        } catch (IllegalArgumentException ex) {
+            if (key != null) documentStorage.delete(key);
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        } catch (IOException | NoSuchAlgorithmException ex) {
+            if (key != null) documentStorage.delete(key);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Não foi possível armazenar o PDF."));
+        } catch (RuntimeException ex) {
+            if (key != null) documentStorage.delete(key);
+            throw ex;
+        }
+    }
+
+    @GetMapping("/{id}/documents/{documentId}")
+    public ResponseEntity<?> downloadDocument(Authentication auth, @PathVariable UUID id,
+                                               @PathVariable UUID documentId) {
+        if (!canAccess(auth)) return forbidden();
+        List<Map<String,Object>> rows = jdbc.queryForList("""
+            SELECT storage_key FROM patient_documents
+             WHERE clinic_id=? AND patient_id=? AND id=?
+            """, TenantContext.requireClinicId(), id, documentId);
+        if (rows.isEmpty()) return ResponseEntity.notFound().build();
+        try {
+            byte[] content = documentStorage.read((String) rows.getFirst().get("storage_key"));
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"documento.pdf\"")
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(content);
+        } catch (IOException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "O arquivo não está disponível no armazenamento privado."));
+        }
     }
 
     @PutMapping("/{id}")
