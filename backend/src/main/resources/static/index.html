@@ -46,7 +46,6 @@
     .clinic-action{border:1px solid var(--line);background:white;color:var(--blue);border-radius:7px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer}
     .clinic-action.active{background:#eaf7ef;border-color:#cde8d6;color:#267043;cursor:default}
     .secondary{border:1px solid var(--line);background:white;color:var(--blue);border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;margin-top:18px}
-    #setupTab{display:none}
     .master-tools{margin-top:20px;border-top:1px solid var(--line);padding-top:18px}
     .master-tools h3{font-size:16px;color:var(--navy);margin:0 0 12px}
     .master-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -77,7 +76,7 @@
         <p class="sub" id="subheading">Entre com seu e-mail e senha para acessar o MARKYS.</p>
         <div class="tabs" role="tablist" aria-label="Tipo de acesso">
           <button id="loginTab" class="active" type="button" role="tab" aria-selected="true">Entrar</button>
-          <button id="setupTab" type="button" role="tab" aria-selected="false">Criar MASTER</button>
+          <button id="setupTab" class="hidden" type="button" role="tab" aria-selected="false">Criar MASTER</button>
         </div>
         <div id="notice" class="notice" role="status" aria-live="polite"></div>
         <form id="loginForm">
