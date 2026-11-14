@@ -64,11 +64,29 @@ public class PatientController {
     @GetMapping("/{id}")
     public ResponseEntity<?> get(Authentication auth, @PathVariable UUID id) {
         if (!canAccess(auth)) return forbidden();
+        UUID clinic = TenantContext.requireClinicId();
         List<Map<String,Object>> rows = jdbc.queryForList("""
             SELECT id, full_name, birth_date, sex, insurance_name, job_title, status, created_at
               FROM patients WHERE clinic_id=? AND id=?
-            """, TenantContext.requireClinicId(), id);
-        return rows.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(rows.getFirst());
+            """, clinic, id);
+        if (rows.isEmpty()) return ResponseEntity.notFound().build();
+        Map<String,Object> result = new java.util.LinkedHashMap<>(rows.getFirst());
+        List<Map<String,Object>> queue = jdbc.queryForList("""
+            SELECT id, service_type_id FROM queue_entries
+             WHERE clinic_id=? AND patient_id=? AND status IN ('WAITING','CALLED')
+             ORDER BY arrived_at DESC LIMIT 1
+            """, clinic, id);
+        if (!queue.isEmpty()) {
+            result.put("serviceTypeId", queue.getFirst().get("service_type_id"));
+            result.put("examIds", jdbc.queryForList("""
+                SELECT exam_id FROM queue_entry_exams
+                 WHERE clinic_id=? AND queue_entry_id=? ORDER BY created_at
+                """, UUID.class, clinic, queue.getFirst().get("id")));
+        } else {
+            result.put("serviceTypeId", null);
+            result.put("examIds", List.of());
+        }
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping
@@ -215,13 +233,47 @@ public class PatientController {
                                     @Valid @RequestBody PatientUpdateRequest body) {
         if (!canAccess(auth)) return forbidden();
         UUID clinic = TenantContext.requireClinicId();
+        if (body.birthDate() != null && body.birthDate().isAfter(LocalDate.now())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "A data de nascimento não pode estar no futuro."));
+        }
         int changed = jdbc.update("""
             UPDATE patients SET full_name=?, birth_date=?, sex=?, insurance_name=?, job_title=?, updated_at=now()
              WHERE clinic_id=? AND id=? AND status='ACTIVE'
             """, body.fullName().trim(), body.birthDate(), clean(body.sex()), clean(body.insuranceName()),
             clean(body.jobTitle()), clinic, id);
-        return changed == 0 ? ResponseEntity.notFound().build()
-            : ResponseEntity.ok(Map.of("id", id, "message", "Cadastro atualizado."));
+        if (changed == 0) return ResponseEntity.notFound().build();
+
+        if (body.serviceTypeId() != null) {
+            List<Map<String,Object>> activeQueue = jdbc.queryForList("""
+                SELECT id FROM queue_entries WHERE clinic_id=? AND patient_id=?
+                  AND status IN ('WAITING','CALLED') ORDER BY arrived_at DESC LIMIT 1
+                """, clinic, id);
+            if (!activeQueue.isEmpty()) {
+                UUID queueId = (UUID) activeQueue.getFirst().get("id");
+                int updated = jdbc.update("""
+                    UPDATE queue_entries q SET service_type_id=st.id, service_label=st.name
+                      FROM service_types st
+                     WHERE q.clinic_id=? AND q.id=? AND st.clinic_id=q.clinic_id
+                       AND st.id=? AND st.active=true
+                    """, clinic, queueId, body.serviceTypeId());
+                if (updated != 1) throw new InvalidRequest("Selecione um tipo de atendimento ativo.");
+                jdbc.update("DELETE FROM queue_entry_exams WHERE clinic_id=? AND queue_entry_id=?", clinic, queueId);
+                if (body.examIds() != null) {
+                    for (UUID examId : body.examIds().stream().distinct().toList()) {
+                        int added = jdbc.update("""
+                            INSERT INTO queue_entry_exams
+                                (clinic_id, queue_entry_id, exam_id, exam_name_snapshot, room_id, room_name_snapshot)
+                            SELECT ?, ?, e.id, e.name, r.id, r.name
+                              FROM exam_catalog e
+                              JOIN clinic_rooms r ON r.clinic_id=e.clinic_id AND r.id=e.room_id
+                             WHERE e.clinic_id=? AND e.id=? AND e.active=true AND r.status='ACTIVE'
+                            """, clinic, queueId, clinic, examId);
+                        if (added != 1) throw new InvalidRequest("Um dos exames selecionados não está ativo ou não possui sala válida.");
+                    }
+                }
+            }
+        }
+        return ResponseEntity.ok(Map.of("id", id, "message", "Cadastro atualizado."));
     }
 
     private UUID currentMembership(Authentication auth, UUID clinic) {
@@ -281,7 +333,9 @@ public class PatientController {
         LocalDate birthDate,
         @Size(max=30) String sex,
         @Size(max=180) String insuranceName,
-        @Size(max=160) String jobTitle
+        @Size(max=160) String jobTitle,
+        UUID serviceTypeId,
+        List<UUID> examIds
     ) {}
     @ExceptionHandler(InvalidRequest.class)
     public ResponseEntity<Map<String,String>> invalidRequest(InvalidRequest ex) {
