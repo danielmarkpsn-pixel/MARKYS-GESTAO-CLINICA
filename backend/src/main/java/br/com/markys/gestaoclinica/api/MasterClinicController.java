@@ -72,6 +72,7 @@ public class MasterClinicController {
             INSERT INTO clinic_memberships (id, clinic_id, user_id, role, status)
             VALUES (?, ?, ?, 'CLINIC_ADMIN', 'ACTIVE')
             """, membershipId, clinicId, userId);
+        jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicId.toString());
         seedClinicCatalog(clinicId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
