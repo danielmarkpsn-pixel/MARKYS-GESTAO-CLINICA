@@ -10,7 +10,7 @@ Esta pasta contém o Worker de entrada e a configuração do Cloudflare Containe
 - Neon PostgreSQL: banco relacional externo. Use a connection string JDBC com SSL e, preferencialmente, o endpoint pooled do Neon.
 - Cloudflare R2: bucket privado para PDFs de pacientes, acessado pelo SDK S3 do Java.
 
-O container é configurado com instância `basic` (1 GiB) e janela de inatividade de dois minutos. O tamanho é intencional: o perfil `lite` tem apenas 256 MiB e não é adequado para iniciar uma aplicação Spring Boot. A instância pode ser encerrada após inatividade; a primeira requisição seguinte pode sofrer cold start.
+O container é configurado com instância `standard-1` e janela de inatividade de dois minutos. O perfil `lite` é o menor disponível e não foi escolhido para esta aplicação Spring Boot. O tamanho `standard-1` deve ser validado em teste e acompanhado no painel de custos antes de uso contínuo. A instância pode ser encerrada após inatividade; a primeira requisição seguinte pode sofrer cold start.
 
 ## Pré-requisitos
 
