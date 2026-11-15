@@ -7,7 +7,7 @@ Esta pasta contém o Worker de entrada e a configuração do Cloudflare Containe
 - Cloudflare Worker: recebe HTTPS e encaminha as requisições para o backend.
 - Cloudflare Container: executa o backend Spring Boot / Java 21 na porta 8080.
 - Durable Object: mantém o identificador singleton do backend e controla o ciclo de vida do container.
-- Neon PostgreSQL: banco relacional externo. Use a connection string JDBC com SSL e, preferencialmente, o endpoint pooled do Neon.
+- Neon PostgreSQL: banco relacional externo. Use a connection string JDBC com SSL e endpoint direto (Direct) durante a primeira implantação e execução do Flyway.
 - Cloudflare R2: bucket privado para PDFs de pacientes, acessado pelo SDK S3 do Java.
 
 O container é configurado com instância `standard-1` e janela de inatividade de dois minutos. O perfil `lite` é o menor disponível e não foi escolhido para esta aplicação Spring Boot. O tamanho `standard-1` deve ser validado em teste e acompanhado no painel de custos antes de uso contínuo. A instância pode ser encerrada após inatividade; a primeira requisição seguinte pode sofrer cold start.
@@ -22,11 +22,13 @@ O container é configurado com instância `standard-1` e janela de inatividade d
 
 ## Configurar o Neon
 
-No Neon, crie um banco/projeto exclusivo para MARKYS. Para a primeira implantação, prefira o endpoint direto do Neon e converta a connection string para JDBC. O backend executa Flyway na inicialização; só troque para o endpoint pooled depois de validar migrations, locks e conexões no ambiente real. Exemplo de formato JDBC:
+No Neon, crie um banco/projeto exclusivo para MARKYS. Na tela Connect do projeto, selecione a branch e o banco que você criou e escolha **Direct connection** (não Pooled) nesta primeira implantação. O backend executa Flyway na inicialização; o endpoint direto evita introduzir o pooler durante a criação/validação do esquema. Converta os dados para o formato JDBC abaixo, substituindo host e nome do banco pelos valores exibidos no Neon:
 
 ```
-jdbc:postgresql://HOST-POOLER.REGION.aws.neon.tech/markys?sslmode=require
+jdbc:postgresql://HOST.REGION.aws.neon.tech/NOME_DO_BANCO?sslmode=require
 ```
+
+Cadastre o host e o nome do banco na variável `DATABASE_URL`; usuário e senha ficam nas variáveis separadas `DATABASE_USERNAME` e `DATABASE_PASSWORD`. Não inclua `postgresql://` no lugar de `jdbc:postgresql://`.
 
 Use o usuário e senha fornecidos pelo Neon nos secrets separados abaixo. Não coloque credenciais em arquivos versionados. Antes de usar dados reais, confirme que as migrations executam e que o RLS está ativo em todas as tabelas clínicas.
 
