@@ -4,22 +4,27 @@
   "main": "./src/index.ts",
   "compatibility_date": "2026-11-14",
   "workers_dev": true,
-  "observability": { "enabled": true },
+  "observability": {
+    "enabled": true
+  },
   "containers": [
     {
       "class_name": "MarkysApiContainer",
       "scheduling_policy": "durable_object",
       "images": {
         "base": {
-          "dockerfile": "../../backend/Dockerfile",
-          "build_context": "../../backend"
+          "dockerfile": "../backend/Dockerfile",
+          "build_context": "../backend"
         }
       }
     }
   ],
   "durable_objects": {
     "bindings": [
-      { "name": "MARKYS_API", "class_name": "MarkysApiContainer" }
+      {
+        "name": "MARKYS_API",
+        "class_name": "MarkysApiContainer"
+      }
     ]
   },
   "exports": {
