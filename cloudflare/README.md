@@ -72,7 +72,7 @@ npm install
 npx wrangler deploy
 ```
 
-O Wrangler constrói a imagem usando `../../backend/Dockerfile` e o contexto `../../backend`. O Docker precisa estar disponível no ambiente que executa o deploy. Após o primeiro deploy, aguarde o provisionamento do Container.
+O Wrangler constrói a imagem usando `../backend/Dockerfile` e o contexto `../backend`. O Docker precisa estar disponível no ambiente que executa o deploy. Após o primeiro deploy, aguarde o provisionamento do Container.
 
 ## Verificação
 
