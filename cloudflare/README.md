@@ -22,7 +22,7 @@ O container é configurado com instância `basic` (1 GiB) e janela de inatividad
 
 ## Configurar o Neon
 
-No Neon, crie um banco/projeto exclusivo para MARKYS. Copie a connection string do endpoint pooled e converta para JDBC, por exemplo:
+No Neon, crie um banco/projeto exclusivo para MARKYS. Para a primeira implantação, prefira o endpoint direto do Neon e converta a connection string para JDBC. O backend executa Flyway na inicialização; só troque para o endpoint pooled depois de validar migrations, locks e conexões no ambiente real. Exemplo de formato JDBC:
 
 ```
 jdbc:postgresql://HOST-POOLER.REGION.aws.neon.tech/markys?sslmode=require
