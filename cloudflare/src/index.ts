@@ -50,6 +50,13 @@ export default {
 export class MarkysApiContainer extends DurableObject<Env> {
   private starting?: Promise<void>;
 
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    if (ctx.container?.running) {
+      void ctx.blockConcurrencyWhile(() => ctx.container!.setInactivityTimeout(IDLE_TIMEOUT_MS));
+    }
+  }
+
   async fetch(request: Request): Promise<Response> {
     this.starting ??= this.startAndWaitForPort().finally(() => {
       this.starting = undefined;
@@ -69,7 +76,7 @@ export class MarkysApiContainer extends DurableObject<Env> {
     if (!container.running) {
       container.start({
         image: container.images.base,
-        instance: "basic",
+        instance: "standard-1",
         enableInternet: true,
         env: {
           PORT: String(PORT),
