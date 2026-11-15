@@ -1,0 +1,41 @@
+name: MARKYS Cloudflare build
+
+on:
+  push:
+    branches:
+      - main
+      - deploy/cloudflare-containers
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Test and package Spring Boot
+        working-directory: backend
+        run: mvn -B verify
+
+  worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloudflare
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Worker dependencies
+        run: npm install --no-package-lock
+      - name: Generate Cloudflare types
+        run: npx wrangler types
+      - name: Type-check Worker
+        run: npx tsc --noEmit
