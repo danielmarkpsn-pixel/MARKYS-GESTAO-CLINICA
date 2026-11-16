@@ -73,28 +73,45 @@ export class MarkysApiContainer extends DurableObject<Env> {
 
   private async startAndWaitForPort(): Promise<void> {
     const container = this.ctx.container!;
+
     if (!container.running) {
-      container.start({
-        image: container.images.base,
-        instance: "standard-1",
-        enableInternet: true,
-        env: {
-          PORT: String(PORT),
-          DATABASE_URL: this.env.DATABASE_URL,
-          DATABASE_USERNAME: this.env.DATABASE_USERNAME,
-          DATABASE_PASSWORD: this.env.DATABASE_PASSWORD,
-          DB_POOL_SIZE: "3",
-          SESSION_COOKIE_SECURE: "true",
-          MARKYS_PII_ENCRYPTION_KEY: this.env.MARKYS_PII_ENCRYPTION_KEY,
-          MARKYS_PII_FINGERPRINT_KEY: this.env.MARKYS_PII_FINGERPRINT_KEY,
-          MARKYS_MASTER_BOOTSTRAP_TOKEN: this.env.MARKYS_MASTER_BOOTSTRAP_TOKEN ?? "",
-          MARKYS_STORAGE_PROVIDER: "r2",
-          R2_ENDPOINT: this.env.R2_ENDPOINT,
-          R2_BUCKET: this.env.R2_BUCKET,
-          R2_ACCESS_KEY_ID: this.env.R2_ACCESS_KEY_ID,
-          R2_SECRET_ACCESS_KEY: this.env.R2_SECRET_ACCESS_KEY,
-        },
-      });
+      try {
+        // Wait until Cloudflare has accepted and completed the start operation
+        // before configuring the timeout or requesting the container TCP port.
+        await container.start({
+          image: container.images.base,
+          instance: "standard-1",
+          enableInternet: true,
+          env: {
+            PORT: String(PORT),
+            DATABASE_URL: this.env.DATABASE_URL,
+            DATABASE_USERNAME: this.env.DATABASE_USERNAME,
+            DATABASE_PASSWORD: this.env.DATABASE_PASSWORD,
+            DB_POOL_SIZE: "3",
+            SESSION_COOKIE_SECURE: "true",
+            MARKYS_PII_ENCRYPTION_KEY: this.env.MARKYS_PII_ENCRYPTION_KEY,
+            MARKYS_PII_FINGERPRINT_KEY: this.env.MARKYS_PII_FINGERPRINT_KEY,
+            MARKYS_MASTER_BOOTSTRAP_TOKEN: this.env.MARKYS_MASTER_BOOTSTRAP_TOKEN ?? "",
+            MARKYS_STORAGE_PROVIDER: "r2",
+            R2_ENDPOINT: this.env.R2_ENDPOINT,
+            R2_BUCKET: this.env.R2_BUCKET,
+            R2_ACCESS_KEY_ID: this.env.R2_ACCESS_KEY_ID,
+            R2_SECRET_ACCESS_KEY: this.env.R2_SECRET_ACCESS_KEY,
+          },
+        });
+        console.info("MARKYS container start operation completed", {
+          instance: "standard-1",
+          port: PORT,
+        });
+      } catch (error) {
+        const detail = error instanceof Error
+          ? { message: error.message, stack: error.stack }
+          : { message: String(error) };
+        console.error("MARKYS container start failed", detail);
+        throw new Error(`MARKYS container failed to start: ${detail.message}`, {
+          cause: error,
+        });
+      }
     }
 
     await container.setInactivityTimeout(IDLE_TIMEOUT_MS);
@@ -119,7 +136,7 @@ export class MarkysApiContainer extends DurableObject<Env> {
           });
           return;
         }
-        lastError = undefined;
+        lastError = `Health endpoint returned HTTP ${response.status}`;
       } catch (error) {
         lastError = error instanceof Error ? error.message : String(error);
       }
@@ -133,9 +150,12 @@ export class MarkysApiContainer extends DurableObject<Env> {
       port: PORT,
       attempts: maxAttempts,
       timeoutMs: maxAttempts * retryDelayMs,
+      containerRunning: container.running,
       lastStatus,
       lastError,
     });
-    throw new Error("MARKYS Spring Boot container did not become ready on port 8080");
+    throw new Error("MARKYS Spring Boot container did not become ready on port 8080", {
+      cause: lastError ? new Error(lastError) : undefined,
+    });
   }
 }
