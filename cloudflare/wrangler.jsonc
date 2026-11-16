@@ -32,5 +32,19 @@
       "type": "durable-object",
       "storage": "sqlite"
     }
+  },
+  "keep_vars": true,
+  "secrets": {
+    "required": [
+      "DATABASE_URL",
+      "DATABASE_USERNAME",
+      "DATABASE_PASSWORD",
+      "MARKYS_PII_ENCRYPTION_KEY",
+      "MARKYS_PII_FINGERPRINT_KEY",
+      "R2_ENDPOINT",
+      "R2_BUCKET",
+      "R2_ACCESS_KEY_ID",
+      "R2_SECRET_ACCESS_KEY"
+    ]
   }
 }
