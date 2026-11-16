@@ -99,18 +99,43 @@ export class MarkysApiContainer extends DurableObject<Env> {
 
     await container.setInactivityTimeout(IDLE_TIMEOUT_MS);
     const port = container.getTcpPort(PORT);
-    for (let attempt = 0; attempt < 100; attempt++) {
+    const maxAttempts = 120;
+    const retryDelayMs = 1000;
+    let lastStatus: number | undefined;
+    let lastError: string | undefined;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const response = await port.fetch("http://container/api/v1/health", {
-          signal: AbortSignal.timeout(1000),
+          signal: AbortSignal.timeout(2000),
         });
+        lastStatus = response.status;
         await response.body?.cancel();
-        if (response.ok) return;
-      } catch {
-        // Spring Boot may still be starting; retry only the readiness probe.
+        if (response.ok) {
+          console.info("MARKYS Spring Boot container is ready", {
+            port: PORT,
+            attempt,
+            elapsedMs: attempt * retryDelayMs,
+          });
+          return;
+        }
+        lastError = undefined;
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : String(error);
       }
-      await scheduler.wait(200);
+
+      if (attempt < maxAttempts) {
+        await scheduler.wait(retryDelayMs);
+      }
     }
+
+    console.error("MARKYS Spring Boot container readiness check failed", {
+      port: PORT,
+      attempts: maxAttempts,
+      timeoutMs: maxAttempts * retryDelayMs,
+      lastStatus,
+      lastError,
+    });
     throw new Error("MARKYS Spring Boot container did not become ready on port 8080");
   }
 }
