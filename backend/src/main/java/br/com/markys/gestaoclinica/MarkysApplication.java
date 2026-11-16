@@ -26,35 +26,40 @@ public class MarkysApplication {
         }
     }
 
+    /*
+     * Emit the complete diagnostic as ONE physical log event. Cloudflare may
+     * split multi-line stderr output into separate records, which previously
+     * made the exception cause difficult to correlate with the start/end markers.
+     */
     private static void logStartupFailure(Throwable failure) {
-        System.err.println("========== MARKYS_STARTUP_FATAL ==========");
-        System.err.println("O Spring Boot falhou durante a inicialização. Detalhes (com dados sensíveis filtrados):");
-
+        StringBuilder diagnostic = new StringBuilder(4096);
+        diagnostic.append("MARKYS_STARTUP_FATAL ");
+        diagnostic.append("Spring Boot startup failed; sensitive values are filtered. ");
         Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
-        logThrowable(failure, "CAUSE", visited);
-
-        System.err.println("========== END_MARKYS_STARTUP_FATAL ==========");
+        appendThrowable(diagnostic, failure, "CAUSE", visited);
+        System.err.println(sanitize(diagnostic.toString()));
         System.err.flush();
     }
 
-    private static void logThrowable(Throwable error, String relation, Set<Throwable> visited) {
+    private static void appendThrowable(
+            StringBuilder diagnostic, Throwable error, String relation, Set<Throwable> visited) {
         if (error == null || !visited.add(error)) {
             return;
         }
 
+        diagnostic.append("\\n").append(relation).append(": ")
+                .append(error.getClass().getName());
         String message = error.getMessage();
-        System.err.println(relation + ": " + error.getClass().getName()
-                + (message == null || message.isBlank() ? "" : ": " + sanitize(message)));
-
+        if (message != null && !message.isBlank()) {
+            diagnostic.append(": ").append(message);
+        }
         for (StackTraceElement frame : error.getStackTrace()) {
-            System.err.println("\tat " + frame);
+            diagnostic.append("\\n    at ").append(frame);
         }
-
         for (Throwable suppressed : error.getSuppressed()) {
-            logThrowable(suppressed, "SUPPRESSED", visited);
+            appendThrowable(diagnostic, suppressed, "SUPPRESSED", visited);
         }
-
-        logThrowable(error.getCause(), "ROOT_CAUSE", visited);
+        appendThrowable(diagnostic, error.getCause(), "ROOT_CAUSE", visited);
     }
 
     private static String sanitize(String value) {
