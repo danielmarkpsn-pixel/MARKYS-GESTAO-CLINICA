@@ -101,3 +101,11 @@ A instância basic usa 1 GiB de memória. O plano Workers Paid tem uma franquia 
 - O bucket R2 permanece privado; os PDFs são servidos somente pelas rotas autenticadas do backend.
 - A camada Worker não substitui a autorização por clínica do Spring Security nem o RLS do PostgreSQL.
 - Valide backup e restauração do Neon e a política de retenção/backup dos objetos R2 antes de produção.
+
+## Arquivos incluídos na imagem do Container
+
+O Docker build context é exclusivamente `../backend`. Portanto, a imagem publicada contém o JAR Spring Boot e os recursos em `backend/src/main/resources`, incluindo a página de login em `static/index.html` e o ícone em `static/favicon.svg`. Os HTMLs e scripts que ficam na raiz do repositório (`index.html`, `atendimento.html`, `consultorio.html`, `preparo.html` e arquivos PowerShell/BAT) pertencem à distribuição local legada e não fazem parte do Container Cloudflare. Isso é intencional; não são dependências ausentes do backend.
+
+O endpoint de saúde usado pelo Worker é `GET /api/v1/health`. A requisição automática do navegador para `/favicon.ico` não deve ser usada como teste de saúde; o frontend agora referencia diretamente `/favicon.svg`.
+
+Na falha de inicialização, o backend registra a exceção Java em um único evento `MARKYS_STARTUP_FATAL`, com valores sensíveis filtrados, para facilitar a correlação nos logs do Container.
