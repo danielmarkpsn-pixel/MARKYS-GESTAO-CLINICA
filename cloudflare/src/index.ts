@@ -49,11 +49,21 @@ export default {
 
 export class MarkysApiContainer extends DurableObject<Env> {
   private starting?: Promise<void>;
+  private monitoring?: Promise<void>;
+  private lastContainerExit?: {
+    message: string;
+    exitCode?: number;
+    stack?: string;
+  };
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    if (ctx.container?.running) {
-      void ctx.blockConcurrencyWhile(() => ctx.container!.setInactivityTimeout(IDLE_TIMEOUT_MS));
+    const container = ctx.container;
+    if (container?.running) {
+      void ctx.blockConcurrencyWhile(async () => {
+        await container.setInactivityTimeout(IDLE_TIMEOUT_MS);
+        this.observeExit();
+      });
     }
   }
 
@@ -76,9 +86,9 @@ export class MarkysApiContainer extends DurableObject<Env> {
 
     if (!container.running) {
       try {
-        // Wait until Cloudflare has accepted and completed the start operation
-        // before configuring the timeout or requesting the container TCP port.
-        await container.start({
+        // start() submits the startup request; it does not wait for the
+        // container process or the Spring Boot HTTP server to become ready.
+        container.start({
           image: container.images.base,
           instance: "standard-1",
           enableInternet: true,
@@ -99,10 +109,11 @@ export class MarkysApiContainer extends DurableObject<Env> {
             R2_SECRET_ACCESS_KEY: this.env.R2_SECRET_ACCESS_KEY,
           },
         });
-        console.info("MARKYS container start operation completed", {
+        console.info("MARKYS container start requested", {
           instance: "standard-1",
           port: PORT,
         });
+        this.observeExit();
       } catch (error) {
         const detail = error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -141,9 +152,24 @@ export class MarkysApiContainer extends DurableObject<Env> {
         lastError = error instanceof Error ? error.message : String(error);
       }
 
+      // If the main process exits during startup, monitor() provides the
+      // actual exit code and runtime error instead of a misleading port error.
+      if (!container.running && this.monitoring) {
+        await Promise.race([this.monitoring, scheduler.wait(250)]);
+      }
+      if (!container.running && this.lastContainerExit) {
+        const exit = this.lastContainerExit;
+        lastError = `Container process exited: ${exit.message}${exit.exitCode === undefined ? "" : ` (exit code ${exit.exitCode})`}`;
+        break;
+      }
+
       if (attempt < maxAttempts) {
         await scheduler.wait(retryDelayMs);
       }
+    }
+
+    if (!container.running && this.monitoring) {
+      await Promise.race([this.monitoring, scheduler.wait(500)]);
     }
 
     console.error("MARKYS Spring Boot container readiness check failed", {
@@ -153,9 +179,49 @@ export class MarkysApiContainer extends DurableObject<Env> {
       containerRunning: container.running,
       lastStatus,
       lastError,
+      containerExit: this.lastContainerExit,
     });
     throw new Error("MARKYS Spring Boot container did not become ready on port 8080", {
       cause: lastError ? new Error(lastError) : undefined,
     });
+  }
+
+  private observeExit(): void {
+    if (this.monitoring) return;
+
+    const container = this.ctx.container;
+    if (!container) return;
+
+    let monitoring!: Promise<void>;
+    monitoring = container.monitor()
+      .then(() => {
+        this.lastContainerExit = {
+          message: "Container main process exited successfully (exit code 0)",
+          exitCode: 0,
+        };
+        console.warn("MARKYS container process exited", this.lastContainerExit);
+      })
+      .catch((error: unknown) => {
+        const detail = error instanceof Error
+          ? {
+              message: error.message,
+              exitCode: typeof (error as Error & { exitCode?: unknown }).exitCode === "number"
+                ? (error as Error & { exitCode: number }).exitCode
+                : undefined,
+              stack: error.stack,
+            }
+          : { message: String(error) };
+
+        this.lastContainerExit = detail;
+        console.error("MARKYS container process exited with error", detail);
+      })
+      .finally(() => {
+        if (this.monitoring === monitoring) {
+          this.monitoring = undefined;
+        }
+      });
+
+    this.monitoring = monitoring;
+    this.ctx.waitUntil(monitoring);
   }
 }
