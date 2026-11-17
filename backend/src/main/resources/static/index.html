@@ -209,20 +209,6 @@
     const data = await response.json();
     return data.token;
   };
-  const refreshSetupAvailability = async () => {
-    try {
-      const response = await fetch("/api/v1/auth/setup-status", {
-        credentials: "same-origin",
-        cache: "no-store"
-      });
-      if (!response.ok) throw new Error("Não foi possível verificar a configuração inicial.");
-      const data = await response.json();
-      $("setupTab").classList.toggle("hidden", !data.available);
-    } catch (error) {
-      $("setupTab").classList.add("hidden");
-      console.error("Falha ao verificar a disponibilidade do MASTER:", error);
-    }
-  };
   const post = async (path, body) => {
     const token = await csrf();
     const response = await fetch(path, {
@@ -619,6 +605,12 @@
       form.reset();
       setMode("login");
       notice("Conta MASTER criada. Entre com seu e-mail e senha.", "ok");
+      fetch("/api/v1/auth/setup-status", { credentials: "same-origin" })
+    .then(response => response.ok ? response.json() : null)
+    .then(data => {
+      if (data && data.available) $("setupTab").classList.remove("hidden");
+    })
+    .catch(() => $("setupTab").classList.add("hidden"));
     } catch (error) {
       notice(error.message);
     } finally {
@@ -637,7 +629,6 @@
     }
   });
   $("setupTab").classList.add("hidden");
-  refreshSetupAvailability();
   fetch("/api/v1/auth/me", { credentials: "same-origin" })
     .then(response => response.ok ? response.json() : null)
     .then(data => { if (data) showSession(data); })
