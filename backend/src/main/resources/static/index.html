@@ -327,6 +327,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="schedule-field"><label for="scheduleFrom">DE</label><input id="scheduleFrom" type="date"></div>
     <div class="schedule-field"><label for="scheduleTo">ATÉ</label><input id="scheduleTo" type="date"></div>
     <div class="schedule-field"><label for="scheduleProfessionalFilter">PROFISSIONAL</label><select id="scheduleProfessionalFilter"><option value="">Todos os profissionais</option></select></div>
+    <div class="schedule-field"><label for="scheduleSearchTerm">PACIENTE / FINALIDADE</label><input id="scheduleSearchTerm" type="search" maxlength="100" placeholder="Pesquisar na agenda"></div>
     <div class="schedule-field"><label for="scheduleStatusFilter">SITUAÇÃO</label><select id="scheduleStatusFilter"><option value="">Todas as situações</option><option value="SCHEDULED">Agendado</option><option value="CONFIRMED">Confirmado</option><option value="CHECKED_IN">Check-in</option><option value="COMPLETED">Concluído</option><option value="CANCELLED">Cancelado</option><option value="NO_SHOW">Não compareceu</option></select></div>
     <button id="scheduleSearch" class="schedule-btn primary" type="button">Consultar agenda</button>
     <button id="scheduleNew" class="schedule-btn primary" type="button">+ Novo agendamento</button>
@@ -1038,7 +1039,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       if(!scheduleState.resources)await loadScheduleResources();
       const {from,to}=scheduleRange();
       if(!from||!to||to<from)throw new Error("Informe um período válido.");
-      const params=new URLSearchParams({from,to,status:$("scheduleStatusFilter").value,search:""});
+      const params=new URLSearchParams({from,to,status:$("scheduleStatusFilter").value,search:$("scheduleSearchTerm").value.trim()});
       if($("scheduleProfessionalFilter").value)params.set("professionalId",$("scheduleProfessionalFilter").value);
       scheduleState.items=await scheduleRequest("/api/v1/clinic/schedule?"+params);
       renderSchedule();
@@ -1065,7 +1066,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       const actions=cell("");actions.className="schedule-actions";
       const add=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
       if(["SCHEDULED","CONFIRMED"].includes(item.status)&&["CLINIC_ADMIN","RECEPTION"].includes(scheduleState.role))add("Editar",()=>editSchedule(item));
-      const next={SCHEDULED:[["Confirmar","CONFIRMED"],["Check-in","CHECKED_IN"],["Cancelar","CANCELLED"]],CONFIRMED:[["Check-in","CHECKED_IN"],["Cancelar","CANCELLED"]],CHECKED_IN:[["Concluir","COMPLETED"],["Cancelar","CANCELLED"]]}[item.status]||[];
+      const next={SCHEDULED:[["Confirmar","CONFIRMED"],["Check-in","CHECKED_IN"],["Não compareceu","NO_SHOW"],["Cancelar","CANCELLED"]],CONFIRMED:[["Check-in","CHECKED_IN"],["Não compareceu","NO_SHOW"],["Cancelar","CANCELLED"]],CHECKED_IN:[["Concluir","COMPLETED"],["Cancelar","CANCELLED"]]}[item.status]||[];
       next.forEach(([label,state])=>{if(state==="CANCELLED"&&scheduleState.role==="PROFESSIONAL")return;if(state==="COMPLETED"&&scheduleState.role==="RECEPTION")return;add(label,()=>changeScheduleStatus(item,state));});
       tr.append(date,patient,professional,room,reason,status,actions);body.append(tr);
     });
@@ -1089,7 +1090,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   const changeScheduleStatus=async(item,status)=>{
     let cancellationReason="";
     if(status==="CANCELLED"){cancellationReason=prompt("Informe o motivo do cancelamento:")||"";if(!cancellationReason.trim())return;}
-    const labels={CONFIRMED:"confirmar",CHECKED_IN:"registrar o check-in",COMPLETED:"concluir",CANCELLED:"cancelar"};
+    const labels={CONFIRMED:"confirmar",CHECKED_IN:"registrar o check-in",COMPLETED:"concluir",CANCELLED:"cancelar",NO_SHOW:"marcar como não compareceu"};
     if(!confirm("Confirma "+labels[status]+" o agendamento de "+item.patient_name+"?"))return;
     try{await scheduleRequest("/api/v1/clinic/schedule/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status,cancellationReason})});scheduleMessage("Situação do agendamento atualizada.",false);await loadSchedule();}
     catch(error){scheduleMessage(error.message);}
@@ -1107,6 +1108,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   $("scheduleNew").addEventListener("click",()=>openScheduleForm());
   $("scheduleCancelForm").addEventListener("click",closeScheduleForm);
   $("scheduleSearch").addEventListener("click",loadSchedule);
+  $("scheduleSearchTerm").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadSchedule();}});
   $("scheduleStatusFilter").addEventListener("change",loadSchedule);
   $("scheduleProfessionalFilter").addEventListener("change",loadSchedule);
   $("scheduleRuleProfessional").addEventListener("change",loadScheduleRules);
