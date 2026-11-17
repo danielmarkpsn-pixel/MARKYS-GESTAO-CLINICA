@@ -115,7 +115,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .attendance-actions{display:flex;gap:4px;flex-wrap:wrap;min-width:130px}.attendance-actions button{border:1px solid #c8d7e5;background:#f5f9fd;color:#07549a;border-radius:3px;padding:5px 7px;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}.attendance-actions button:disabled{opacity:.55;cursor:wait}
     .attendance-message{font-size:11px;color:#a12c27;min-height:17px;margin:6px 0}
     @media(max-width:760px){.attendance-workspace{padding:9px}.attendance-search{max-width:none;flex-basis:100%}.attendance-toolbar select{flex:1}}
-  </style>
+/* Módulo 2 — Pacientes */.patient-workspace{padding:16px;background:#f3f5f8}.patient-heading,.patient-form-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.patient-heading h3{margin:0;color:#193e64;font-size:17px}.patient-heading .sub{margin:3px 0 0;font-size:11px}.patient-action{height:33px;padding:0 12px;border:1px solid #c6d3e0;border-radius:4px;background:#fff;color:#245779;font-size:11px;font-weight:750;cursor:pointer}.patient-action.primary-action{background:#0867b2;border-color:#0867b2;color:#fff}.patient-directory,.patient-form,.patient-detail{background:#fff;border:1px solid #dce3eb;border-radius:5px;padding:12px;margin-top:10px}.patient-filters{display:flex;gap:7px;flex-wrap:wrap}.patient-filters input,.patient-filters select{height:34px;border:1px solid #ccd6e1;border-radius:4px;padding:0 10px;font:12px system-ui}.patient-filters input{flex:1;min-width:210px}.patient-list-meta{display:flex;justify-content:space-between;margin:11px 0 7px;color:#748397;font-size:10px}.patient-table-wrap{overflow:auto}.patient-table{width:100%;min-width:780px;border-collapse:collapse;font-size:11px}.patient-table th{padding:9px;text-align:left;background:#f1f5f9;color:#63768a;font-size:10px;border-bottom:1px solid #dce4ec}.patient-table td{padding:9px;border-bottom:1px solid #edf0f4;color:#40566d}.patient-name{font-weight:800;color:#1c3d5d;text-transform:uppercase}.patient-state{padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:10px;font-weight:800}.patient-state.inactive{background:#f0f1f3;color:#718093}.patient-row-actions{display:flex;gap:4px;flex-wrap:wrap}.patient-row-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:10px;cursor:pointer}.patient-empty{text-align:center;padding:25px!important;color:#8492a1!important}.patient-form .catalog-card{padding:11px}.patient-form .field{margin-bottom:9px}.patient-form label{font-size:10px;margin-bottom:4px}.patient-form input,.patient-form select{height:34px;font-size:12px;border-radius:4px}.patient-form-heading{grid-column:1/-1}.patient-form-heading h4{margin:0;color:#21486b}.patient-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}.patient-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.patient-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.patient-detail-cell small{display:block;color:#7b8998;font-size:9px}.patient-detail-cell strong{font-size:11px;color:#244766}.patient-history-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.patient-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px}.patient-history-item strong{display:block;color:#244766}@media(max-width:760px){.patient-detail-grid,.patient-history-columns{grid-template-columns:1fr}}  </style>
 </head>
 <body>
   <main class="shell">
@@ -222,37 +222,15 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
           </div>
         </section>
         
-        <section id="patientWorkspace" class="workspace hidden">
-          <h3>Cadastro de pacientes</h3>
-          <p class="sub">Cadastre o paciente e encaminhe-o para a fila com o tipo de atendimento e os exames selecionados.</p>
-          <div id="patientMessage" class="catalog-message" role="status" aria-live="polite"></div>
-          <form id="patientForm" class="catalog-grid">
-            <div class="catalog-card">
-              <div class="field"><label for="patientName">Nome completo</label><input id="patientName" maxlength="180" required></div>
-              <div class="field"><label for="patientCpf">CPF</label><input id="patientCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required></div>
-              <div class="field"><label for="patientBirth">Data de nascimento</label><input id="patientBirth" type="date"></div>
-              <div class="field"><label for="patientAge">Idade</label><input id="patientAge" readonly placeholder="Calculada automaticamente"></div>
-              <div class="field"><label for="patientSex">Sexo</label><select id="patientSex"><option value="">Não informado</option><option value="FEMININO">Feminino</option><option value="MASCULINO">Masculino</option><option value="OUTRO">Outro</option></select></div>
-            </div>
-            <div class="catalog-card">
-              <div class="field"><label for="patientInsurance">Convênio</label><input id="patientInsurance" maxlength="180"></div>
-              <div class="field"><label for="patientJob">Cargo / função</label><input id="patientJob" maxlength="160"></div>
-              <div class="field"><label for="patientServiceType">Tipo de atendimento</label><select id="patientServiceType" required><option value="">Selecione</option></select></div>
-              <div class="field"><label for="patientPdf">Documento PDF (até 10 MB)</label><input id="patientPdf" type="file" accept="application/pdf,.pdf"></div>
-              <p class="hint" style="text-align:left;margin:4px 0">O documento será anexado após a configuração do armazenamento privado da clínica.</p>
-            </div>
-            <div class="catalog-card" style="grid-column:1/-1">
-              <h4>Exames solicitados</h4>
-              <div id="patientExamChoices" class="catalog-list"></div>
-            </div>
-            <button id="patientSubmit" class="primary" type="submit" style="grid-column:1/-1">Cadastrar paciente e enviar para a fila</button>
-            <button id="cancelPatientEdit" class="secondary hidden" type="button" style="grid-column:1/-1;margin-top:0">Cancelar edição</button>
-          </form>
-          <div class="catalog-card" style="margin-top:12px">
-            <h4>Pacientes cadastrados</h4>
-            <div id="patientList" class="catalog-list"></div>
-          </div>
-        </section>
+<section id="patientWorkspace" class="workspace hidden patient-workspace">
+<div class="patient-heading"><div><h3>Pacientes</h3><p class="sub">Cadastro, consulta e histórico dos pacientes da clínica.</p></div><button id="newPatientButton" class="patient-action primary-action" type="button">+ Novo paciente</button></div>
+<div id="patientMessage" class="catalog-message" role="status" aria-live="polite"></div>
+<div id="patient-directory" class="patient-directory"><div class="patient-filters"><input id="patientSearch" type="search" maxlength="120" placeholder="Buscar por nome, convênio ou cargo"><select id="patientStatusFilter"><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option><option value="ALL">Todos</option></select><button id="patientSearchButton" class="patient-action" type="button">Pesquisar</button><button id="patientRefreshButton" class="patient-action" type="button">Atualizar</button></div><div class="patient-list-meta"><span id="patientCount">0 pacientes</span><span>Clínica ativa</span></div><div class="patient-table-wrap"><table class="patient-table"><thead><tr><th>PACIENTE</th><th>NASCIMENTO / IDADE</th><th>CONVÊNIO</th><th>ÚLTIMO ATENDIMENTO</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="patientList"><tr><td colspan="6" class="patient-empty">Carregando...</td></tr></tbody></table></div></div>
+<form id="patientForm" class="catalog-grid patient-form hidden"><div class="patient-form-heading"><h4 id="patientFormTitle">Novo paciente</h4><button id="cancelPatientEdit" class="patient-action" type="button">Fechar</button></div>
+<div class="catalog-card"><div class="field"><label for="patientName">Nome completo *</label><input id="patientName" maxlength="180" required></div><div class="field"><label for="patientCpf">CPF *</label><input id="patientCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required></div><div class="field"><label for="patientBirth">Data de nascimento</label><input id="patientBirth" type="date"></div><div class="field"><label for="patientAge">Idade</label><input id="patientAge" readonly></div><div class="field"><label for="patientSex">Sexo</label><select id="patientSex"><option value="">Não informado</option><option value="FEMININO">Feminino</option><option value="MASCULINO">Masculino</option><option value="OUTRO">Outro</option></select></div></div>
+<div class="catalog-card"><div class="field"><label for="patientInsurance">Convênio</label><input id="patientInsurance" maxlength="180"></div><div class="field"><label for="patientJob">Cargo / função</label><input id="patientJob" maxlength="160"></div><div class="field"><label for="patientServiceType">Tipo de atendimento</label><select id="patientServiceType" required><option value="">Selecione</option></select></div><div class="field"><label for="patientPdf">Documento PDF (até 10 MB)</label><input id="patientPdf" type="file" accept="application/pdf,.pdf"></div></div>
+<div class="catalog-card" style="grid-column:1/-1"><h4>Exames solicitados</h4><div id="patientExamChoices" class="catalog-list"></div></div><div class="patient-form-actions"><button id="patientSubmit" class="patient-action primary-action" type="submit">Cadastrar paciente e enviar para a fila</button><button id="cancelPatientForm" class="patient-action" type="button">Cancelar</button></div></form>
+<section id="patientDetail" class="patient-detail hidden"><div class="patient-form-heading"><h4 id="patientDetailName">Ficha do paciente</h4><button id="closePatientDetail" class="patient-action" type="button">Voltar à lista</button></div><div id="patientDetailData" class="patient-detail-grid"></div><div class="patient-history-columns"><div><h5>Histórico de atendimentos</h5><div id="patientAttendanceHistory"></div></div><div><h5>Consultas / prontuários</h5><div id="patientEncounterHistory"></div></div></div></section></section>
         <p class="hint" id="sessionHint">Os módulos clínicos serão conectados gradualmente a esta autenticação durante a migração.</p>
         <button id="logoutButton" class="secondary" type="button">Encerrar sessão</button>
       </div>
