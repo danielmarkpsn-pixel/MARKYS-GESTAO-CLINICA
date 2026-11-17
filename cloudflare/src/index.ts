@@ -8,26 +8,24 @@ interface Env {
   MARKYS_PII_ENCRYPTION_KEY: string;
   MARKYS_PII_FINGERPRINT_KEY: string;
   MARKYS_MASTER_BOOTSTRAP_TOKEN?: string;
-  R2_ENDPOINT: string;
-  R2_BUCKET: string;
-  R2_ACCESS_KEY_ID: string;
-  R2_SECRET_ACCESS_KEY: string;
+  R2_ENDPOINT?: string;
+  R2_BUCKET?: string;
+  R2_ACCESS_KEY_ID?: string;
+  R2_SECRET_ACCESS_KEY?: string;
 }
 
 const PORT = 8080;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
 
 function missingConfiguration(env: Env): string[] {
+  // Database and PII protection are required to serve the application.
+  // R2 is intentionally optional at startup: document operations initialize it lazily.
   const required: Array<keyof Env> = [
     "DATABASE_URL",
     "DATABASE_USERNAME",
     "DATABASE_PASSWORD",
     "MARKYS_PII_ENCRYPTION_KEY",
     "MARKYS_PII_FINGERPRINT_KEY",
-    "R2_ENDPOINT",
-    "R2_BUCKET",
-    "R2_ACCESS_KEY_ID",
-    "R2_SECRET_ACCESS_KEY",
   ];
   return required.filter((key) => !env[key] || String(env[key]).trim() === "");
 }
@@ -103,10 +101,10 @@ export class MarkysApiContainer extends DurableObject<Env> {
             MARKYS_PII_FINGERPRINT_KEY: this.env.MARKYS_PII_FINGERPRINT_KEY,
             MARKYS_MASTER_BOOTSTRAP_TOKEN: this.env.MARKYS_MASTER_BOOTSTRAP_TOKEN ?? "",
             MARKYS_STORAGE_PROVIDER: "r2",
-            R2_ENDPOINT: this.env.R2_ENDPOINT,
-            R2_BUCKET: this.env.R2_BUCKET,
-            R2_ACCESS_KEY_ID: this.env.R2_ACCESS_KEY_ID,
-            R2_SECRET_ACCESS_KEY: this.env.R2_SECRET_ACCESS_KEY,
+            R2_ENDPOINT: this.env.R2_ENDPOINT ?? "",
+            R2_BUCKET: this.env.R2_BUCKET ?? "",
+            R2_ACCESS_KEY_ID: this.env.R2_ACCESS_KEY_ID ?? "",
+            R2_SECRET_ACCESS_KEY: this.env.R2_SECRET_ACCESS_KEY ?? "",
           },
         });
         console.info("MARKYS container start requested", {

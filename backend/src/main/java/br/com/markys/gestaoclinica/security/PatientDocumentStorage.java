@@ -28,8 +28,12 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @Component
 public class PatientDocumentStorage {
     private final Path root;
+    private final String provider;
+    private final String endpoint;
     private final String bucket;
-    private final S3Client s3;
+    private final String accessKey;
+    private final String secretKey;
+    private volatile S3Client s3;
 
     public PatientDocumentStorage(
         @Value("${MARKYS_PRIVATE_STORAGE_PATH:/var/lib/markys/private}") String directory,
@@ -40,27 +44,54 @@ public class PatientDocumentStorage {
         @Value("${R2_SECRET_ACCESS_KEY:}") String secretKey
     ) {
         this.root = Path.of(directory).toAbsolutePath().normalize();
-        this.bucket = bucket;
-        String selectedProvider = provider.trim().toLowerCase();
-        if ("r2".equals(selectedProvider)) {
-            if (endpoint.isBlank() || bucket.isBlank() || accessKey.isBlank() || secretKey.isBlank()) {
-                throw new IllegalStateException("O armazenamento R2 foi selecionado, mas suas configurações estão incompletas.");
-            }
-            var credentials = AwsBasicCredentials.create(accessKey, secretKey);
-            var serviceConfiguration = S3Configuration.builder()
-                .pathStyleAccessEnabled(true)
-                .chunkedEncodingEnabled(false)
-                .build();
-            this.s3 = S3Client.builder()
-                .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .region(Region.of("auto"))
-                .serviceConfiguration(serviceConfiguration)
-                .build();
-        } else if ("local".equals(selectedProvider)) {
-            this.s3 = null;
-        } else {
+        this.provider = provider == null ? "local" : provider.trim().toLowerCase();
+        this.endpoint = endpoint == null ? "" : endpoint.trim();
+        this.bucket = bucket == null ? "" : bucket.trim();
+        this.accessKey = accessKey == null ? "" : accessKey.trim();
+        this.secretKey = secretKey == null ? "" : secretKey.trim();
+        // Do not initialize or validate remote storage while Spring is starting.
+        // A temporary R2 configuration problem must not prevent login and clinical screens.
+    }
+
+    private S3Client s3Client() {
+        if ("local".equals(provider)) return null;
+        if (!"r2".equals(provider)) {
             throw new IllegalStateException("MARKYS_STORAGE_PROVIDER deve ser 'local' ou 'r2'.");
+        }
+
+        S3Client current = s3;
+        if (current != null) return current;
+
+        synchronized (this) {
+            current = s3;
+            if (current != null) return current;
+
+            if (endpoint.isBlank() || bucket.isBlank() || accessKey.isBlank() || secretKey.isBlank()) {
+                throw new IllegalStateException(
+                    "Armazenamento de documentos indisponível: configure endpoint, bucket e credenciais do R2."
+                );
+            }
+
+            try {
+                var credentials = AwsBasicCredentials.create(accessKey, secretKey);
+                var serviceConfiguration = S3Configuration.builder()
+                    .pathStyleAccessEnabled(true)
+                    .chunkedEncodingEnabled(false)
+                    .build();
+                current = S3Client.builder()
+                    .endpointOverride(URI.create(endpoint))
+                    .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                    .region(Region.of("auto"))
+                    .serviceConfiguration(serviceConfiguration)
+                    .build();
+                s3 = current;
+                return current;
+            } catch (RuntimeException ex) {
+                throw new IllegalStateException(
+                    "Não foi possível preparar a conexão com o armazenamento R2. Verifique o endpoint e as credenciais.",
+                    ex
+                );
+            }
         }
     }
 
@@ -68,8 +99,9 @@ public class PatientDocumentStorage {
         validate(file);
         byte[] bytes = file.getBytes();
         String key = UUID.randomUUID() + ".pdf";
-        if (s3 != null) {
-            s3.putObject(PutObjectRequest.builder()
+        S3Client client = s3Client();
+        if (client != null) {
+            client.putObject(PutObjectRequest.builder()
                 .bucket(bucket).key(key).contentType("application/pdf")
                 .contentLength((long) bytes.length).build(), RequestBody.fromBytes(bytes));
         } else {
@@ -81,8 +113,9 @@ public class PatientDocumentStorage {
 
     public byte[] read(String key) throws IOException {
         validateKey(key);
-        if (s3 != null) {
-            ResponseBytes<GetObjectResponse> object = s3.getObjectAsBytes(
+        S3Client client = s3Client();
+        if (client != null) {
+            ResponseBytes<GetObjectResponse> object = client.getObjectAsBytes(
                 GetObjectRequest.builder().bucket(bucket).key(key).build());
             return object.asByteArray();
         }
@@ -92,8 +125,9 @@ public class PatientDocumentStorage {
     public void delete(String key) {
         try {
             if (key == null || !key.matches("[0-9a-fA-F-]{36}\\.pdf")) return;
-            if (s3 != null) {
-                s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+            S3Client client = s3Client();
+            if (client != null) {
+                client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
             } else {
                 Files.deleteIfExists(resolveLocal(key));
             }
@@ -130,6 +164,7 @@ public class PatientDocumentStorage {
 
     @PreDestroy
     public void close() {
-        if (s3 != null) s3.close();
+        S3Client client = s3;
+        if (client != null) client.close();
     }
 }
