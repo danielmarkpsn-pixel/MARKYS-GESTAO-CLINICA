@@ -1,4 +1,4 @@
-name: MARKYS Cloudflare build
+name: MARKYS Cloudflare build and deploy
 
 on:
   push:
@@ -8,6 +8,10 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   backend:
@@ -39,3 +43,35 @@ jobs:
         run: npx wrangler types
       - name: Type-check Worker
         run: npx tsc --noEmit
+
+  deploy:
+    name: Build image and deploy to Cloudflare
+    runs-on: ubuntu-latest
+    needs:
+      - backend
+      - worker
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/deploy/cloudflare-containers')
+    defaults:
+      run:
+        working-directory: cloudflare
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: deploy/cloudflare-containers
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Wrangler
+        run: npm install --no-package-lock
+      - name: Verify Cloudflare credentials are configured
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Configure CLOUDFLARE_API_TOKEN in GitHub Actions secrets."; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Configure CLOUDFLARE_ACCOUNT_ID in GitHub Actions secrets."; exit 1; }
+      - name: Build Container image and deploy Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
