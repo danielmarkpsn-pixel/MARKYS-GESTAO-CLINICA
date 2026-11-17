@@ -346,7 +346,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       <div><label for="schedulePatient">PACIENTE *</label><select id="schedulePatient" required></select></div>
       <div><label for="scheduleProfessional">PROFISSIONAL *</label><select id="scheduleProfessional" required></select></div>
       <div><label for="scheduleRoom">CONSULTÓRIO</label><select id="scheduleRoom"><option value="">Sem consultório definido</option></select></div>
-      <div><label for="scheduleDate">DATA *</label><input id="scheduleDate" type="date" required></div>
+      <div><label for="scheduleDate">DATA (HORÁRIO LOCAL DA CLÍNICA) *</label><input id="scheduleDate" type="date" required></div>
       <div><label for="scheduleStart">INÍCIO *</label><input id="scheduleStart" type="time" required></div>
       <div><label for="scheduleEnd">TÉRMINO *</label><input id="scheduleEnd" type="time" required></div>
       <div class="wide"><label for="scheduleReason">TIPO / FINALIDADE DO AGENDAMENTO</label><input id="scheduleReason" maxlength="180" placeholder="Ex.: Consulta clínica, retorno, avaliação ocupacional"></div>
@@ -1078,8 +1078,9 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("schedulePatient").value=item?.patient_id||"";
     $("scheduleProfessional").value=item?.professional_id||"";
     $("scheduleRoom").value=item?.room_id||"";
-    const start=item?clinicDateParts(item.starts_at):{date:localDateString(),time:"09:00"};
-    const end=item?clinicDateParts(item.ends_at):{date:start.date,time:"09:30"};
+    const base=new Date(Date.now()+30*60*1000);base.setMinutes(Math.ceil(base.getMinutes()/30)*30,0,0);
+    const start=item?clinicDateParts(item.starts_at):clinicDateParts(base.toISOString());
+    const end=item?clinicDateParts(item.ends_at):clinicDateParts(new Date(base.getTime()+30*60*1000).toISOString());
     $("scheduleDate").value=start.date;$("scheduleStart").value=start.time;$("scheduleEnd").value=end.time;
     $("scheduleReason").value=item?.reason||"";
     $("scheduleSave").textContent=item?"Salvar remarcação":"Criar agendamento";
