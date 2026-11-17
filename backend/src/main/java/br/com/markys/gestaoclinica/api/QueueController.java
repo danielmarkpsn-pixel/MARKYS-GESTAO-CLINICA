@@ -65,10 +65,10 @@ public class QueueController {
                 ON pr.clinic_id=q.clinic_id AND pr.id=q.assigned_professional_id
              WHERE q.clinic_id=?
                AND (? = '' OR q.status=?)
-               AND (? = '' OR p.full_name ILIKE ? ESCAPE '\\'
-                    OR COALESCE(q.service_label,'') ILIKE ? ESCAPE '\\'
-                    OR COALESCE(pr.display_name,'') ILIKE ? ESCAPE '\\'
-                    OR COALESCE(r.name,'') ILIKE ? ESCAPE '\\')
+               AND (? = '' OR p.full_name ILIKE ?
+                    OR COALESCE(q.service_label,'') ILIKE ?
+                    OR COALESCE(pr.display_name,'') ILIKE ?
+                    OR COALESCE(r.name,'') ILIKE ?)
                AND ((? = TRUE AND q.arrived_at >= CURRENT_DATE
                                       AND q.arrived_at < CURRENT_DATE + INTERVAL '1 day')
                     OR (? = FALSE AND q.arrived_at >= CURRENT_DATE - INTERVAL '30 days'))
