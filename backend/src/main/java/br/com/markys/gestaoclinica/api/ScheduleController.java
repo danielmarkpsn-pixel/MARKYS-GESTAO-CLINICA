@@ -373,7 +373,13 @@ public class ScheduleController {
         try{return ZoneId.of(timezone);}catch(RuntimeException ex){return ZoneId.of("America/Manaus");}
     }
     private boolean professionalActive(UUID clinic,UUID id) {
-        return jdbc.queryForObject("SELECT count(*) FROM professionals WHERE clinic_id=? AND id=? AND status='ACTIVE'",Integer.class,clinic,id)>0;
+        return jdbc.queryForObject("""
+            SELECT count(*) FROM professionals p
+              JOIN clinic_memberships m ON m.clinic_id=p.clinic_id AND m.id=p.membership_id
+              JOIN app_users u ON u.id=m.user_id
+             WHERE p.clinic_id=? AND p.id=? AND p.status='ACTIVE'
+               AND m.status='ACTIVE' AND u.status='ACTIVE'
+            """,Integer.class,clinic,id)>0;
     }
     private Access access(Authentication auth) {
         if(auth==null || !auth.isAuthenticated())return null;
