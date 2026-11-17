@@ -6,7 +6,11 @@ import java.security.NoSuchAlgorithmException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.UUID;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.regex.Pattern;
 
 import jakarta.validation.Valid;
@@ -37,12 +41,14 @@ public class PatientController {
     private final JdbcTemplate jdbc;
     private final PatientDataProtection protection;
     private final PatientDocumentStorage documentStorage;
+    private final ObjectMapper objectMapper;
 
     public PatientController(JdbcTemplate jdbc, PatientDataProtection protection,
-                             PatientDocumentStorage documentStorage) {
+                             PatientDocumentStorage documentStorage, ObjectMapper objectMapper) {
         this.jdbc = jdbc;
         this.protection = protection;
         this.documentStorage = documentStorage;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping
@@ -82,11 +88,16 @@ public class PatientController {
         if (!canAccess(auth)) return forbidden();
         UUID clinic = TenantContext.requireClinicId();
         List<Map<String,Object>> rows = jdbc.queryForList("""
-            SELECT id, full_name, birth_date, sex, insurance_name, job_title, status, created_at
+            SELECT id, full_name, birth_date, sex, insurance_name, job_title, status, created_at,
+                   document_ciphertext, contact_ciphertext
               FROM patients WHERE clinic_id=? AND id=?
             """, clinic, id);
         if (rows.isEmpty()) return ResponseEntity.notFound().build();
-        Map<String,Object> result = new java.util.LinkedHashMap<>(rows.getFirst());
+        Map<String,Object> result = new LinkedHashMap<>(rows.getFirst());
+        byte[] encryptedCpf = (byte[]) result.remove("document_ciphertext");
+        byte[] encryptedContact = (byte[]) result.remove("contact_ciphertext");
+        result.put("cpf", encryptedCpf == null ? "" : protection.decrypt(encryptedCpf));
+        result.putAll(readContact(encryptedContact));
         List<Map<String,Object>> queue = jdbc.queryForList("""
             SELECT id, service_type_id FROM queue_entries
              WHERE clinic_id=? AND patient_id=? AND status IN ('WAITING','CALLED')
@@ -127,11 +138,12 @@ public class PatientController {
             jdbc.update("""
                 INSERT INTO patients (id, clinic_id, full_name, birth_date, sex, insurance_name,
                     job_title, document_type, document_fingerprint, document_ciphertext,
-                    created_by_membership_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'CPF', ?, ?, ?)
+                    contact_ciphertext, created_by_membership_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'CPF', ?, ?, ?, ?)
                 """, patientId, clinic, body.fullName().trim(), body.birthDate(), clean(body.sex()),
                 clean(body.insuranceName()), clean(body.jobTitle()), protection.fingerprint(cpf),
-                protection.encrypt(cpf), membership);
+                protection.encrypt(cpf), encryptContact(body.phone(), body.email(), body.address(),
+                    body.emergencyContact(), body.emergencyPhone(), body.administrativeNotes()), membership);
 
             if (queueId != null) {
                 int serviceTypeCount = jdbc.update("""
