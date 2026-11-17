@@ -288,6 +288,9 @@ class DatabaseMigrationIntegrationTest {
                     {"professionalId":"%s","weekday":%d,"startsLocal":"08:00:00","endsLocal":"18:00:00","slotMinutes":30}
                     """.formatted(professionalId, appointmentDay.getDayOfWeek().getValue())))
             .andExpect(status().isCreated());
+        UUID secondPatientId = UUID.randomUUID();
+        jdbc.update("INSERT INTO patients (id, clinic_id, full_name) VALUES (?, ?, ?)",
+            secondPatientId, clinicId, "Segundo Paciente Agenda");
         String appointmentPayload = """
             {"patientId":"%s","professionalId":"%s","roomId":"%s",
              "startsAt":"%sT09:00:00","endsAt":"%sT09:30:00","reason":"Consulta de integração"}
@@ -300,8 +303,34 @@ class DatabaseMigrationIntegrationTest {
             appointmentResult.getResponse().getContentAsString(), "$.id"));
         mockMvc.perform(post("/api/v1/clinic/schedule")
                 .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
-                .contentType(MediaType.APPLICATION_JSON).content(appointmentPayload))
+                .contentType(MediaType.APPLICATION_JSON).content(appointmentPayload.replace(patientId.toString(),secondPatientId.toString())))
             .andExpect(status().isConflict());
+
+        UUID secondProfessionalUser = UUID.randomUUID();
+        UUID secondProfessionalMembership = UUID.randomUUID();
+        UUID secondProfessionalId = UUID.randomUUID();
+        jdbc.update("INSERT INTO app_users (id, full_name, email, password_hash, status) VALUES (?, ?, ?, ?, 'ACTIVE')",
+            secondProfessionalUser, "Segundo Profissional Agenda", "profissional.agenda2@clinica.test", "$2a$10$abcdefghijklmnopqrstuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+        jdbc.update("INSERT INTO clinic_memberships (id, clinic_id, user_id, role, status) VALUES (?, ?, ?, 'PROFESSIONAL', 'ACTIVE')",
+            secondProfessionalMembership, clinicId, secondProfessionalUser);
+        jdbc.update("INSERT INTO professionals (id, clinic_id, membership_id, display_name, specialty, status) VALUES (?, ?, ?, ?, ?, 'ACTIVE')",
+            secondProfessionalId, clinicId, secondProfessionalMembership, "Segundo Profissional", "Clínica Geral");
+        mockMvc.perform(post("/api/v1/clinic/schedule/rules")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"professionalId":"%s","weekday":%d,"startsLocal":"08:00:00","endsLocal":"18:00:00","slotMinutes":30}
+                    """.formatted(secondProfessionalId, appointmentDay.getDayOfWeek().getValue())))
+            .andExpect(status().isCreated());
+        String patientConflictPayload = """
+            {"patientId":"%s","professionalId":"%s","roomId":null,
+             "startsAt":"%sT09:00:00","endsAt":"%sT09:30:00","reason":"Consulta duplicada"}
+            """.formatted(patientId, secondProfessionalId, appointmentDay, appointmentDay);
+        mockMvc.perform(post("/api/v1/clinic/schedule")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON).content(patientConflictPayload))
+            .andExpect(status().isConflict());
+
         mockMvc.perform(patch("/api/v1/clinic/schedule/{id}/status", appointmentId)
                 .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CONFIRMED\"}"))
