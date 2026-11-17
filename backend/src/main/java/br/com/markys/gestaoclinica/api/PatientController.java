@@ -46,19 +46,35 @@ public class PatientController {
     }
 
     @GetMapping
-    public ResponseEntity<?> list(Authentication auth) {
+    public ResponseEntity<?> list(Authentication auth,
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "ACTIVE") String status) {
         if (!canAccess(auth)) return forbidden();
         UUID clinic = TenantContext.requireClinicId();
+        String normalizedStatus = status == null ? "ACTIVE" : status.trim().toUpperCase();
+        if (!List.of("ACTIVE", "INACTIVE", "ALL").contains(normalizedStatus)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Filtro de situação inválido."));
+        }
+        String term = search == null ? "" : search.trim();
+        if (term.length() > 120) term = term.substring(0, 120);
+        String pattern = "%" + term + "%";
         return ResponseEntity.ok(jdbc.queryForList("""
             SELECT p.id, p.full_name, p.birth_date, p.sex, p.insurance_name, p.job_title,
-                   p.status, p.created_at,\n                   (SELECT count(*) FROM patient_documents d WHERE d.clinic_id=p.clinic_id AND d.patient_id=p.id) AS document_count,
+                   p.status, p.created_at,
+                   (SELECT count(*) FROM patient_documents d WHERE d.clinic_id=p.clinic_id AND d.patient_id=p.id) AS document_count,
                    (SELECT count(*) FROM queue_entries q WHERE q.clinic_id=p.clinic_id
-                     AND q.patient_id=p.id AND q.status IN ('WAITING','CALLED','IN_SERVICE')) AS active_queue_entries
+                     AND q.patient_id=p.id AND q.status IN ('WAITING','CALLED','IN_SERVICE')) AS active_queue_entries,
+                   (SELECT max(q.arrived_at) FROM queue_entries q
+                     WHERE q.clinic_id=p.clinic_id AND q.patient_id=p.id) AS last_attendance
               FROM patients p
-             WHERE p.clinic_id = ? AND p.status = 'ACTIVE'
-             ORDER BY p.created_at DESC
-             LIMIT 250
-            """, clinic));
+             WHERE p.clinic_id = ?
+               AND (? = 'ALL' OR p.status = ?)
+               AND (? = '' OR p.full_name ILIKE ? OR COALESCE(p.insurance_name,'') ILIKE ?
+                    OR COALESCE(p.job_title,'') ILIKE ?)
+             ORDER BY lower(p.full_name), p.created_at DESC
+             LIMIT 300
+            """, clinic, normalizedStatus, normalizedStatus, term,
+            pattern, pattern, pattern));
     }
 
     @GetMapping("/{id}")
@@ -150,6 +166,50 @@ public class PatientController {
             "patientId", patientId, "queueEntryId", queueId,
             "message", "Paciente cadastrado e encaminhado para a fila."
         ));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(Authentication auth, @PathVariable UUID id,
+            @Valid @RequestBody PatientStatusRequest body) {
+        if (!canManage(auth)) return forbidden();
+        String next = body.status() == null ? "" : body.status().trim().toUpperCase();
+        if (!List.of("ACTIVE", "INACTIVE").contains(next)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Situação de paciente inválida."));
+        }
+        UUID clinic = TenantContext.requireClinicId();
+        int changed = jdbc.update("""
+            UPDATE patients SET status=?, updated_at=now()
+             WHERE clinic_id=? AND id=? AND status IN ('ACTIVE','INACTIVE')
+            """, next, clinic, id);
+        if (changed == 0) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("id", id, "status", next, "message",
+            next.equals("ACTIVE") ? "Paciente reativado." : "Paciente inativado."));
+    }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<?> history(Authentication auth, @PathVariable UUID id) {
+        if (!canAccess(auth)) return forbidden();
+        UUID clinic = TenantContext.requireClinicId();
+        if (jdbc.queryForObject("SELECT count(*) FROM patients WHERE clinic_id=? AND id=?",
+                Integer.class, clinic, id) == 0) return ResponseEntity.notFound().build();
+        List<Map<String,Object>> queue = jdbc.queryForList("""
+            SELECT q.id, q.arrived_at, q.called_at, q.completed_at, q.status,
+                   q.service_label, q.priority, r.name AS room_name,
+                   pr.display_name AS professional_name
+              FROM queue_entries q
+              LEFT JOIN clinic_rooms r ON r.clinic_id=q.clinic_id AND r.id=q.room_id
+              LEFT JOIN professionals pr ON pr.clinic_id=q.clinic_id AND pr.id=q.assigned_professional_id
+             WHERE q.clinic_id=? AND q.patient_id=?
+             ORDER BY q.arrived_at DESC LIMIT 100
+            """, clinic, id);
+        List<Map<String,Object>> encounters = jdbc.queryForList("""
+            SELECT e.id, e.started_at, e.signed_at, e.status, pr.display_name AS professional_name
+              FROM encounters e
+              JOIN professionals pr ON pr.clinic_id=e.clinic_id AND pr.id=e.professional_id
+             WHERE e.clinic_id=? AND e.patient_id=?
+             ORDER BY e.started_at DESC LIMIT 100
+            """, clinic, id);
+        return ResponseEntity.ok(Map.of("attendances", queue, "encounters", encounters));
     }
 
     @GetMapping("/{id}/documents")
@@ -337,6 +397,7 @@ public class PatientController {
         @NotNull UUID serviceTypeId,
         List<UUID> examIds
     ) {}
+    public record PatientStatusRequest(@NotBlank @Size(max=20) String status) {}
     public record PatientUpdateRequest(
         @NotBlank @Size(max=180) String fullName,
         LocalDate birthDate,
