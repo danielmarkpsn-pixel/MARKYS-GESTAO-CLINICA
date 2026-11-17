@@ -58,16 +58,16 @@ class DatabaseMigrationIntegrationTest {
         Integer clinicalTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema()
-               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks')
+               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events')
             """, Integer.class);
         Integer masterTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(9);
+        assertThat(migrationCount).isEqualTo(10);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(12);
+        assertThat(clinicalTables).isEqualTo(13);
         assertThat(masterTables).isEqualTo(1);
     }
 
@@ -125,7 +125,7 @@ class DatabaseMigrationIntegrationTest {
         // Test cleanup is intentionally explicit: TRUNCATE is not filtered by RLS,
         // unlike DELETE, and CASCADE clears tenant-owned rows before parent clinics.
         jdbc.execute("""
-            TRUNCATE TABLE appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
+            TRUNCATE TABLE appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
                 exam_catalog, service_types, clinic_rooms, professionals, patients, platform_admins,
                 clinic_memberships, app_users, clinics CASCADE
             """);
@@ -308,6 +308,8 @@ class DatabaseMigrationIntegrationTest {
             .andExpect(status().isOk());
         assertThat(jdbc.queryForObject("SELECT status FROM appointments WHERE id=?", String.class, appointmentId))
             .isEqualTo("CONFIRMED");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM appointment_events WHERE appointment_id=?",
+            Integer.class, appointmentId)).isEqualTo(2);
 
         mockMvc.perform(post("/api/v1/auth/master-bootstrap")
                 .cookie(csrfCookie).header("X-XSRF-TOKEN", token)
