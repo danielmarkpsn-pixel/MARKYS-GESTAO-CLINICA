@@ -559,6 +559,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("receptionWorkspace").classList.toggle("hidden", !canUseReception);
     $("patientWorkspace").classList.toggle("hidden", !canUsePatients);
     $("patientForm").classList.toggle("hidden", !canManagePatients);
+    $("newPatientButton").classList.toggle("hidden", !canManagePatients);
     if (canUseReception) loadCatalog().then(() => { if (canUsePatients) loadPatients(); });
     else if (canUsePatients) loadPatients();
     $("sessionHint").classList.toggle("hidden", isMaster);
