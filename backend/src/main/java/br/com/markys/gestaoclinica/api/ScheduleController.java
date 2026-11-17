@@ -223,8 +223,7 @@ public class ScheduleController {
 
         lockResource(clinic,"P:"+body.professionalId(),body.startsAt().toLocalDate());
         if(body.roomId()!=null)lockResource(clinic,"R:"+body.roomId(),body.startsAt().toLocalDate());
-        ZoneId zone=clinicZone(clinic);
-        ZonedDateTime localStart=body.startsAt().atZoneSameInstant(zone), localEnd=body.endsAt().atZoneSameInstant(zone);
+        ZonedDateTime localStart=body.startsAt().atZone(zone), localEnd=body.endsAt().atZone(zone);
         if(!localStart.toLocalDate().equals(localEnd.toLocalDate()))return badRequest("O agendamento deve terminar no mesmo dia local.");
         int weekday=localStart.getDayOfWeek().getValue();
         List<Map<String,Object>> rules=jdbc.queryForList("""
