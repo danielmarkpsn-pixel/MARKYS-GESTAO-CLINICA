@@ -252,14 +252,17 @@ public class ScheduleController {
                 INSERT INTO appointments(id,clinic_id,patient_id,professional_id,room_id,starts_at,ends_at,reason,created_by_membership_id,updated_by_membership_id)
                 VALUES(?,?,?,?,?,?,?,?,?,?)
                 """,appointmentId,clinic,body.patientId(),body.professionalId(),body.roomId(),appointmentStart,appointmentEnd,clean(body.reason()),access.membershipId(),access.membershipId());
+            recordEvent(clinic,appointmentId,"CREATED",null,"SCHEDULED","Agendamento criado",access.membershipId());
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",appointmentId,"status","SCHEDULED","message","Agendamento criado com sucesso."));
         }
+        String previousStatus=jdbc.queryForObject("SELECT status FROM appointments WHERE clinic_id=? AND id=?",String.class,clinic,id);
         int changed=jdbc.update("""
             UPDATE appointments SET patient_id=?,professional_id=?,room_id=?,starts_at=?,ends_at=?,reason=?,
                 updated_by_membership_id=?,updated_at=now()
              WHERE clinic_id=? AND id=? AND status IN ('SCHEDULED','CONFIRMED')
             """,body.patientId(),body.professionalId(),body.roomId(),appointmentStart,appointmentEnd,clean(body.reason()),access.membershipId(),clinic,id);
         if(changed==0)return conflict("Este agendamento não pode mais ser editado. Atualize a agenda.");
+        recordEvent(clinic,id,"RESCHEDULED",previousStatus,previousStatus,"Agendamento ou dados atualizados",access.membershipId());
         return ResponseEntity.ok(Map.of("id",id,"message","Agendamento atualizado."));
     }
 
@@ -290,7 +293,36 @@ public class ScheduleController {
              WHERE clinic_id=? AND id=? AND status=?
             """,next,"CANCELLED".equals(next)?body.cancellationReason().trim():null,access.membershipId(),clinic,id,previous);
         if(changed==0)return conflict("O agendamento foi atualizado por outro usuário.");
+        recordEvent(clinic,id,"STATUS_CHANGED",previous,next,
+            "CANCELLED".equals(next)?body.cancellationReason():("Situação alterada para "+next),access.membershipId());
         return ResponseEntity.ok(Map.of("id",id,"status",next,"message","Situação atualizada."));
+    }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<?> history(Authentication auth,@PathVariable UUID id) {
+        Access access=access(auth);
+        if(access==null || !List.of("CLINIC_ADMIN","RECEPTION","PROFESSIONAL").contains(access.role()))return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        List<Map<String,Object>> appointment=jdbc.queryForList(
+            "SELECT professional_id FROM appointments WHERE clinic_id=? AND id=?",clinic,id);
+        if(appointment.isEmpty())return ResponseEntity.notFound().build();
+        if("PROFESSIONAL".equals(access.role()) && !Objects.equals(appointment.getFirst().get("professional_id"),access.professionalId()))return forbidden();
+        return ResponseEntity.ok(jdbc.queryForList("""
+            SELECT ev.id,ev.event_type,ev.previous_status,ev.new_status,ev.detail,ev.created_at,
+                   u.full_name AS actor_name
+              FROM appointment_events ev
+              JOIN clinic_memberships m ON m.clinic_id=ev.clinic_id AND m.id=ev.actor_membership_id
+              JOIN app_users u ON u.id=m.user_id
+             WHERE ev.clinic_id=? AND ev.appointment_id=?
+             ORDER BY ev.created_at DESC LIMIT 100
+            """,clinic,id));
+    }
+
+    private void recordEvent(UUID clinic,UUID appointmentId,String type,String previous,String next,String detail,UUID actor) {
+        jdbc.update("""
+            INSERT INTO appointment_events(clinic_id,appointment_id,event_type,previous_status,new_status,detail,actor_membership_id)
+            VALUES(?,?,?,?,?,?,?)
+            """,clinic,appointmentId,type,previous,next,detail,actor);
     }
 
     private int countConflict(UUID clinic,UUID professional,UUID room,OffsetDateTime start,OffsetDateTime end) {
