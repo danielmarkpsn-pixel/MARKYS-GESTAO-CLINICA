@@ -269,6 +269,46 @@ class DatabaseMigrationIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM queue_entry_exams WHERE clinic_id=?",
             Integer.class, clinicId)).isZero();
 
+        UUID professionalUserId = UUID.randomUUID();
+        UUID professionalMembershipId = UUID.randomUUID();
+        UUID professionalId = UUID.randomUUID();
+        UUID roomId = jdbc.queryForObject("SELECT id FROM clinic_rooms WHERE clinic_id=? ORDER BY name LIMIT 1",
+            UUID.class, clinicId);
+        jdbc.update("INSERT INTO app_users (id, full_name, email, password_hash, status) VALUES (?, ?, ?, ?, 'ACTIVE')",
+            professionalUserId, "Profissional Agenda", "profissional.agenda@clinica.test", "$2a$10$abcdefghijklmnopqrstuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+        jdbc.update("INSERT INTO clinic_memberships (id, clinic_id, user_id, role, status) VALUES (?, ?, ?, 'PROFESSIONAL', 'ACTIVE')",
+            professionalMembershipId, clinicId, professionalUserId);
+        jdbc.update("INSERT INTO professionals (id, clinic_id, membership_id, display_name, specialty, status) VALUES (?, ?, ?, ?, ?, 'ACTIVE')",
+            professionalId, clinicId, professionalMembershipId, "Profissional Agenda", "Clínica Geral");
+        java.time.LocalDate appointmentDay = java.time.LocalDate.now(java.time.ZoneId.of("America/Manaus")).plusDays(1);
+        mockMvc.perform(post("/api/v1/clinic/schedule/rules")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"professionalId":"%s","weekday":%d,"startsLocal":"08:00:00","endsLocal":"18:00:00","slotMinutes":30}
+                    """.formatted(professionalId, appointmentDay.getDayOfWeek().getValue())))
+            .andExpect(status().isCreated());
+        String appointmentPayload = """
+            {"patientId":"%s","professionalId":"%s","roomId":"%s",
+             "startsAt":"%sT09:00:00","endsAt":"%sT09:30:00","reason":"Consulta de integração"}
+            """.formatted(patientId, professionalId, roomId, appointmentDay, appointmentDay);
+        MvcResult appointmentResult = mockMvc.perform(post("/api/v1/clinic/schedule")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON).content(appointmentPayload))
+            .andExpect(status().isCreated()).andReturn();
+        UUID appointmentId = UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            appointmentResult.getResponse().getContentAsString(), "$.id"));
+        mockMvc.perform(post("/api/v1/clinic/schedule")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON).content(appointmentPayload))
+            .andExpect(status().isConflict());
+        mockMvc.perform(patch("/api/v1/clinic/schedule/{id}/status", appointmentId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CONFIRMED\"}"))
+            .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("SELECT status FROM appointments WHERE id=?", String.class, appointmentId))
+            .isEqualTo("CONFIRMED");
+
         mockMvc.perform(post("/api/v1/auth/master-bootstrap")
                 .cookie(csrfCookie).header("X-XSRF-TOKEN", token)
                 .header("X-MARKYS-BOOTSTRAP-TOKEN", "integration-test-bootstrap-secret")
