@@ -310,16 +310,29 @@ public class PatientController {
     public ResponseEntity<?> update(Authentication auth, @PathVariable UUID id,
                                     @Valid @RequestBody PatientUpdateRequest body) {
         if (!canManage(auth)) return forbidden();
+        if (!protection.isConfigured()) return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(Map.of("error", "Edição de CPF indisponível. Configure as chaves de proteção no servidor."));
+        String cpf = normalizeCpf(body.cpf());
+        if (!validCpf(cpf)) return ResponseEntity.badRequest().body(Map.of("error", "CPF inválido."));
         UUID clinic = TenantContext.requireClinicId();
         if (body.birthDate() != null && body.birthDate().isAfter(LocalDate.now())) {
             return ResponseEntity.badRequest().body(Map.of("error", "A data de nascimento não pode estar no futuro."));
         }
-        int changed = jdbc.update("""
-            UPDATE patients SET full_name=?, birth_date=?, sex=?, insurance_name=?, job_title=?, updated_at=now()
-             WHERE clinic_id=? AND id=? AND status='ACTIVE'
-            """, body.fullName().trim(), body.birthDate(), clean(body.sex()), clean(body.insuranceName()),
-            clean(body.jobTitle()), clinic, id);
-        if (changed == 0) return ResponseEntity.notFound().build();
+        try {
+            int changed = jdbc.update("""
+                UPDATE patients SET full_name=?, birth_date=?, sex=?, insurance_name=?, job_title=?,
+                    document_type='CPF', document_fingerprint=?, document_ciphertext=?, contact_ciphertext=?,
+                    updated_at=now()
+                 WHERE clinic_id=? AND id=? AND status IN ('ACTIVE','INACTIVE')
+                """, body.fullName().trim(), body.birthDate(), clean(body.sex()), clean(body.insuranceName()),
+                clean(body.jobTitle()), protection.fingerprint(cpf), protection.encrypt(cpf),
+                encryptContact(body.phone(), body.email(), body.address(), body.emergencyContact(),
+                    body.emergencyPhone(), body.administrativeNotes()), clinic, id);
+            if (changed == 0) return ResponseEntity.notFound().build();
+        } catch (DuplicateKeyException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", "Já existe outro paciente cadastrado com este CPF nesta clínica."));
+        }
 
         if (body.serviceTypeId() != null) {
             List<Map<String,Object>> activeQueue = jdbc.queryForList("""
@@ -352,6 +365,64 @@ public class PatientController {
             }
         }
         return ResponseEntity.ok(Map.of("id", id, "message", "Cadastro atualizado."));
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> delete(Authentication auth, @PathVariable UUID id) {
+        if (!canManage(auth)) return forbidden();
+        UUID clinic = TenantContext.requireClinicId();
+        Integer exists = jdbc.queryForObject(
+            "SELECT count(*) FROM patients WHERE clinic_id=? AND id=?", Integer.class, clinic, id);
+        if (exists == null || exists == 0) return ResponseEntity.notFound().build();
+
+        Integer attendances = jdbc.queryForObject(
+            "SELECT count(*) FROM queue_entries WHERE clinic_id=? AND patient_id=?", Integer.class, clinic, id);
+        Integer encounters = jdbc.queryForObject(
+            "SELECT count(*) FROM encounters WHERE clinic_id=? AND patient_id=?", Integer.class, clinic, id);
+        Integer documents = jdbc.queryForObject(
+            "SELECT count(*) FROM patient_documents WHERE clinic_id=? AND patient_id=?", Integer.class, clinic, id);
+        int linked = (attendances == null ? 0 : attendances) + (encounters == null ? 0 : encounters)
+            + (documents == null ? 0 : documents);
+        if (linked > 0) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "Este paciente possui histórico de atendimentos, prontuários ou documentos vinculados. Para proteger o histórico clínico, a exclusão definitiva foi bloqueada. Inative o cadastro se não deve mais ser utilizado.",
+                "attendances", attendances == null ? 0 : attendances,
+                "encounters", encounters == null ? 0 : encounters,
+                "documents", documents == null ? 0 : documents
+            ));
+        }
+        int deleted = jdbc.update("DELETE FROM patients WHERE clinic_id=? AND id=?", clinic, id);
+        if (deleted != 1) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("id", id, "message", "Cadastro do paciente excluído definitivamente."));
+    }
+
+    private byte[] encryptContact(String phone, String email, String address,
+                                  String emergencyContact, String emergencyPhone,
+                                  String administrativeNotes) {
+        Map<String,String> data = new LinkedHashMap<>();
+        data.put("phone", clean(phone));
+        data.put("email", clean(email));
+        data.put("address", clean(address));
+        data.put("emergencyContact", clean(emergencyContact));
+        data.put("emergencyPhone", clean(emergencyPhone));
+        data.put("administrativeNotes", clean(administrativeNotes));
+        if (data.values().stream().allMatch(value -> value == null)) return null;
+        try {
+            return protection.encrypt(objectMapper.writeValueAsString(data));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
+            throw new IllegalStateException("Não foi possível proteger os dados de contato do paciente.", ex);
+        }
+    }
+
+    private Map<String,Object> readContact(byte[] encrypted) {
+        if (encrypted == null) return Map.of();
+        try {
+            return objectMapper.readValue(protection.decrypt(encrypted),
+                new TypeReference<Map<String,Object>>() {});
+        } catch (java.io.IOException ex) {
+            throw new IllegalStateException("Os dados de contato protegidos estão inválidos.", ex);
+        }
     }
 
     private UUID currentMembership(Authentication auth, UUID clinic) {
@@ -413,18 +484,32 @@ public class PatientController {
         @Size(max=180) String insuranceName,
         @Size(max=160) String jobTitle,
         UUID serviceTypeId,
-        List<UUID> examIds
+        List<UUID> examIds,
+        @Size(max=40) String phone,
+        @Size(max=254) String email,
+        @Size(max=500) String address,
+        @Size(max=180) String emergencyContact,
+        @Size(max=40) String emergencyPhone,
+        @Size(max=2000) String administrativeNotes
     ) {}
     public record PatientStatusRequest(@NotBlank @Size(max=20) String status) {}
     public record PatientUpdateRequest(
         @NotBlank @Size(max=180) String fullName,
+        @NotBlank @Size(max=20) String cpf,
         LocalDate birthDate,
         @Size(max=30) String sex,
         @Size(max=180) String insuranceName,
         @Size(max=160) String jobTitle,
         UUID serviceTypeId,
-        List<UUID> examIds
+        List<UUID> examIds,
+        @Size(max=40) String phone,
+        @Size(max=254) String email,
+        @Size(max=500) String address,
+        @Size(max=180) String emergencyContact,
+        @Size(max=40) String emergencyPhone,
+        @Size(max=2000) String administrativeNotes
     ) {}
+
     @ExceptionHandler(InvalidRequest.class)
     public ResponseEntity<Map<String,String>> invalidRequest(InvalidRequest ex) {
         return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
