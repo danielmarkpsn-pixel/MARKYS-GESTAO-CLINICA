@@ -154,6 +154,18 @@ public class FinanceController {
             "pages",total==null?0:(int)Math.ceil(total/(double)size)));
     }
 
+    @GetMapping("/categories")
+    public ResponseEntity<?> categories(Authentication auth,@RequestParam(defaultValue="false") boolean all) {
+        Access access=access(auth);
+        if(access==null)return forbidden();
+        boolean includeInactive=all && "CLINIC_ADMIN".equals(access.role());
+        return ResponseEntity.ok(jdbc.queryForList("""
+            SELECT id,name,direction,active FROM finance_categories
+             WHERE clinic_id=? AND (? OR active=true)
+             ORDER BY direction,lower(name)
+            """,TenantContext.requireClinicId(),includeInactive));
+    }
+
     @PostMapping("/categories")
     @Transactional
     public ResponseEntity<?> createCategory(Authentication auth, @Valid @RequestBody CategoryRequest body) {
@@ -324,8 +336,13 @@ public class FinanceController {
         if(categoryCount==null || categoryCount==0)return false;
         if(patient!=null && jdbc.queryForObject("SELECT count(*) FROM patients WHERE clinic_id=? AND id=? AND status='ACTIVE'",
             Integer.class,clinic,patient)==0)return false;
-        if(appointment!=null && jdbc.queryForObject("SELECT count(*) FROM appointments WHERE clinic_id=? AND id=?",
-            Integer.class,clinic,appointment)==0)return false;
+        if(appointment!=null) {
+            Integer appointmentCount=jdbc.queryForObject("""
+                SELECT count(*) FROM appointments WHERE clinic_id=? AND id=?
+                  AND (?::uuid IS NULL OR patient_id=?)
+                """,Integer.class,clinic,appointment,patient,patient);
+            if(appointmentCount==null || appointmentCount==0)return false;
+        }
         return true;
     }
 
