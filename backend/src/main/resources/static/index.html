@@ -187,6 +187,34 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     @media(max-width:760px){.schedule-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.schedule-form-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:480px){.schedule-form-grid{grid-template-columns:1fr}.schedule-form-grid .wide{grid-column:auto}}
 
+
+    .finance-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
+    .finance-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:0 0 12px}
+    .finance-kpi{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px 14px;min-width:0}
+    .finance-kpi small{display:block;color:#718297;font-size:10px;margin-bottom:5px}
+    .finance-kpi strong{display:block;font-size:20px;color:#17436c;overflow-wrap:anywhere}
+    .finance-kpi.income strong{color:#267043}.finance-kpi.expense strong{color:#a34b38}
+    .finance-table{width:100%;min-width:1080px;border-collapse:collapse;font-size:11px}
+    .finance-table th{background:#edf3f8;color:#536a80;text-align:left;padding:11px 10px;font-size:9px;letter-spacing:.5px}
+    .finance-table td{padding:10px;border-top:1px solid #e8edf2;color:#344e67;vertical-align:middle}
+    .finance-table tr:hover td{background:#f8fbfe}
+    .finance-direction{font-size:9px;font-weight:800;border-radius:20px;padding:4px 8px;background:#eaf7ef;color:#267043;white-space:nowrap}
+    .finance-direction.expense{background:#fff0ef;color:#a33b35}
+    .finance-state{font-size:9px;font-weight:800;border-radius:20px;padding:4px 8px;background:#eaf3fb;color:#17639d;white-space:nowrap}
+    .finance-state.overdue{background:#fff0e7;color:#a64b1d}.finance-state.paid{background:#eaf7ef;color:#267043}.finance-state.cancelled{background:#f0f1f3;color:#697786}
+    .finance-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+    .finance-form-grid>div{min-width:0}.finance-form-grid .wide{grid-column:1/-1}
+    .finance-form-grid label{display:block;font-size:10px;color:#52677d;margin-bottom:5px}
+    .finance-form-grid input,.finance-form-grid select,.finance-form-grid textarea{height:37px;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;width:100%;min-width:0;background:#fff}
+    .finance-form-grid textarea{height:72px;padding:8px;resize:vertical}
+    .finance-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .finance-panel-heading h4{margin:0;color:#1b4269;font-size:14px}
+    .finance-pager{display:flex;justify-content:space-between;align-items:center;padding:11px;color:#62778c;font-size:11px}
+    .finance-message{min-height:20px;font-size:11px;color:#a12c26;margin:4px 0}
+    .finance-category-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:12px}
+    .finance-category-item{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f5f8fb;border:1px solid #e2e9f0;border-radius:4px;padding:9px;font-size:11px;color:#40566d}
+    @media(max-width:760px){.finance-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-form-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:480px){.finance-summary,.finance-form-grid,.finance-category-list{grid-template-columns:1fr}.finance-form-grid .wide{grid-column:auto}}
   </style>
 </head>
 <body>
@@ -377,6 +405,69 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div id="scheduleBlocks" class="schedule-rule-list"></div>
   </section>
 </section>
+
+<section id="financeWorkspace" class="finance-workspace hidden" aria-label="Gestão financeira">
+  <div class="schedule-toolbar">
+    <div class="schedule-field"><label for="financeFrom">VENCIMENTO DE</label><input id="financeFrom" type="date"></div>
+    <div class="schedule-field"><label for="financeTo">ATÉ</label><input id="financeTo" type="date"></div>
+    <div class="schedule-field"><label for="financeDirectionFilter">MOVIMENTAÇÃO</label><select id="financeDirectionFilter"><option value="ALL">Receitas e despesas</option><option value="INCOME">Receitas</option><option value="EXPENSE">Despesas</option></select></div>
+    <div class="schedule-field"><label for="financeStatusFilter">SITUAÇÃO</label><select id="financeStatusFilter"><option value="ALL">Todas</option><option value="OPEN">Em aberto</option><option value="PARTIAL">Parcial</option><option value="OVERDUE">Vencidas</option><option value="PAID">Quitadas</option><option value="CANCELLED">Canceladas</option></select></div>
+    <div class="schedule-field"><label for="financeCategoryFilter">CATEGORIA</label><select id="financeCategoryFilter"><option value="">Todas as categorias</option></select></div>
+    <div class="schedule-field"><label for="financeSearchTerm">BUSCAR</label><input id="financeSearchTerm" type="search" maxlength="100" placeholder="Descrição ou paciente"></div>
+    <button id="financeSearch" class="schedule-btn primary" type="button">Filtrar</button>
+    <button id="financeNew" class="schedule-btn primary" type="button">+ Novo lançamento</button>
+    <button id="financeCategoriesToggle" class="schedule-btn" type="button">Categorias</button>
+  </div>
+  <div class="finance-summary">
+    <div class="finance-kpi income"><small>RECEITAS PREVISTAS</small><strong id="financeIncomeDue">R$ 0,00</strong></div>
+    <div class="finance-kpi"><small>RECEBIDO NO PERÍODO</small><strong id="financeIncomeReceived">R$ 0,00</strong></div>
+    <div class="finance-kpi expense"><small>DESPESAS PREVISTAS</small><strong id="financeExpenseDue">R$ 0,00</strong></div>
+    <div class="finance-kpi"><small>DESPESAS PAGAS</small><strong id="financeExpensePaid">R$ 0,00</strong></div>
+    <div class="finance-kpi"><small>SALDO REALIZADO</small><strong id="financeBalance">R$ 0,00</strong></div>
+    <div class="finance-kpi expense"><small>LANÇAMENTOS VENCIDOS</small><strong id="financeOverdue">0</strong></div>
+  </div>
+  <div id="financeMessage" class="finance-message" role="status" aria-live="polite"></div>
+  <div class="schedule-table-wrap"><table class="finance-table"><thead><tr><th>VENCIMENTO</th><th>DESCRIÇÃO / PACIENTE</th><th>CATEGORIA</th><th>TIPO</th><th>VALOR</th><th>RECEBIDO / PAGO</th><th>SALDO</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="financeRows"><tr><td colspan="9" class="schedule-empty">Carregando lançamentos...</td></tr></tbody></table></div>
+  <div class="finance-pager"><span id="financePageInfo">Página 1</span><div class="schedule-actions"><button id="financePrev" type="button">Anterior</button><button id="financeNext" type="button">Próxima</button></div></div>
+  <section id="financeEntryPanel" class="schedule-panel hidden">
+    <div class="finance-panel-heading"><h4 id="financeEntryTitle">Novo lançamento</h4><button id="financeEntryClose" class="schedule-btn" type="button">Fechar</button></div>
+    <form id="financeEntryForm">
+      <div class="finance-form-grid">
+        <div><label for="financeEntryDirection">TIPO *</label><select id="financeEntryDirection" required><option value="INCOME">Receita / a receber</option><option value="EXPENSE">Despesa / a pagar</option></select></div>
+        <div><label for="financeEntryCategory">CATEGORIA *</label><select id="financeEntryCategory" required></select></div>
+        <div><label for="financeEntryAmount">VALOR (R$) *</label><input id="financeEntryAmount" type="number" min="0.01" max="9999999999.99" step="0.01" required></div>
+        <div class="wide"><label for="financeEntryDescription">DESCRIÇÃO *</label><input id="financeEntryDescription" maxlength="180" required placeholder="Ex.: Consulta ocupacional, aluguel..."></div>
+        <div><label for="financeEntryDue">VENCIMENTO *</label><input id="financeEntryDue" type="date" required></div>
+        <div><label for="financeEntryPatient">PACIENTE (OPCIONAL)</label><select id="financeEntryPatient"><option value="">Não vincular</option></select></div>
+        <div><label for="financeEntryAppointment">AGENDAMENTO (OPCIONAL)</label><select id="financeEntryAppointment"><option value="">Não vincular</option></select></div>
+        <div class="wide"><label for="financeEntryNotes">OBSERVAÇÕES</label><textarea id="financeEntryNotes" maxlength="500"></textarea></div>
+      </div>
+      <div class="schedule-form-actions"><button id="financeEntrySave" class="schedule-btn primary" type="submit">Salvar lançamento</button></div>
+    </form>
+  </section>
+  <section id="financePaymentPanel" class="schedule-panel hidden">
+    <div class="finance-panel-heading"><h4 id="financePaymentTitle">Registrar movimentação</h4><button id="financePaymentClose" class="schedule-btn" type="button">Fechar</button></div>
+    <p id="financePaymentBalance" class="sub"></p>
+    <form id="financePaymentForm">
+      <div class="finance-form-grid">
+        <div><label for="financePaymentAmount">VALOR *</label><input id="financePaymentAmount" type="number" min="0.01" step="0.01" required></div>
+        <div><label for="financePaymentMethod">FORMA *</label><select id="financePaymentMethod"><option value="PIX">PIX</option><option value="CASH">Dinheiro</option><option value="DEBIT_CARD">Cartão de débito</option><option value="CREDIT_CARD">Cartão de crédito</option><option value="TRANSFER">Transferência</option><option value="BOLETO">Boleto</option><option value="OTHER">Outro</option></select></div>
+        <div><label for="financePaymentDate">DATA / HORA</label><input id="financePaymentDate" type="datetime-local"></div>
+        <div><label for="financePaymentReference">REFERÊNCIA</label><input id="financePaymentReference" maxlength="120" placeholder="NSU, comprovante..."></div>
+        <div class="wide"><label for="financePaymentNotes">OBSERVAÇÕES</label><textarea id="financePaymentNotes" maxlength="300"></textarea></div>
+      </div>
+      <div class="schedule-form-actions"><button class="schedule-btn primary" type="submit">Confirmar movimentação</button></div>
+    </form>
+    <div id="financePaymentHistory" class="schedule-rule-list"></div>
+  </section>
+  <section id="financeHistoryPanel" class="schedule-panel hidden"><div class="finance-panel-heading"><h4>Histórico do lançamento</h4><button id="financeHistoryClose" class="schedule-btn" type="button">Fechar</button></div><div id="financeHistoryRows" class="schedule-rule-list"></div></section>
+  <section id="financeCategoriesPanel" class="schedule-panel hidden">
+    <div class="finance-panel-heading"><h4>Plano de categorias</h4><button id="financeCategoriesClose" class="schedule-btn" type="button">Fechar</button></div>
+    <form id="financeCategoryForm" class="finance-form-grid"><div><label for="financeCategoryName">NOME *</label><input id="financeCategoryName" maxlength="100" required></div><div><label for="financeCategoryDirection">APLICAÇÃO *</label><select id="financeCategoryDirection"><option value="INCOME">Receitas</option><option value="EXPENSE">Despesas</option><option value="BOTH">Ambos</option></select></div><div style="display:flex;align-items:end"><button class="schedule-btn primary" type="submit">Adicionar categoria</button></div></form>
+    <div id="financeCategoryList" class="finance-category-list"></div>
+  </section>
+</section>
+
   </main>
 
 
