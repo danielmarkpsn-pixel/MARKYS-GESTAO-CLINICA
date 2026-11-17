@@ -340,6 +340,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   </div>
   <div id="scheduleMessage" class="schedule-message" role="status" aria-live="polite"></div>
   <div class="schedule-table-wrap"><table class="schedule-table"><thead><tr><th>DATA / HORÁRIO</th><th>PACIENTE</th><th>PROFISSIONAL</th><th>CONSULTÓRIO</th><th>FINALIDADE</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="scheduleRows"><tr><td colspan="7" class="schedule-empty">Carregando agenda...</td></tr></tbody></table></div>
+  <section id="scheduleHistory" class="schedule-panel hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h4 id="scheduleHistoryTitle">Histórico do agendamento</h4><button id="scheduleHistoryClose" class="schedule-btn" type="button">Fechar histórico</button></div><div id="scheduleHistoryRows" class="schedule-rule-list"></div></section>
   <form id="scheduleForm" class="schedule-panel hidden">
     <h4 id="scheduleFormTitle">Novo agendamento</h4>
     <div class="schedule-form-grid">
@@ -1066,11 +1067,29 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       const actions=cell("");actions.className="schedule-actions";
       const add=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
       if(["SCHEDULED","CONFIRMED"].includes(item.status)&&["CLINIC_ADMIN","RECEPTION"].includes(scheduleState.role))add("Editar",()=>editSchedule(item));
+      add("Histórico",()=>showScheduleHistory(item));
       const next={SCHEDULED:[["Confirmar","CONFIRMED"],["Check-in","CHECKED_IN"],["Não compareceu","NO_SHOW"],["Cancelar","CANCELLED"]],CONFIRMED:[["Check-in","CHECKED_IN"],["Não compareceu","NO_SHOW"],["Cancelar","CANCELLED"]],CHECKED_IN:[["Concluir","COMPLETED"],["Cancelar","CANCELLED"]]}[item.status]||[];
       next.forEach(([label,state])=>{if(state==="CANCELLED"&&scheduleState.role==="PROFESSIONAL")return;if(state==="COMPLETED"&&scheduleState.role==="RECEPTION")return;add(label,()=>changeScheduleStatus(item,state));});
       tr.append(date,patient,professional,room,reason,status,actions);body.append(tr);
     });
   };
+  const showScheduleHistory=async item=>{
+    try{
+      const events=await scheduleRequest("/api/v1/clinic/schedule/"+item.id+"/history");
+      $("scheduleHistoryTitle").textContent="Histórico • "+item.patient_name;
+      const target=$("scheduleHistoryRows");target.replaceChildren();
+      if(!events.length){target.textContent="Nenhum evento registrado."; }
+      const labels={CREATED:"Agendamento criado",RESCHEDULED:"Agendamento editado / remarcado",STATUS_CHANGED:"Situação alterada"};
+      events.forEach(ev=>{
+        const line=document.createElement("div");line.className="schedule-rule";
+        const info=document.createElement("span");
+        info.textContent=clinicDateTime(ev.created_at)+" • "+(labels[ev.event_type]||ev.event_type)+" • "+(ev.actor_name||"Usuário")+" • "+(ev.detail||"");
+        line.append(info);target.append(line);
+      });
+      $("scheduleHistory").classList.remove("hidden");$("scheduleHistory").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){scheduleMessage(error.message);}
+  };
+  $("scheduleHistoryClose").addEventListener("click",()=>$("scheduleHistory").classList.add("hidden"));
   const openScheduleForm=(item=null)=>{
     scheduleState.editingId=item?.id||null;
     $("scheduleForm").classList.remove("hidden");
