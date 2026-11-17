@@ -74,6 +74,7 @@
     @media(max-width:650px){.catalog-grid{grid-template-columns:1fr}}
     @media(max-width:520px){.master-form{grid-template-columns:1fr}.master-form .wide{grid-column:auto}}
     @media(max-width:760px){body{padding:14px}.shell{grid-template-columns:1fr;min-height:0}.brand{padding:28px 28px 24px}.brand-copy{margin:35px 0 25px}.brand h1{font-size:29px}.brand-foot{display:none}.panel{padding:32px 26px 36px}}
+body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100vh;display:block;border:0;border-radius:0;box-shadow:none;background:#eef1f5}.brand{display:none}.panel{display:block;min-height:100vh;padding:0;background:#eef1f5}#authPanel{min-height:100vh;display:grid;place-items:center;padding:24px}#sessionPanel{min-height:100vh;padding:0 24px 24px 258px;display:block;background:#eef1f5}#sessionPanel.hidden{display:none!important}.app-sidebar{position:fixed;z-index:5;left:0;top:0;bottom:0;width:236px;overflow:auto;background:#fff;border-right:1px solid #d9e1e9;padding:16px 10px}.app-brand{height:52px;display:flex;align-items:center;gap:10px;padding:0 10px 14px;margin-bottom:8px;border-bottom:1px solid #e3e9ef;color:#07549a;font-weight:800;letter-spacing:1.5px}.app-brand img{width:30px;height:30px}.app-brand small{display:block;font-size:9px;letter-spacing:1.4px}.module-nav{display:grid;gap:3px}.module-nav button{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:5px;background:transparent;color:#40566d;text-align:left;padding:10px;font:600 12px system-ui;cursor:pointer}.module-nav button:hover,.module-nav button.active{background:#e8f2fb;color:#07549a}.module-nav button.active{border-left:3px solid #0873bd;padding-left:7px}.module-nav svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.app-topbar{height:58px;margin:0 -24px 22px -258px;padding:0 24px 0 258px;display:flex;align-items:center;justify-content:space-between;background:#07549a;color:white;position:sticky;top:0;z-index:4;box-shadow:0 2px 7px #102b5220}.app-user{font-size:12px}.app-user strong{display:block}.app-user span{opacity:.8}.page-heading{margin-bottom:18px}.page-heading h2{font-size:22px;color:#183b60;margin:0 0 5px}.page-heading p{font-size:12px;color:#738397;margin:0}.session{display:none}.master-tools,.workspace{background:#fff;border:1px solid #dce4ec;border-radius:7px;padding:20px;box-shadow:0 1px 2px #102b5208;margin:0 0 18px}.module-placeholder{background:#fff;border:1px solid #dce4ec;border-radius:7px;padding:28px;min-height:200px}.module-placeholder h3{font-size:16px;color:#1b4269;margin:0 0 8px}.module-placeholder p{font-size:12px;color:#718297;line-height:1.6;margin:0;max-width:680px}.module-status{display:inline-block;margin-top:16px;padding:6px 9px;border-radius:4px;background:#f1f5f8;color:#64788d;font-size:10px;font-weight:700}#logoutButton{position:fixed;right:18px;top:10px;z-index:8;margin:0;padding:7px 10px;font-size:11px;border-color:#ffffff55;background:#ffffff20;color:#fff}@media(max-width:760px){#sessionPanel{padding-left:64px;padding-right:12px}.app-sidebar{width:58px;padding:12px 5px}.app-brand{padding:0 5px 12px}.app-brand div,.module-nav button span{display:none}.module-nav button{justify-content:center;padding:11px 5px}.module-nav button.active{padding-left:2px}.app-topbar{margin-left:-70px;padding-left:82px;margin-right:-12px}.app-main{min-width:0}}
   </style>
 </head>
 <body>
@@ -111,6 +112,22 @@
         <p class="hint">A criação do MASTER exige o token secreto configurado no servidor e só pode ser concluída uma vez.</p>
       </div>
       <div id="sessionPanel" class="hidden">
+<aside class="app-sidebar"><div class="app-brand"><img src="/favicon.svg" alt=""> <div>MARKYS<small>GESTÃO CLÍNICA</small></div></div><nav class="module-nav" id="moduleNav" aria-label="Navegação principal">
+<button class="active" data-module="attendance"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Lista de atendimentos</span></button>
+<button data-module="patients"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.5-4 3-6 7-6s6.5 2 7 6M18 8h5M20.5 5.5v5"/></svg><span>Pacientes</span></button>
+<button data-module="professionals"><svg viewBox="0 0 24 24"><path d="M9 3h6M12 3v5M5 8h14v12H5zM9 13h6M12 10v6"/></svg><span>Profissionais</span></button>
+<button data-module="schedule"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span>Agenda</span></button>
+<button data-module="finance"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M3 9h18M7 15h4"/></svg><span>Financeiro</span></button>
+<button data-module="exams"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3M8 15h8"/></svg><span>Exames</span></button>
+<button data-module="rooms"><svg viewBox="0 0 24 24"><path d="M4 21V4h16v17M4 10h16M10 21v-7h4v7"/></svg><span>Consultórios</span></button>
+<button data-module="insurance"><svg viewBox="0 0 24 24"><path d="M3 9h18M5 9v11M19 9v11M3 20h18M12 3l9 6H3z"/></svg><span>Convênios</span></button>
+<button data-module="access"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3 8-8 10-5-2-8-5-8-10V6z"/><path d="m9 12 2 2 4-4"/></svg><span>Acessos</span></button>
+<button data-module="laboratory"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v7l-5 9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2l-5-9V3M8 16h8"/></svg><span>Laboratório</span></button>
+<button data-module="esocial"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5zM15 3v5h4M8 13h8M8 17h8"/></svg><span>eSocial</span></button>
+<button data-module="calls"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4zM8 9h8M8 13h5"/></svg><span>Tela de chamados</span></button>
+<button data-module="subscription"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span>Assinatura</span></button>
+<button data-module="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7h.01"/></svg><span>Sobre</span></button></nav></aside>
+<header class="app-topbar"><strong>MARKYS | GESTÃO CLÍNICA</strong><div class="app-user"><strong id="topUserName">Usuário</strong><span id="topClinicName">Clínica ativa</span></div></header><div class="page-heading"><h2 id="moduleTitle">Lista de atendimentos</h2><p id="moduleSubtitle">Acompanhe os atendimentos da clínica.</p></div><section id="modulePlaceholder" class="module-placeholder"><h3 id="placeholderTitle">Lista de atendimentos</h3><p id="placeholderText">Este módulo será conectado ao fluxo clínico.</p><span class="module-status">MÓDULO EM IMPLEMENTAÇÃO</span></section>
         <h2>Acesso confirmado</h2>
         <p class="sub">Sua sessão está ativa no MARKYS.</p>
         <div class="session">
@@ -485,12 +502,14 @@
     $("authPanel").classList.add("hidden");
     $("sessionPanel").classList.remove("hidden");
     const isMaster = data.globalRole === "MASTER";
+    activeData = data;
     $("masterTools").classList.toggle("hidden", !isMaster);
     const activeMembership = (data.memberships || []).find(item => item.clinic_id === data.activeClinicId);
     const canUseReception = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION"].includes(activeMembership.role);
     const canUsePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION", "PROFESSIONAL"].includes(activeMembership.role);
     const canManagePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION"].includes(activeMembership.role);
     canManagePatientRecords = canManagePatients;
+    activateModule(isMaster ? "access" : (canUsePatients ? "patients" : "attendance"));
     $("receptionWorkspace").classList.toggle("hidden", !canUseReception);
     $("patientWorkspace").classList.toggle("hidden", !canUsePatients);
     $("patientForm").classList.toggle("hidden", !canManagePatients);
@@ -499,6 +518,8 @@
     $("sessionHint").classList.toggle("hidden", isMaster);
     $("sessionName").textContent = data.fullName + (isMaster ? " • MASTER" : "");
     $("sessionEmail").textContent = data.email;
+    $("topUserName").textContent = data.fullName + (isMaster ? " • MASTER" : "");
+    $("topClinicName").textContent = isMaster ? "Administração global" : ((data.memberships || []).find(item => item.clinic_id === data.activeClinicId)?.clinic_name || "Clínica ativa");
     $("clinics").replaceChildren();
     if (isMaster) {
       $("clinics").textContent = "Administrador global da plataforma — sem vínculo a uma clínica.";
@@ -533,6 +554,20 @@
       $("clinics").append(row);
     });
   };
+  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Agendamentos e horários."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
+  let activeData = null;
+  const activateModule = key => {
+    const info = moduleLabels[key] || moduleLabels.attendance;
+    $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
+    $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
+    $("modulePlaceholder").classList.remove("hidden");
+    $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    if (key === "patients" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role)))) $("patientWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
+    if (key === "rooms" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION"].includes(m.role)))) $("receptionWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
+    if (key === "access" && activeData && activeData.globalRole === "MASTER") $("masterTools").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
+    document.querySelectorAll("#moduleNav button").forEach(b => b.classList.toggle("active", b.dataset.module === key));
+  };
+  $("moduleNav").addEventListener("click", e => { const b=e.target.closest("button[data-module]"); if(b) activateModule(b.dataset.module); });
   const submit = async (form, path, payload) => {
     const button = form.querySelector("button[type=submit]");
     button.disabled = true;
