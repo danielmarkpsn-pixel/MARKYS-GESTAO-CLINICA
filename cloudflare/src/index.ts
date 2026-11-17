@@ -47,6 +47,7 @@ export default {
 
 export class MarkysApiContainer extends DurableObject<Env> {
   private starting?: Promise<void>;
+  private configurationSync?: Promise<void>;
   private monitoring?: Promise<void>;
   private lastContainerExit?: {
     message: string;
@@ -66,6 +67,7 @@ export class MarkysApiContainer extends DurableObject<Env> {
   }
 
   async fetch(request: Request): Promise<Response> {
+    await this.ensureBootstrapTokenConfiguration();
     this.starting ??= this.startAndWaitForPort().finally(() => {
       this.starting = undefined;
     });
@@ -77,6 +79,43 @@ export class MarkysApiContainer extends DurableObject<Env> {
     const forwarded = new Request(url, request);
     forwarded.headers.delete("host");
     return this.ctx.container!.getTcpPort(PORT).fetch(forwarded);
+  }
+
+  /**
+   * A running Container keeps the environment it received at startup.
+   * Persist only a SHA-256 fingerprint so a rotated bootstrap secret causes
+   * one controlled restart, without storing or logging the secret itself.
+   */
+  private async ensureBootstrapTokenConfiguration(): Promise<void> {
+    this.configurationSync ??= this.syncBootstrapTokenConfiguration().finally(() => {
+      this.configurationSync = undefined;
+    });
+    await this.configurationSync;
+  }
+
+  private async syncBootstrapTokenConfiguration(): Promise<void> {
+    const token = this.env.MARKYS_MASTER_BOOTSTRAP_TOKEN ?? "";
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(token),
+    );
+    const fingerprint = Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+    const storageKey = "container-bootstrap-token-fingerprint";
+    const previousFingerprint = await this.ctx.storage.get<string>(storageKey);
+
+    if (previousFingerprint === fingerprint) return;
+
+    const container = this.ctx.container!;
+    if (container.running) {
+      console.info("MARKYS container restarting after bootstrap secret rotation");
+      await container.destroy();
+      const previousMonitor = this.monitoring;
+      if (previousMonitor) await previousMonitor.catch(() => undefined);
+    }
+
+    await this.ctx.storage.put(storageKey, fingerprint);
   }
 
   private async startAndWaitForPort(): Promise<void> {
