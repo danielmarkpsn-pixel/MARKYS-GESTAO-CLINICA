@@ -93,7 +93,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .attendance-alert{display:none;padding:9px 11px;margin:0 0 10px;border:1px solid #efc18b;background:#fff4e8;color:#9a4e08;font-size:11px;line-height:1.5}
     .attendance-alert.visible{display:block}
     .attendance-table-wrap{overflow:auto;background:transparent}
-    .attendance-table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:720px;font-size:11px}
+    .attendance-table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:850px;font-size:11px}
     .attendance-table th{text-align:left;padding:0 9px 3px;color:#52677d;font-size:10px;font-weight:700;white-space:nowrap}
     .attendance-table td{background:#fff;border-top:1px solid #d7dce5;border-bottom:1px solid #d7dce5;padding:8px 9px;vertical-align:middle}
     .attendance-table td:first-child{border-left:5px solid #8998a8;width:125px}
@@ -112,6 +112,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .attendance-tag.status-other{background:#eef0f3;color:#637386}
     .attendance-professional{font-weight:650;color:#233f5d;min-width:150px}
     .attendance-empty{text-align:center;padding:28px!important;color:#718196;background:#fff;border:1px dashed #cbd4df}
+    .attendance-actions{display:flex;gap:4px;flex-wrap:wrap;min-width:130px}.attendance-actions button{border:1px solid #c8d7e5;background:#f5f9fd;color:#07549a;border-radius:3px;padding:5px 7px;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}.attendance-actions button:disabled{opacity:.55;cursor:wait}
     .attendance-message{font-size:11px;color:#a12c27;min-height:17px;margin:6px 0}
     @media(max-width:760px){.attendance-workspace{padding:9px}.attendance-search{max-width:none;flex-basis:100%}.attendance-toolbar select{flex:1}}
   </style>
@@ -182,7 +183,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <div id="attendanceAlert" class="attendance-alert"></div>
   <div class="attendance-table-wrap">
     <table class="attendance-table">
-      <thead><tr><th>HORÁRIO / SITUAÇÃO</th><th>PACIENTE</th><th>ATENDIMENTO / PRIORIDADE</th><th>PROFISSIONAL</th><th>CONSULTÓRIO</th></tr></thead>
+      <thead><tr><th>HORÁRIO / SITUAÇÃO</th><th>PACIENTE</th><th>ATENDIMENTO / PRIORIDADE</th><th>PROFISSIONAL</th><th>CONSULTÓRIO</th><th>AÇÕES</th></tr></thead>
       <tbody id="attendanceRows"><tr><td class="attendance-empty" colspan="5">Carregando atendimentos...</td></tr></tbody>
     </table>
   </div>
@@ -667,7 +668,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       rows.replaceChildren();
       if (!items.length) {
         const tr=document.createElement("tr"), td=document.createElement("td");
-        td.colSpan=5; td.className="attendance-empty"; td.textContent="Nenhum atendimento encontrado para os filtros selecionados.";
+        td.colSpan=6; td.className="attendance-empty"; td.textContent="Nenhum atendimento encontrado para os filtros selecionados.";
         tr.append(td); rows.append(tr); return;
       }
       items.forEach(item=>{
@@ -690,12 +691,17 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
         service.append(tags);
         const professional=document.createElement("td"); professional.className="attendance-professional"; professional.textContent=item.professional_name||"Não atribuído";
         const room=document.createElement("td"); room.textContent=item.room_name||"Não definido";
-        tr.append(first,patient,service,professional,room); rows.append(tr);
+        const actions=document.createElement("td"); actions.className="attendance-actions";
+        const addAction=(label,next)=>{const button=document.createElement("button");button.type="button";button.textContent=label;button.addEventListener("click",async()=>{button.disabled=true;try{const token=await csrf();const response=await fetch("/api/v1/clinic/queue/"+item.id+"/status",{method:"PATCH",credentials:"same-origin",headers:{"Content-Type":"application/json","X-XSRF-TOKEN":token},body:JSON.stringify({status:next})});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||"Não foi possível atualizar o atendimento.");await loadAttendance();}catch(error){attendanceMessage(error.message);button.disabled=false;}});actions.append(button);};
+        if(status==="WAITING") addAction("Chamar","CALLED");
+        if(status==="CALLED"){addAction("Iniciar","IN_SERVICE");addAction("Voltar à fila","WAITING");}
+        if(status==="IN_SERVICE"){addAction("Finalizar","COMPLETED");addAction("Liberar","RELEASED");}
+        tr.append(first,patient,service,professional,room,actions); rows.append(tr);
       });
     } catch(error) {
       rows.replaceChildren();
       const tr=document.createElement("tr"),td=document.createElement("td");
-      td.colSpan=5;td.className="attendance-empty";td.textContent=error.message||"Falha ao carregar os atendimentos.";
+      td.colSpan=6;td.className="attendance-empty";td.textContent=error.message||"Falha ao carregar os atendimentos.";
       tr.append(td);rows.append(tr);attendanceMessage("Verifique sua conexão e tente atualizar a lista.");
     } finally { $("attendanceRefresh").disabled=false; }
   };
