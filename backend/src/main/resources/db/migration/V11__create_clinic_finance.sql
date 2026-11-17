@@ -93,8 +93,8 @@ BEGIN
         EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
         EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
         EXECUTE format(
-            'CREATE POLICY tenant_isolation_%I ON %I USING (clinic_id = NULLIF(current_setting(''app.current_clinic_id'', true), '''')::uuid) WITH CHECK (clinic_id = NULLIF(current_setting(''app.current_clinic_id'', true), '''')::uuid)',
-            t, t
+            'CREATE POLICY %I ON %I USING (clinic_id = NULLIF(current_setting(''app.current_clinic_id'', true), '''')::uuid) WITH CHECK (clinic_id = NULLIF(current_setting(''app.current_clinic_id'', true), '''')::uuid)',
+            'tenant_isolation_' || t, t
         );
     END LOOP;
 END $$;
