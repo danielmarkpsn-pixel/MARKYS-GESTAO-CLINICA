@@ -74,6 +74,7 @@ public class MasterClinicController {
             """, membershipId, clinicId, userId);
         jdbc.queryForObject("SELECT set_config('app.current_clinic_id', ?, true)", String.class, clinicId.toString());
         seedClinicCatalog(clinicId);
+        seedClinicFinance(clinicId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
             "clinicId", clinicId,
@@ -83,6 +84,28 @@ public class MasterClinicController {
         ));
     }
 
+
+    private void seedClinicFinance(UUID clinicId) {
+        List<String[]> categories = List.of(
+            new String[] {"Consultas particulares", "INCOME"},
+            new String[] {"Exames e procedimentos", "INCOME"},
+            new String[] {"ASO e saúde ocupacional", "INCOME"},
+            new String[] {"Convênios", "INCOME"},
+            new String[] {"Outros recebimentos", "INCOME"},
+            new String[] {"Salários e honorários", "EXPENSE"},
+            new String[] {"Aluguel e condomínio", "EXPENSE"},
+            new String[] {"Materiais e insumos", "EXPENSE"},
+            new String[] {"Serviços terceirizados", "EXPENSE"},
+            new String[] {"Impostos e taxas", "EXPENSE"},
+            new String[] {"Outros pagamentos", "EXPENSE"}
+        );
+        for (String[] category : categories) {
+            jdbc.update("""
+                INSERT INTO finance_categories (clinic_id, name, direction)
+                VALUES (?, ?, ?) ON CONFLICT DO NOTHING
+                """, clinicId, category[0], category[1]);
+        }
+    }
 
     private void seedClinicCatalog(UUID clinicId) {
         Map<String, UUID> rooms = new HashMap<>();
