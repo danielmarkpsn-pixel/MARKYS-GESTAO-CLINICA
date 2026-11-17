@@ -43,7 +43,7 @@ public class QueueController {
 
         String term = search == null ? "" : search.trim();
         if (term.length() > 120) term = term.substring(0, 120);
-        String pattern = "%" + term.replace("%", "\\%").replace("_", "\\_") + "%";
+        String pattern = "%" + term + "%";
 
         List<Map<String, Object>> rows = jdbc.queryForList("""
             SELECT q.id,
