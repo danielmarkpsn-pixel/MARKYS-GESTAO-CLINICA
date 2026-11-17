@@ -58,16 +58,16 @@ class DatabaseMigrationIntegrationTest {
         Integer clinicalTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema()
-               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents')
+               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks')
             """, Integer.class);
         Integer masterTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(8);
+        assertThat(migrationCount).isEqualTo(9);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(9);
+        assertThat(clinicalTables).isEqualTo(12);
         assertThat(masterTables).isEqualTo(1);
     }
 
@@ -125,7 +125,7 @@ class DatabaseMigrationIntegrationTest {
         // Test cleanup is intentionally explicit: TRUNCATE is not filtered by RLS,
         // unlike DELETE, and CASCADE clears tenant-owned rows before parent clinics.
         jdbc.execute("""
-            TRUNCATE TABLE clinical_notes, encounters, triage_records, queue_entries,
+            TRUNCATE TABLE appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
                 exam_catalog, service_types, clinic_rooms, professionals, patients, platform_admins,
                 clinic_memberships, app_users, clinics CASCADE
             """);
