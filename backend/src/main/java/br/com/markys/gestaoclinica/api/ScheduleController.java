@@ -145,17 +145,20 @@ public class ScheduleController {
         if(!body.endsAt().isAfter(body.startsAt()))return badRequest("O fim do bloqueio deve ser posterior ao início.");
         if(body.professionalId()==null && body.roomId()==null)return badRequest("Selecione um profissional ou consultório para bloquear.");
         UUID clinic=TenantContext.requireClinicId();
+        ZoneId zone=clinicZone(clinic);
+        OffsetDateTime blockStart=body.startsAt().atZone(zone).toOffsetDateTime();
+        OffsetDateTime blockEnd=body.endsAt().atZone(zone).toOffsetDateTime();
         if(body.professionalId()!=null && !professionalActive(clinic,body.professionalId()))return badRequest("Profissional inválido ou inativo.");
         if(body.roomId()!=null && jdbc.queryForObject("SELECT count(*) FROM clinic_rooms WHERE clinic_id=? AND id=? AND status='ACTIVE'",Integer.class,clinic,body.roomId())==0)return badRequest("Consultório inválido ou inativo.");
         if(body.professionalId()!=null) lockResource(clinic,"P:"+body.professionalId(),body.startsAt().toLocalDate());
         if(body.roomId()!=null) lockResource(clinic,"R:"+body.roomId(),body.startsAt().toLocalDate());
-        if(body.professionalId()!=null && countConflict(clinic,body.professionalId(),null,body.startsAt(),body.endsAt())>0)return conflict("Há agendamento no período deste profissional.");
-        if(body.roomId()!=null && countConflict(clinic,null,body.roomId(),body.startsAt(),body.endsAt())>0)return conflict("Há agendamento no período deste consultório.");
+        if(body.professionalId()!=null && countConflict(clinic,body.professionalId(),null,blockStart,blockEnd)>0)return conflict("Há agendamento no período deste profissional.");
+        if(body.roomId()!=null && countConflict(clinic,null,body.roomId(),blockStart,blockEnd)>0)return conflict("Há agendamento no período deste consultório.");
         UUID id=UUID.randomUUID();
         jdbc.update("""
             INSERT INTO schedule_blocks(id,clinic_id,professional_id,room_id,starts_at,ends_at,reason,created_by_membership_id)
             VALUES(?,?,?,?,?,?,?,?)
-            """,id,clinic,body.professionalId(),body.roomId(),body.startsAt(),body.endsAt(),body.reason().trim(),access.membershipId());
+            """,id,clinic,body.professionalId(),body.roomId(),blockStart,blockEnd,body.reason().trim(),access.membershipId());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"message","Bloqueio cadastrado."));
     }
 
@@ -208,8 +211,11 @@ public class ScheduleController {
         if(!body.endsAt().isAfter(body.startsAt()))return badRequest("O horário final deve ser posterior ao inicial.");
         long minutes=Duration.between(body.startsAt(),body.endsAt()).toMinutes();
         if(minutes<5 || minutes>480)return badRequest("A duração deve ficar entre 5 minutos e 8 horas.");
-        if(body.startsAt().isBefore(OffsetDateTime.now().minusMinutes(1)))return badRequest("Não é permitido criar ou remarcar agendamento no passado.");
         UUID clinic=TenantContext.requireClinicId();
+        ZoneId zone=clinicZone(clinic);
+        OffsetDateTime appointmentStart=body.startsAt().atZone(zone).toOffsetDateTime();
+        OffsetDateTime appointmentEnd=body.endsAt().atZone(zone).toOffsetDateTime();
+        if(appointmentStart.isBefore(OffsetDateTime.now().minusMinutes(1)))return badRequest("Não é permitido criar ou remarcar agendamento no passado.");
         if(!professionalActive(clinic,body.professionalId()))return badRequest("Selecione um profissional ativo.");
         if(jdbc.queryForObject("SELECT count(*) FROM patients WHERE clinic_id=? AND id=? AND status='ACTIVE'",Integer.class,clinic,body.patientId())==0)return badRequest("Selecione um paciente ativo.");
         if(body.roomId()!=null && jdbc.queryForObject("SELECT count(*) FROM clinic_rooms WHERE clinic_id=? AND id=? AND status='ACTIVE'",Integer.class,clinic,body.roomId())==0)return badRequest("Selecione um consultório ativo.");
@@ -235,24 +241,24 @@ public class ScheduleController {
         });
         if(!aligned)return badRequest("O horário não respeita os intervalos definidos na agenda do profissional.");
 
-        if(countConflict(clinic,body.professionalId(),null,body.startsAt(),body.endsAt(),id)>0)return conflict("O profissional já possui agendamento neste intervalo.");
-        if(body.roomId()!=null && countConflict(clinic,null,body.roomId(),body.startsAt(),body.endsAt(),id)>0)return conflict("O consultório já possui agendamento neste intervalo.");
-        if(body.professionalId()!=null && blockConflict(clinic,body.professionalId(),null,body.startsAt(),body.endsAt())>0)return conflict("O profissional possui bloqueio neste intervalo.");
-        if(body.roomId()!=null && blockConflict(clinic,null,body.roomId(),body.startsAt(),body.endsAt())>0)return conflict("O consultório possui bloqueio neste intervalo.");
+        if(countConflict(clinic,body.professionalId(),null,appointmentStart,appointmentEnd,id)>0)return conflict("O profissional já possui agendamento neste intervalo.");
+        if(body.roomId()!=null && countConflict(clinic,null,body.roomId(),appointmentStart,appointmentEnd,id)>0)return conflict("O consultório já possui agendamento neste intervalo.");
+        if(body.professionalId()!=null && blockConflict(clinic,body.professionalId(),null,appointmentStart,appointmentEnd)>0)return conflict("O profissional possui bloqueio neste intervalo.");
+        if(body.roomId()!=null && blockConflict(clinic,null,body.roomId(),appointmentStart,appointmentEnd)>0)return conflict("O consultório possui bloqueio neste intervalo.");
 
         if(id==null){
             UUID appointmentId=UUID.randomUUID();
             jdbc.update("""
                 INSERT INTO appointments(id,clinic_id,patient_id,professional_id,room_id,starts_at,ends_at,reason,created_by_membership_id,updated_by_membership_id)
                 VALUES(?,?,?,?,?,?,?,?,?,?)
-                """,appointmentId,clinic,body.patientId(),body.professionalId(),body.roomId(),body.startsAt(),body.endsAt(),clean(body.reason()),access.membershipId(),access.membershipId());
+                """,appointmentId,clinic,body.patientId(),body.professionalId(),body.roomId(),appointmentStart,appointmentEnd,clean(body.reason()),access.membershipId(),access.membershipId());
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",appointmentId,"status","SCHEDULED","message","Agendamento criado com sucesso."));
         }
         int changed=jdbc.update("""
             UPDATE appointments SET patient_id=?,professional_id=?,room_id=?,starts_at=?,ends_at=?,reason=?,
                 updated_by_membership_id=?,updated_at=now()
              WHERE clinic_id=? AND id=? AND status IN ('SCHEDULED','CONFIRMED')
-            """,body.patientId(),body.professionalId(),body.roomId(),body.startsAt(),body.endsAt(),clean(body.reason()),access.membershipId(),clinic,id);
+            """,body.patientId(),body.professionalId(),body.roomId(),appointmentStart,appointmentEnd,clean(body.reason()),access.membershipId(),clinic,id);
         if(changed==0)return conflict("Este agendamento não pode mais ser editado. Atualize a agenda.");
         return ResponseEntity.ok(Map.of("id",id,"message","Agendamento atualizado."));
     }
@@ -337,9 +343,9 @@ public class ScheduleController {
     private record Access(UUID membershipId,String role,UUID professionalId){}
     public record RuleRequest(@NotNull UUID professionalId,@Min(1) @Max(7) int weekday,
         @NotNull LocalTime startsLocal,@NotNull LocalTime endsLocal,@Min(5) @Max(240) int slotMinutes){}
-    public record BlockRequest(UUID professionalId,UUID roomId,@NotNull OffsetDateTime startsAt,
-        @NotNull OffsetDateTime endsAt,@NotBlank @Size(max=180) String reason){}
+    public record BlockRequest(UUID professionalId,UUID roomId,@NotNull LocalDateTime startsAt,
+        @NotNull LocalDateTime endsAt,@NotBlank @Size(max=180) String reason){}
     public record AppointmentRequest(@NotNull UUID patientId,@NotNull UUID professionalId,UUID roomId,
-        @NotNull OffsetDateTime startsAt,@NotNull OffsetDateTime endsAt,@Size(max=180) String reason){}
+        @NotNull LocalDateTime startsAt,@NotNull LocalDateTime endsAt,@Size(max=180) String reason){}
     public record StatusRequest(@NotBlank String status,@Size(max=240) String cancellationReason){}
 }
