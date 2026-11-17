@@ -310,6 +310,9 @@ class DatabaseMigrationIntegrationTest {
             .isEqualTo("CONFIRMED");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM appointment_events WHERE appointment_id=?",
             Integer.class, appointmentId)).isEqualTo(2);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            jdbc.update("UPDATE appointment_events SET detail='alterado' WHERE appointment_id=?", appointmentId))
+            .isInstanceOf(DataAccessException.class);
 
         mockMvc.perform(post("/api/v1/auth/master-bootstrap")
                 .cookie(csrfCookie).header("X-XSRF-TOKEN", token)
