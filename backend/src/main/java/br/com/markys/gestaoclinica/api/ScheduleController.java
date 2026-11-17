@@ -155,6 +155,8 @@ public class ScheduleController {
         if(body.roomId()!=null) lockResource(clinic,"R:"+body.roomId(),body.startsAt().toLocalDate());
         if(body.professionalId()!=null && countConflict(clinic,body.professionalId(),null,blockStart,blockEnd)>0)return conflict("Há agendamento no período deste profissional.");
         if(body.roomId()!=null && countConflict(clinic,null,body.roomId(),blockStart,blockEnd)>0)return conflict("Há agendamento no período deste consultório.");
+        if(body.professionalId()!=null && blockOverlap(clinic,body.professionalId(),null,blockStart,blockEnd)>0)return conflict("Já existe outro bloqueio para este profissional no período.");
+        if(body.roomId()!=null && blockOverlap(clinic,null,body.roomId(),blockStart,blockEnd)>0)return conflict("Já existe outro bloqueio para este consultório no período.");
         UUID id=UUID.randomUUID();
         jdbc.update("""
             INSERT INTO schedule_blocks(id,clinic_id,professional_id,room_id,starts_at,ends_at,reason,created_by_membership_id)
@@ -223,6 +225,7 @@ public class ScheduleController {
         if(id!=null && jdbc.queryForObject("SELECT count(*) FROM appointments WHERE clinic_id=? AND id=?",Integer.class,clinic,id)==0)return ResponseEntity.notFound().build();
 
         lockResource(clinic,"P:"+body.professionalId(),body.startsAt().toLocalDate());
+        lockResource(clinic,"A:"+body.patientId(),body.startsAt().toLocalDate());
         if(body.roomId()!=null)lockResource(clinic,"R:"+body.roomId(),body.startsAt().toLocalDate());
         ZonedDateTime localStart=body.startsAt().atZone(zone), localEnd=body.endsAt().atZone(zone);
         if(!localStart.toLocalDate().equals(localEnd.toLocalDate()))return badRequest("O agendamento deve terminar no mesmo dia local.");
@@ -241,6 +244,7 @@ public class ScheduleController {
         });
         if(!aligned)return badRequest("O horário não respeita os intervalos definidos na agenda do profissional.");
 
+        if(countPatientConflict(clinic,body.patientId(),appointmentStart,appointmentEnd,id)>0)return conflict("O paciente já possui outro agendamento neste intervalo.");
         if(countConflict(clinic,body.professionalId(),null,appointmentStart,appointmentEnd,id)>0)return conflict("O profissional já possui agendamento neste intervalo.");
         if(body.roomId()!=null && countConflict(clinic,null,body.roomId(),appointmentStart,appointmentEnd,id)>0)return conflict("O consultório já possui agendamento neste intervalo.");
         if(body.professionalId()!=null && blockConflict(clinic,body.professionalId(),null,appointmentStart,appointmentEnd)>0)return conflict("O profissional possui bloqueio neste intervalo.");
@@ -336,6 +340,21 @@ public class ScheduleController {
                AND (?::uuid IS NULL OR professional_id=?)
                AND (?::uuid IS NULL OR room_id=?)
             """,Integer.class,clinic,end,start,exclude,exclude,professional,professional,room,room);
+    }
+    private int countPatientConflict(UUID clinic,UUID patient,OffsetDateTime start,OffsetDateTime end,UUID exclude) {
+        return jdbc.queryForObject("""
+            SELECT count(*) FROM appointments WHERE clinic_id=? AND patient_id=?
+              AND status NOT IN ('CANCELLED','NO_SHOW') AND starts_at < ? AND ends_at > ?
+              AND (?::uuid IS NULL OR id<>?)
+            """,Integer.class,clinic,patient,end,start,exclude,exclude);
+    }
+    private int blockOverlap(UUID clinic,UUID professional,UUID room,OffsetDateTime start,OffsetDateTime end) {
+        return jdbc.queryForObject("""
+            SELECT count(*) FROM schedule_blocks WHERE clinic_id=?
+              AND starts_at < ? AND ends_at > ?
+              AND (?::uuid IS NULL OR professional_id=?)
+              AND (?::uuid IS NULL OR room_id=?)
+            """,Integer.class,clinic,end,start,professional,professional,room,room);
     }
     private int blockConflict(UUID clinic,UUID professional,UUID room,OffsetDateTime start,OffsetDateTime end) {
         return jdbc.queryForObject("""
