@@ -1,3 +1,7 @@
+-- Add the tenant-scoped unique key required by the composite audit foreign key.
+ALTER TABLE appointments
+    ADD CONSTRAINT uq_appointments_clinic_id_id UNIQUE (clinic_id, id);
+
 -- Immutable event trail for scheduling operations.
 CREATE TABLE appointment_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
