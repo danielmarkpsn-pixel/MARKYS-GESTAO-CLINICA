@@ -440,37 +440,42 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     });
     if (!choices.childElementCount) choices.textContent = "Nenhum exame ativo cadastrado.";
   };
+  const patientDate = v => v ? new Date(v+"T00:00:00").toLocaleDateString("pt-BR") : "Não informado";
+  const patientAgeLabel = v => {if(!v)return "Não informada";const b=new Date(v+"T00:00:00"),n=new Date();let y=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))y--;return y>=0?y+" anos":"Não informada";};
   const loadPatients = async () => {
-    try {
-      const items = await catalogRequest("/api/v1/clinic/patients");
-      const list = $("patientList"); list.replaceChildren();
-      items.forEach(item => {
-        const row = document.createElement("div"); row.className = "catalog-item";
-        const info = document.createElement("span");
-        const birth = item.birth_date ? new Date(item.birth_date + "T00:00:00").toLocaleDateString("pt-BR") : "Nascimento não informado";
-        info.textContent = item.full_name + " • " + birth + " • " + (item.insurance_name || "Sem convênio");
-        const status = document.createElement("small"); status.textContent = item.active_queue_entries + " na fila";
-        row.append(info, status);
-        if (Number(item.document_count) > 0) {
-          const view = document.createElement("button"); view.type = "button"; view.textContent = "Ver PDF";
-          view.addEventListener("click", async () => {
-            try {
-              const docs = await catalogRequest("/api/v1/clinic/patients/" + item.id + "/documents");
-              const doc = docs[0]; if (!doc) return;
-              const response = await fetch("/api/v1/clinic/patients/" + item.id + "/documents/" + doc.id, {credentials:"same-origin"});
-              if (!response.ok) throw new Error("Não foi possível abrir o documento.");
-              const blob = await response.blob(); const url = URL.createObjectURL(blob);
-              const link = document.createElement("a"); link.href = url; link.download = "documento-paciente.pdf";
-              document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
-            } catch (error) { patientMessage(error.message); }
-          });
-          row.append(view);
-        }
-        list.append(row);
+    const list=$("patientList");list.replaceChildren();
+    try{
+      const p=new URLSearchParams({search:$("patientSearch").value.trim(),status:$("patientStatusFilter").value});
+      const items=await catalogRequest("/api/v1/clinic/patients?"+p.toString());$("patientCount").textContent=items.length+" paciente(s)";
+      if(!items.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=6;td.className="patient-empty";td.textContent="Nenhum paciente encontrado.";tr.append(td);list.append(tr);return;}
+      items.forEach(item=>{
+        const tr=document.createElement("tr"),nameCell=document.createElement("td"),name=document.createElement("div");name.className="patient-name";name.textContent=item.full_name;nameCell.append(name);tr.append(nameCell);
+        const birth=document.createElement("td");birth.textContent=patientDate(item.birth_date)+" • "+patientAgeLabel(item.birth_date);tr.append(birth);
+        const insurance=document.createElement("td");insurance.textContent=item.insurance_name||"Particular";tr.append(insurance);
+        const last=document.createElement("td");last.textContent=item.last_attendance?new Date(item.last_attendance).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"Sem atendimento";tr.append(last);
+        const status=document.createElement("td"),pill=document.createElement("span");pill.className="patient-state"+(item.status==="INACTIVE"?" inactive":"");pill.textContent=item.status==="INACTIVE"?"Inativo":"Ativo";status.append(pill);tr.append(status);
+        const td=document.createElement("td"),actions=document.createElement("div");actions.className="patient-row-actions";
+        const add=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
+        add("Ficha",()=>showPatientDetail(item.id));if(canManagePatientRecords)add("Editar",()=>editPatient(item.id));
+        if(canManagePatientRecords)add(item.status==="ACTIVE"?"Inativar":"Reativar",async()=>{if(item.status==="ACTIVE"&&!confirm("Inativar este paciente? O histórico será preservado."))return;try{await catalogRequest("/api/v1/clinic/patients/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:item.status==="ACTIVE"?"INACTIVE":"ACTIVE"})});patientMessage("Situação atualizada.",true);await loadPatients();}catch(err){patientMessage(err.message);}});
+        td.append(actions);tr.append(td);list.append(tr);
       });
-      if (!items.length) list.textContent = "Nenhum paciente cadastrado.";
-    } catch (error) { patientMessage(error.message); }
+    }catch(err){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=6;td.className="patient-empty";td.textContent=err.message;tr.append(td);list.append(tr);patientMessage(err.message);}
   };
+  const showPatientDetail = async id => {
+    try{
+      const patient=await catalogRequest("/api/v1/clinic/patients/"+id),history=await catalogRequest("/api/v1/clinic/patients/"+id+"/history");
+      $("patient-directory").classList.add("hidden");$("patientForm").classList.add("hidden");$("patientDetail").classList.remove("hidden");$("patientDetailName").textContent=patient.full_name;
+      const data=$("patientDetailData");data.replaceChildren();
+      [["Nascimento",patientDate(patient.birth_date)],["Idade",patientAgeLabel(patient.birth_date)],["Sexo",patient.sex||"Não informado"],["Convênio",patient.insurance_name||"Particular"],["Cargo / função",patient.job_title||"Não informado"],["Situação",patient.status==="ACTIVE"?"Ativo":"Inativo"]].forEach(pair=>{const box=document.createElement("div");box.className="patient-detail-cell";const small=document.createElement("small"),strong=document.createElement("strong");small.textContent=pair[0];strong.textContent=pair[1];box.append(small,strong);data.append(box);});
+      const render=(target,items,kind)=>{const box=$(target);box.replaceChildren();if(!items.length){box.textContent="Nenhum registro encontrado.";return;}items.forEach(item=>{const row=document.createElement("div");row.className="patient-history-item";const title=document.createElement("strong"),meta=document.createElement("span");title.textContent=kind==="attendance"?(item.service_label||"Atendimento"):(item.professional_name||"Consulta");meta.textContent=kind==="attendance"?patientDate(String(item.arrived_at).slice(0,10))+" • "+item.status:"Início: "+(item.started_at?new Date(item.started_at).toLocaleString("pt-BR"):"—")+" • "+item.status;row.append(title,meta);box.append(row);});};
+      render("patientAttendanceHistory",history.attendances||[],"attendance");render("patientEncounterHistory",history.encounters||[],"encounter");
+    }catch(err){patientMessage(err.message);}
+  };
+  $("closePatientDetail").addEventListener("click",()=>{$("patientDetail").classList.add("hidden");$("patient-directory").classList.remove("hidden");});
+  $("newPatientButton").addEventListener("click",()=>{resetPatientForm();$("patientFormTitle").textContent="Novo paciente";$("patientForm").classList.remove("hidden");$("patient-directory").classList.add("hidden");$("patientDetail").classList.add("hidden");});
+  $("cancelPatientForm").addEventListener("click",()=>{resetPatientForm();$("patientForm").classList.add("hidden");$("patient-directory").classList.remove("hidden");});
+  $("patientSearchButton").addEventListener("click",loadPatients);$("patientSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadPatients();}});$("patientStatusFilter").addEventListener("change",loadPatients);$("patientRefreshButton").addEventListener("click",loadPatients);
   const editPatient = async id => {
     try {
       const patient = await catalogRequest("/api/v1/clinic/patients/" + id);
@@ -490,11 +495,13 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       const selected = new Set(patient.examIds || []);
       $("patientExamChoices").querySelectorAll("input[type=checkbox]").forEach(input => { input.checked = selected.has(input.value); });
       $("patientSubmit").textContent = "Salvar alterações";
+      $("patientFormTitle").textContent = "Editar paciente";
+      $("patientForm").classList.remove("hidden"); $("patient-directory").classList.add("hidden"); $("patientDetail").classList.add("hidden");
       $("cancelPatientEdit").classList.remove("hidden");
       $("patientName").focus(); patientMessage("Editando cadastro. O CPF permanece protegido.");
     } catch (error) { patientMessage(error.message); }
   };
-  $("cancelPatientEdit").addEventListener("click", resetPatientForm);
+  $("cancelPatientEdit").addEventListener("click", () => { resetPatientForm(); $("patientForm").classList.add("hidden"); $("patient-directory").classList.remove("hidden"); });
   $("patientForm").addEventListener("submit", async event => {
     event.preventDefault();
     const form = event.currentTarget; const button = $("patientSubmit");
@@ -529,7 +536,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
           await catalogRequest("/api/v1/clinic/patients/" + patientId + "/documents", {method:"POST", body:data});
         } catch (uploadError) { uploadWarning = " O cadastro foi salvo, mas o PDF não foi anexado: " + uploadError.message; }
       }
-      resetPatientForm(); patientMessage(successMessage + uploadWarning, !uploadWarning); await loadPatients();
+      resetPatientForm(); $("patientForm").classList.add("hidden"); $("patient-directory").classList.remove("hidden"); $("patientDetail").classList.add("hidden"); patientMessage(successMessage + uploadWarning, !uploadWarning); await loadPatients();
     } catch (error) { patientMessage(error.message); }
     finally { button.disabled = false; }
   });
@@ -698,7 +705,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("modulePlaceholder").classList.remove("hidden");
     $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
-    if (key === "patients" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role)))) $("patientWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
+    if (key === "patients" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("patientWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); $("patient-directory").classList.remove("hidden"); $("patientForm").classList.add("hidden"); $("patientDetail").classList.add("hidden"); loadPatients(); }
     if (key === "rooms" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION"].includes(m.role)))) $("receptionWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
     if (key === "access" && activeData && activeData.globalRole === "MASTER") $("masterTools").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
     document.querySelectorAll("#moduleNav button").forEach(b => b.classList.toggle("active", b.dataset.module === key));
