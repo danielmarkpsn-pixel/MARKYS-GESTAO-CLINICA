@@ -149,6 +149,44 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 .professional-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}
 .professional-history-item strong{display:block;color:#244766}
 @media(max-width:650px){.professional-form{grid-template-columns:1fr}.professional-form .wide{grid-column:auto}}
+  
+    /* Módulo Agenda — planejamento, disponibilidade e controle de conflitos */
+    .schedule-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
+    .schedule-toolbar{display:flex;gap:9px;align-items:end;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:13px;margin-bottom:12px}
+    .schedule-field{display:grid;gap:5px;min-width:125px;flex:1}
+    .schedule-field label{font-size:10px;letter-spacing:.4px;color:#52677d;margin:0}
+    .schedule-field input,.schedule-field select{height:35px;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;color:#29445f;background:#fff;min-width:0;width:100%}
+    .schedule-btn{height:35px;border:1px solid #c5d5e4;background:#fff;color:#145a91;border-radius:4px;padding:0 12px;font-size:11px;font-weight:750;cursor:pointer}
+    .schedule-btn.primary{background:#0867b2;border-color:#0867b2;color:white}
+    .schedule-btn:disabled{opacity:.55;cursor:wait}
+    .schedule-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0 0 12px}
+    .schedule-kpi{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px 14px}
+    .schedule-kpi small{display:block;color:#718297;font-size:10px;margin-bottom:5px}
+    .schedule-kpi strong{font-size:22px;color:#17436c}
+    .schedule-message{min-height:20px;font-size:11px;color:#a12c26;margin:4px 0}
+    .schedule-table-wrap{overflow:auto;background:#fff;border:1px solid #dce4ed;border-radius:6px}
+    .schedule-table{width:100%;min-width:900px;border-collapse:collapse;font-size:11px}
+    .schedule-table th{background:#edf3f8;color:#536a80;text-align:left;padding:11px 10px;font-size:9px;letter-spacing:.5px}
+    .schedule-table td{padding:11px 10px;border-top:1px solid #e8edf2;color:#344e67;vertical-align:middle}
+    .schedule-table tr:hover td{background:#f8fbfe}
+    .schedule-state{display:inline-block;border-radius:20px;padding:4px 8px;font-size:9px;font-weight:800;background:#eaf3fb;color:#17639d;white-space:nowrap}
+    .schedule-state.cancelled,.schedule-state.no-show{background:#fff0ef;color:#a33b35}
+    .schedule-state.completed{background:#eaf7ef;color:#267043}
+    .schedule-actions{display:flex;gap:5px;flex-wrap:wrap}
+    .schedule-actions button{border:1px solid #d2dce6;background:#fff;color:#1b5d91;border-radius:4px;padding:5px 7px;font-size:10px;font-weight:700;cursor:pointer}
+    .schedule-panel{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:16px;margin-top:12px}
+    .schedule-panel h4{margin:0 0 12px;color:#1b4269;font-size:14px}
+    .schedule-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+    .schedule-form-grid .wide{grid-column:1/-1}
+    .schedule-form-grid input,.schedule-form-grid select{height:37px;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;width:100%;min-width:0}
+    .schedule-form-grid label{font-size:10px;color:#52677d;margin-bottom:5px}
+    .schedule-form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}
+    .schedule-rule-list{display:grid;gap:6px;margin-top:12px}
+    .schedule-rule{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#f5f8fb;border:1px solid #e2e9f0;border-radius:4px;padding:8px 10px;font-size:11px;color:#40566d}
+    .schedule-empty{padding:25px;text-align:center;color:#8190a0;font-size:12px}
+    @media(max-width:760px){.schedule-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.schedule-form-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:480px){.schedule-form-grid{grid-template-columns:1fr}.schedule-form-grid .wide{grid-column:auto}}
+
   </style>
 </head>
 <body>
@@ -309,6 +347,61 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       </div>
     </section>
   </main>
+
+<section id="scheduleWorkspace" class="schedule-workspace hidden" aria-label="Agenda clínica">
+  <div class="schedule-toolbar">
+    <div class="schedule-field"><label for="scheduleFrom">DE</label><input id="scheduleFrom" type="date"></div>
+    <div class="schedule-field"><label for="scheduleTo">ATÉ</label><input id="scheduleTo" type="date"></div>
+    <div class="schedule-field"><label for="scheduleProfessionalFilter">PROFISSIONAL</label><select id="scheduleProfessionalFilter"><option value="">Todos os profissionais</option></select></div>
+    <div class="schedule-field"><label for="scheduleStatusFilter">SITUAÇÃO</label><select id="scheduleStatusFilter"><option value="">Todas as situações</option><option value="SCHEDULED">Agendado</option><option value="CONFIRMED">Confirmado</option><option value="CHECKED_IN">Check-in</option><option value="COMPLETED">Concluído</option><option value="CANCELLED">Cancelado</option><option value="NO_SHOW">Não compareceu</option></select></div>
+    <button id="scheduleSearch" class="schedule-btn primary" type="button">Consultar agenda</button>
+    <button id="scheduleNew" class="schedule-btn primary" type="button">+ Novo agendamento</button>
+  </div>
+  <div class="schedule-kpis">
+    <div class="schedule-kpi"><small>AGENDAMENTOS NO PERÍODO</small><strong id="scheduleTotal">0</strong></div>
+    <div class="schedule-kpi"><small>AGUARDANDO / CONFIRMADOS</small><strong id="schedulePending">0</strong></div>
+    <div class="schedule-kpi"><small>CHECK-IN REALIZADO</small><strong id="scheduleCheckedIn">0</strong></div>
+    <div class="schedule-kpi"><small>CONCLUÍDOS</small><strong id="scheduleCompleted">0</strong></div>
+  </div>
+  <div id="scheduleMessage" class="schedule-message" role="status" aria-live="polite"></div>
+  <div class="schedule-table-wrap"><table class="schedule-table"><thead><tr><th>DATA / HORÁRIO</th><th>PACIENTE</th><th>PROFISSIONAL</th><th>CONSULTÓRIO</th><th>FINALIDADE</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="scheduleRows"><tr><td colspan="7" class="schedule-empty">Carregando agenda...</td></tr></tbody></table></div>
+  <form id="scheduleForm" class="schedule-panel hidden">
+    <h4 id="scheduleFormTitle">Novo agendamento</h4>
+    <div class="schedule-form-grid">
+      <div><label for="schedulePatient">PACIENTE *</label><select id="schedulePatient" required></select></div>
+      <div><label for="scheduleProfessional">PROFISSIONAL *</label><select id="scheduleProfessional" required></select></div>
+      <div><label for="scheduleRoom">CONSULTÓRIO</label><select id="scheduleRoom"><option value="">Sem consultório definido</option></select></div>
+      <div><label for="scheduleDate">DATA *</label><input id="scheduleDate" type="date" required></div>
+      <div><label for="scheduleStart">INÍCIO *</label><input id="scheduleStart" type="time" required></div>
+      <div><label for="scheduleEnd">TÉRMINO *</label><input id="scheduleEnd" type="time" required></div>
+      <div class="wide"><label for="scheduleReason">TIPO / FINALIDADE DO AGENDAMENTO</label><input id="scheduleReason" maxlength="180" placeholder="Ex.: Consulta clínica, retorno, avaliação ocupacional"></div>
+    </div>
+    <div class="schedule-form-actions"><button id="scheduleCancelForm" class="schedule-btn" type="button">Fechar</button><button id="scheduleSave" class="schedule-btn primary" type="submit">Salvar agendamento</button></div>
+  </form>
+  <section id="scheduleAdminTools" class="schedule-panel hidden">
+    <h4>Disponibilidade semanal dos profissionais</h4>
+    <form id="scheduleRuleForm" class="schedule-form-grid">
+      <div><label for="scheduleRuleProfessional">PROFISSIONAL *</label><select id="scheduleRuleProfessional" required></select></div>
+      <div><label for="scheduleRuleDay">DIA DA SEMANA *</label><select id="scheduleRuleDay"><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="7">Domingo</option></select></div>
+      <div><label for="scheduleRuleSlot">INTERVALO (MINUTOS) *</label><select id="scheduleRuleSlot"><option>15</option><option selected>30</option><option>45</option><option>60</option><option>90</option><option>120</option></select></div>
+      <div><label for="scheduleRuleStart">INÍCIO *</label><input id="scheduleRuleStart" type="time" value="08:00" required></div>
+      <div><label for="scheduleRuleEnd">TÉRMINO *</label><input id="scheduleRuleEnd" type="time" value="17:00" required></div>
+      <div style="display:flex;align-items:end"><button class="schedule-btn primary" type="submit">Adicionar horário semanal</button></div>
+    </form>
+    <div id="scheduleRules" class="schedule-rule-list"></div>
+    <h4 style="margin-top:20px">Bloqueio de horário</h4>
+    <form id="scheduleBlockForm" class="schedule-form-grid">
+      <div><label for="scheduleBlockProfessional">PROFISSIONAL</label><select id="scheduleBlockProfessional"><option value="">Não bloquear profissional</option></select></div>
+      <div><label for="scheduleBlockRoom">CONSULTÓRIO</label><select id="scheduleBlockRoom"><option value="">Não bloquear consultório</option></select></div>
+      <div><label for="scheduleBlockReason">MOTIVO *</label><input id="scheduleBlockReason" maxlength="180" required placeholder="Ex.: Férias, manutenção"></div>
+      <div><label for="scheduleBlockStart">INÍCIO *</label><input id="scheduleBlockStart" type="datetime-local" required></div>
+      <div><label for="scheduleBlockEnd">TÉRMINO *</label><input id="scheduleBlockEnd" type="datetime-local" required></div>
+      <div style="display:flex;align-items:end"><button class="schedule-btn primary" type="submit">Registrar bloqueio</button></div>
+    </form>
+    <div id="scheduleBlocks" class="schedule-rule-list"></div>
+  </section>
+</section>
+
 <script>
 (() => {
   const $ = id => document.getElementById(id);
