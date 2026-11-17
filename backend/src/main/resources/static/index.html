@@ -75,6 +75,45 @@
     @media(max-width:520px){.master-form{grid-template-columns:1fr}.master-form .wide{grid-column:auto}}
     @media(max-width:760px){body{padding:14px}.shell{grid-template-columns:1fr;min-height:0}.brand{padding:28px 28px 24px}.brand-copy{margin:35px 0 25px}.brand h1{font-size:29px}.brand-foot{display:none}.panel{padding:32px 26px 36px}}
 body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100vh;display:block;border:0;border-radius:0;box-shadow:none;background:#eef1f5}.brand{display:none}.panel{display:block;min-height:100vh;padding:0;background:#eef1f5}#authPanel{min-height:100vh;display:grid;place-items:center;padding:24px}#sessionPanel{min-height:100vh;padding:0 24px 24px 258px;display:block;background:#eef1f5}#sessionPanel.hidden{display:none!important}.app-sidebar{position:fixed;z-index:5;left:0;top:0;bottom:0;width:236px;overflow:auto;background:#fff;border-right:1px solid #d9e1e9;padding:16px 10px}.app-brand{height:52px;display:flex;align-items:center;gap:10px;padding:0 10px 14px;margin-bottom:8px;border-bottom:1px solid #e3e9ef;color:#07549a;font-weight:800;letter-spacing:1.5px}.app-brand img{width:30px;height:30px}.app-brand small{display:block;font-size:9px;letter-spacing:1.4px}.module-nav{display:grid;gap:3px}.module-nav button{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:5px;background:transparent;color:#40566d;text-align:left;padding:10px;font:600 12px system-ui;cursor:pointer}.module-nav button:hover,.module-nav button.active{background:#e8f2fb;color:#07549a}.module-nav button.active{border-left:3px solid #0873bd;padding-left:7px}.module-nav svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.app-topbar{height:58px;margin:0 -24px 22px -258px;padding:0 24px 0 258px;display:flex;align-items:center;justify-content:space-between;background:#07549a;color:white;position:sticky;top:0;z-index:4;box-shadow:0 2px 7px #102b5220}.app-user{font-size:12px}.app-user strong{display:block}.app-user span{opacity:.8}.page-heading{margin-bottom:18px}.page-heading h2{font-size:22px;color:#183b60;margin:0 0 5px}.page-heading p{font-size:12px;color:#738397;margin:0}.session{display:none}.master-tools,.workspace{background:#fff;border:1px solid #dce4ec;border-radius:7px;padding:20px;box-shadow:0 1px 2px #102b5208;margin:0 0 18px}.module-placeholder{background:#fff;border:1px solid #dce4ec;border-radius:7px;padding:28px;min-height:200px}.module-placeholder h3{font-size:16px;color:#1b4269;margin:0 0 8px}.module-placeholder p{font-size:12px;color:#718297;line-height:1.6;margin:0;max-width:680px}.module-status{display:inline-block;margin-top:16px;padding:6px 9px;border-radius:4px;background:#f1f5f8;color:#64788d;font-size:10px;font-weight:700}#logoutButton{position:fixed;right:18px;top:10px;z-index:8;margin:0;padding:7px 10px;font-size:11px;border-color:#ffffff55;background:#ffffff20;color:#fff}@media(max-width:760px){#sessionPanel{padding-left:64px;padding-right:12px}.app-sidebar{width:58px;padding:12px 5px}.app-brand{padding:0 5px 12px}.app-brand div,.module-nav button span{display:none}.module-nav button{justify-content:center;padding:11px 5px}.module-nav button.active{padding-left:2px}.app-topbar{margin-left:-70px;padding-left:82px;margin-right:-12px}.app-main{min-width:0}}
+
+    /* Módulo 1 — Lista de atendimentos */
+    .attendance-workspace{background:#f0f1f6;border:1px solid #d9dfe8;border-radius:5px;padding:14px;margin:0 0 18px}
+    .attendance-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .attendance-search{display:flex;align-items:center;gap:7px;flex:1;min-width:230px;max-width:430px}
+    .attendance-search input,.attendance-toolbar select{height:34px;border:1px solid #cbd4df;border-radius:3px;background:#fff;padding:0 10px;color:#263d56;font:12px system-ui;min-width:0}
+    .attendance-search input{width:100%}
+    .attendance-toolbar select{min-width:155px}
+    .attendance-button{height:34px;border:1px solid #b8cce0;border-radius:4px;padding:0 12px;background:#fff;color:#07549a;font-size:11px;font-weight:700;cursor:pointer}
+    .attendance-button.primary{background:#0867b2;color:#fff;border-color:#0867b2}
+    .attendance-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:#40566d;white-space:nowrap}
+    .attendance-toggle input{accent-color:#0873bd}
+    .attendance-summary{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 11px;color:#52677d;font-size:11px}
+    .attendance-summary span{background:#fff;border:1px solid #d9e0e8;border-radius:3px;padding:5px 8px}
+    .attendance-summary strong{color:#173d64;margin-left:3px}
+    .attendance-alert{display:none;padding:9px 11px;margin:0 0 10px;border:1px solid #efc18b;background:#fff4e8;color:#9a4e08;font-size:11px;line-height:1.5}
+    .attendance-alert.visible{display:block}
+    .attendance-table-wrap{overflow:auto;background:transparent}
+    .attendance-table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:720px;font-size:11px}
+    .attendance-table th{text-align:left;padding:0 9px 3px;color:#52677d;font-size:10px;font-weight:700;white-space:nowrap}
+    .attendance-table td{background:#fff;border-top:1px solid #d7dce5;border-bottom:1px solid #d7dce5;padding:8px 9px;vertical-align:middle}
+    .attendance-table td:first-child{border-left:5px solid #8998a8;width:125px}
+    .attendance-table td:last-child{border-right:1px solid #d7dce5}
+    .attendance-time{font-weight:800;color:#193c60;font-size:12px;white-space:nowrap}
+    .attendance-muted{display:block;color:#718196;font-size:10px;margin-top:3px}
+    .attendance-patient{font-weight:800;color:#1b2f46;font-size:11px;text-transform:uppercase}
+    .attendance-tags{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+    .attendance-tag{display:inline-flex;align-items:center;gap:4px;border-radius:4px;padding:4px 6px;font-size:10px;font-weight:750;white-space:nowrap;background:#edf1f6;color:#3c536c}
+    .attendance-tag.priority{background:#fff0f0;color:#c33242}
+    .attendance-tag.urgent{background:#ffe7e8;color:#b51f32}
+    .attendance-tag.status-waiting{background:#edf4ff;color:#2864a8}
+    .attendance-tag.status-called{background:#fff5df;color:#95620b}
+    .attendance-tag.status-service{background:#f5eafa;color:#823d9b}
+    .attendance-tag.status-completed{background:#e9f7ee;color:#287747}
+    .attendance-tag.status-other{background:#eef0f3;color:#637386}
+    .attendance-professional{font-weight:650;color:#233f5d;min-width:150px}
+    .attendance-empty{text-align:center;padding:28px!important;color:#718196;background:#fff;border:1px dashed #cbd4df}
+    .attendance-message{font-size:11px;color:#a12c27;min-height:17px;margin:6px 0}
+    @media(max-width:760px){.attendance-workspace{padding:9px}.attendance-search{max-width:none;flex-basis:100%}.attendance-toolbar select{flex:1}}
   </style>
 </head>
 <body>
@@ -128,6 +167,27 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 <button data-module="subscription"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span>Assinatura</span></button>
 <button data-module="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7h.01"/></svg><span>Sobre</span></button></nav></aside>
 <header class="app-topbar"><strong>MARKYS | GESTÃO CLÍNICA</strong><div class="app-user"><strong id="topUserName">Usuário</strong><span id="topClinicName">Clínica ativa</span></div></header><div class="page-heading"><h2 id="moduleTitle">Lista de atendimentos</h2><p id="moduleSubtitle">Acompanhe os atendimentos da clínica.</p></div><section id="modulePlaceholder" class="module-placeholder"><h3 id="placeholderTitle">Lista de atendimentos</h3><p id="placeholderText">Este módulo será conectado ao fluxo clínico.</p><span class="module-status">MÓDULO EM IMPLEMENTAÇÃO</span></section>
+<section id="attendanceWorkspace" class="attendance-workspace hidden" aria-label="Lista de atendimentos">
+  <div class="attendance-toolbar">
+    <div class="attendance-search"><input id="attendanceSearch" type="search" maxlength="120" placeholder="Pesquise por nome do paciente, atendimento ou profissional" aria-label="Pesquisar atendimentos"><button id="attendanceSearchButton" class="attendance-button primary" type="button">Pesquisar</button></div>
+    <label class="attendance-toggle"><input id="attendanceToday" type="checkbox" checked> Somente atendimentos de hoje</label>
+    <select id="attendanceStatus" aria-label="Filtrar por situação">
+      <option value="">Todas as situações</option><option value="WAITING">Aguardando atendimento</option><option value="CALLED">Chamado</option><option value="IN_SERVICE">Em atendimento</option><option value="COMPLETED">Finalizado</option><option value="RELEASED">Liberado</option><option value="CANCELLED">Cancelado</option>
+    </select>
+    <button id="attendanceRefresh" class="attendance-button" type="button" title="Atualizar lista">Atualizar</button>
+  </div>
+  <div class="attendance-summary" aria-live="polite">
+    <span>Exibidos<strong id="attendanceTotal">0</strong></span><span>Aguardando<strong id="attendanceWaiting">0</strong></span><span>Em atendimento<strong id="attendanceInService">0</strong></span><span>Finalizados<strong id="attendanceCompleted">0</strong></span>
+  </div>
+  <div id="attendanceAlert" class="attendance-alert"></div>
+  <div class="attendance-table-wrap">
+    <table class="attendance-table">
+      <thead><tr><th>HORÁRIO / SITUAÇÃO</th><th>PACIENTE</th><th>ATENDIMENTO / PRIORIDADE</th><th>PROFISSIONAL</th><th>CONSULTÓRIO</th></tr></thead>
+      <tbody id="attendanceRows"><tr><td class="attendance-empty" colspan="5">Carregando atendimentos...</td></tr></tbody>
+    </table>
+  </div>
+  <div id="attendanceMessage" class="attendance-message" role="status" aria-live="polite"></div>
+</section>
         <h2>Acesso confirmado</h2>
         <p class="sub">Sua sessão está ativa no MARKYS.</p>
         <div class="session">
@@ -509,7 +569,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     const canUsePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION", "PROFESSIONAL"].includes(activeMembership.role);
     const canManagePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION"].includes(activeMembership.role);
     canManagePatientRecords = canManagePatients;
-    activateModule(isMaster ? "access" : (canUsePatients ? "patients" : "attendance"));
+    activateModule(isMaster ? "access" : "attendance");
     $("receptionWorkspace").classList.toggle("hidden", !canUseReception);
     $("patientWorkspace").classList.toggle("hidden", !canUsePatients);
     $("patientForm").classList.toggle("hidden", !canManagePatients);
@@ -554,6 +614,97 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       $("clinics").append(row);
     });
   };
+
+  const attendanceStatusLabels = {
+    WAITING:"Aguardando atendimento", CALLED:"Chamado", IN_SERVICE:"Em atendimento",
+    COMPLETED:"Finalizado", RELEASED:"Liberado", CANCELLED:"Cancelado"
+  };
+  const attendanceDateTime = value => {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  };
+  const attendanceAge = value => {
+    if (!value) return "Idade não informada";
+    const birth = new Date(value + "T00:00:00");
+    if (Number.isNaN(birth.getTime())) return "Idade não informada";
+    const now = new Date();
+    let years = now.getFullYear()-birth.getFullYear();
+    let months = now.getMonth()-birth.getMonth();
+    if (now.getDate()<birth.getDate()) months--;
+    if (months<0) { years--; months+=12; }
+    if (years<0) return "Idade não informada";
+    return years ? years+" anos e "+months+" meses" : months+" meses";
+  };
+  const attendanceMessage = message => { $("attendanceMessage").textContent = message || ""; };
+  const loadAttendance = async () => {
+    const rows = $("attendanceRows");
+    rows.replaceChildren();
+    const loading = document.createElement("tr");
+    const loadingCell = document.createElement("td"); loadingCell.colSpan=5; loadingCell.className="attendance-empty"; loadingCell.textContent="Carregando atendimentos...";
+    loading.append(loadingCell); rows.append(loading);
+    attendanceMessage("");
+    $("attendanceRefresh").disabled = true;
+    try {
+      const params = new URLSearchParams({
+        search: $("attendanceSearch").value.trim(),
+        status: $("attendanceStatus").value,
+        today: String($("attendanceToday").checked)
+      });
+      const response = await fetch("/api/v1/clinic/queue?"+params.toString(), {credentials:"same-origin",cache:"no-store"});
+      const data = await response.json().catch(()=>[]);
+      if (!response.ok) throw new Error(data.error || "Não foi possível carregar a lista de atendimentos.");
+      const items = Array.isArray(data) ? data : [];
+      $("attendanceTotal").textContent=items.length;
+      $("attendanceWaiting").textContent=items.filter(x=>x.status==="WAITING").length;
+      $("attendanceInService").textContent=items.filter(x=>x.status==="IN_SERVICE").length;
+      $("attendanceCompleted").textContent=items.filter(x=>x.status==="COMPLETED").length;
+      const pendingOld = items.filter(x=>["WAITING","CALLED","IN_SERVICE"].includes(x.status));
+      const alert=$("attendanceAlert");
+      alert.classList.toggle("visible",!$("attendanceToday").checked && pendingOld.length>0);
+      alert.textContent=!$("attendanceToday").checked && pendingOld.length>0
+        ? "Atenção: a consulta inclui os últimos 30 dias e encontrou "+pendingOld.length+" atendimento(s) ainda não finalizado(s)." : "";
+      rows.replaceChildren();
+      if (!items.length) {
+        const tr=document.createElement("tr"), td=document.createElement("td");
+        td.colSpan=5; td.className="attendance-empty"; td.textContent="Nenhum atendimento encontrado para os filtros selecionados.";
+        tr.append(td); rows.append(tr); return;
+      }
+      items.forEach(item=>{
+        const tr=document.createElement("tr");
+        const status=item.status || "WAITING";
+        const first=document.createElement("td");
+        first.style.borderLeftColor=status==="COMPLETED"?"#36a45c":status==="WAITING"?"#4d9b55":status==="CALLED"?"#e2a32c":status==="IN_SERVICE"?"#9a4eb0":"#8998a8";
+        const time=document.createElement("div"); time.className="attendance-time"; time.textContent=attendanceDateTime(item.arrived_at);
+        const statusText=document.createElement("span"); statusText.className="attendance-muted"; statusText.textContent=attendanceStatusLabels[status]||status;
+        first.append(time,statusText);
+        const patient=document.createElement("td");
+        const name=document.createElement("div"); name.className="attendance-patient"; name.textContent=item.patient_name||"Paciente não identificado";
+        const age=document.createElement("span"); age.className="attendance-muted"; age.textContent=attendanceAge(item.birth_date);
+        patient.append(name,age);
+        const service=document.createElement("td"); const tags=document.createElement("div"); tags.className="attendance-tags";
+        const serviceTag=document.createElement("span"); serviceTag.className="attendance-tag"; serviceTag.textContent=item.service_label||"Atendimento";
+        const statusTag=document.createElement("span"); statusTag.className="attendance-tag "+(status==="WAITING"?"status-waiting":status==="CALLED"?"status-called":status==="IN_SERVICE"?"status-service":status==="COMPLETED"?"status-completed":"status-other"); statusTag.textContent=attendanceStatusLabels[status]||status;
+        tags.append(serviceTag,statusTag);
+        if(item.priority && item.priority!=="NORMAL"){const priority=document.createElement("span");priority.className="attendance-tag "+(item.priority==="URGENT"?"urgent":"priority");priority.textContent=item.priority==="URGENT"?"Urgente":"Prioridade";tags.append(priority);}
+        service.append(tags);
+        const professional=document.createElement("td"); professional.className="attendance-professional"; professional.textContent=item.professional_name||"Não atribuído";
+        const room=document.createElement("td"); room.textContent=item.room_name||"Não definido";
+        tr.append(first,patient,service,professional,room); rows.append(tr);
+      });
+    } catch(error) {
+      rows.replaceChildren();
+      const tr=document.createElement("tr"),td=document.createElement("td");
+      td.colSpan=5;td.className="attendance-empty";td.textContent=error.message||"Falha ao carregar os atendimentos.";
+      tr.append(td);rows.append(tr);attendanceMessage("Verifique sua conexão e tente atualizar a lista.");
+    } finally { $("attendanceRefresh").disabled=false; }
+  };
+  $("attendanceSearchButton").addEventListener("click",loadAttendance);
+  $("attendanceSearch").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();loadAttendance();}});
+  $("attendanceStatus").addEventListener("change",loadAttendance);
+  $("attendanceToday").addEventListener("change",loadAttendance);
+  $("attendanceRefresh").addEventListener("click",loadAttendance);
+
   const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Agendamentos e horários."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
@@ -561,7 +712,8 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    if (key === "attendance" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role)))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
     if (key === "patients" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role)))) $("patientWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
     if (key === "rooms" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION"].includes(m.role)))) $("receptionWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
     if (key === "access" && activeData && activeData.globalRole === "MASTER") $("masterTools").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
