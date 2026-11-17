@@ -115,7 +115,41 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .attendance-actions{display:flex;gap:4px;flex-wrap:wrap;min-width:130px}.attendance-actions button{border:1px solid #c8d7e5;background:#f5f9fd;color:#07549a;border-radius:3px;padding:5px 7px;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}.attendance-actions button:disabled{opacity:.55;cursor:wait}
     .attendance-message{font-size:11px;color:#a12c27;min-height:17px;margin:6px 0}
     @media(max-width:760px){.attendance-workspace{padding:9px}.attendance-search{max-width:none;flex-basis:100%}.attendance-toolbar select{flex:1}}
-/* Módulo 2 — Pacientes */.patient-workspace{padding:16px;background:#f3f5f8}.patient-heading,.patient-form-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.patient-heading h3{margin:0;color:#193e64;font-size:17px}.patient-heading .sub{margin:3px 0 0;font-size:11px}.patient-action{height:33px;padding:0 12px;border:1px solid #c6d3e0;border-radius:4px;background:#fff;color:#245779;font-size:11px;font-weight:750;cursor:pointer}.patient-action.primary-action{background:#0867b2;border-color:#0867b2;color:#fff}.patient-directory,.patient-form,.patient-detail{background:#fff;border:1px solid #dce3eb;border-radius:5px;padding:12px;margin-top:10px}.patient-filters{display:flex;gap:7px;flex-wrap:wrap}.patient-filters input,.patient-filters select{height:34px;border:1px solid #ccd6e1;border-radius:4px;padding:0 10px;font:12px system-ui}.patient-filters input{flex:1;min-width:210px}.patient-list-meta{display:flex;justify-content:space-between;margin:11px 0 7px;color:#748397;font-size:10px}.patient-table-wrap{overflow:auto}.patient-table{width:100%;min-width:780px;border-collapse:collapse;font-size:11px}.patient-table th{padding:9px;text-align:left;background:#f1f5f9;color:#63768a;font-size:10px;border-bottom:1px solid #dce4ec}.patient-table td{padding:9px;border-bottom:1px solid #edf0f4;color:#40566d}.patient-name{font-weight:800;color:#1c3d5d;text-transform:uppercase}.patient-state{padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:10px;font-weight:800}.patient-state.inactive{background:#f0f1f3;color:#718093}.patient-row-actions{display:flex;gap:4px;flex-wrap:wrap}.patient-row-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:10px;cursor:pointer}.patient-row-actions button.patient-delete{border-color:#edc8c8;color:#a12626;background:#fff6f6}.patient-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:#718093;font-size:10px}.patient-pagination>div{display:flex;align-items:center;gap:8px}.patient-pagination button:disabled{opacity:.45;cursor:not-allowed}.patient-empty{text-align:center;padding:25px!important;color:#8492a1!important}.patient-form .catalog-card{padding:11px}.patient-form .field{margin-bottom:9px}.patient-form label{font-size:10px;margin-bottom:4px}.patient-form input,.patient-form select{height:34px;font-size:12px;border-radius:4px}.patient-form-heading{grid-column:1/-1}.patient-form-heading h4{margin:0;color:#21486b}.patient-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}.patient-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.patient-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.patient-detail-cell small{display:block;color:#7b8998;font-size:9px}.patient-detail-cell strong{font-size:11px;color:#244766}.patient-history-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.patient-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px}.patient-history-item strong{display:block;color:#244766}@media(max-width:760px){.patient-detail-grid,.patient-history-columns{grid-template-columns:1fr}}  </style>
+/* Módulo 2 — Pacientes */.patient-workspace{padding:16px;background:#f3f5f8}.patient-heading,.patient-form-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.patient-heading h3{margin:0;color:#193e64;font-size:17px}.patient-heading .sub{margin:3px 0 0;font-size:11px}.patient-action{height:33px;padding:0 12px;border:1px solid #c6d3e0;border-radius:4px;background:#fff;color:#245779;font-size:11px;font-weight:750;cursor:pointer}.patient-action.primary-action{background:#0867b2;border-color:#0867b2;color:#fff}.patient-directory,.patient-form,.patient-detail{background:#fff;border:1px solid #dce3eb;border-radius:5px;padding:12px;margin-top:10px}.patient-filters{display:flex;gap:7px;flex-wrap:wrap}.patient-filters input,.patient-filters select{height:34px;border:1px solid #ccd6e1;border-radius:4px;padding:0 10px;font:12px system-ui}.patient-filters input{flex:1;min-width:210px}.patient-list-meta{display:flex;justify-content:space-between;margin:11px 0 7px;color:#748397;font-size:10px}.patient-table-wrap{overflow:auto}.patient-table{width:100%;min-width:780px;border-collapse:collapse;font-size:11px}.patient-table th{padding:9px;text-align:left;background:#f1f5f9;color:#63768a;font-size:10px;border-bottom:1px solid #dce4ec}.patient-table td{padding:9px;border-bottom:1px solid #edf0f4;color:#40566d}.patient-name{font-weight:800;color:#1c3d5d;text-transform:uppercase}.patient-state{padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:10px;font-weight:800}.patient-state.inactive{background:#f0f1f3;color:#718093}.patient-row-actions{display:flex;gap:4px;flex-wrap:wrap}.patient-row-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:10px;cursor:pointer}.patient-row-actions button.patient-delete{border-color:#edc8c8;color:#a12626;background:#fff6f6}.patient-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:#718093;font-size:10px}.patient-pagination>div{display:flex;align-items:center;gap:8px}.patient-pagination button:disabled{opacity:.45;cursor:not-allowed}.patient-empty{text-align:center;padding:25px!important;color:#8492a1!important}.patient-form .catalog-card{padding:11px}.patient-form .field{margin-bottom:9px}.patient-form label{font-size:10px;margin-bottom:4px}.patient-form input,.patient-form select{height:34px;font-size:12px;border-radius:4px}.patient-form-heading{grid-column:1/-1}.patient-form-heading h4{margin:0;color:#21486b}.patient-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}.patient-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.patient-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.patient-detail-cell small{display:block;color:#7b8998;font-size:9px}.patient-detail-cell strong{font-size:11px;color:#244766}.patient-history-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.patient-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px}.patient-history-item strong{display:block;color:#244766}@media(max-width:760px){.patient-detail-grid,.patient-history-columns{grid-template-columns:1fr}}  /* Módulo Profissionais — gestão da equipe e vínculos */
+.professional-workspace{padding:16px;background:#f3f5f8}
+.professional-panel{background:#fff;border:1px solid #dce3eb;border-radius:6px;padding:14px;margin-top:10px}
+.professional-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.professional-toolbar input,.professional-toolbar select,.professional-form input,.professional-form select{height:36px;border:1px solid #ccd6e1;border-radius:4px;padding:0 10px;font:12px system-ui;color:#29445f;background:#fff}
+.professional-toolbar input{flex:1;min-width:220px}
+.professional-action{height:34px;padding:0 12px;border:1px solid #c6d3e0;border-radius:4px;background:#fff;color:#245779;font-size:11px;font-weight:750;cursor:pointer}
+.professional-action.primary{background:#0867b2;border-color:#0867b2;color:#fff}
+.professional-action.danger{color:#a12626;border-color:#edc8c8;background:#fff7f7}
+.professional-summary{display:flex;gap:18px;flex-wrap:wrap;padding:12px 2px;color:#718397;font-size:10px}
+.professional-summary strong{display:block;color:#1e4569;font-size:18px;margin-top:2px}
+.professional-table-wrap{overflow:auto}
+.professional-table{width:100%;min-width:800px;border-collapse:collapse;font-size:11px}
+.professional-table th{padding:10px;text-align:left;background:#f1f5f9;color:#63768a;font-size:10px;border-bottom:1px solid #dce4ec}
+.professional-table td{padding:10px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.professional-name{font-weight:800;color:#1c3d5d}
+.professional-muted{display:block;color:#8391a0;font-size:10px;margin-top:3px}
+.professional-state{padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:10px;font-weight:800}
+.professional-state.inactive{background:#f0f1f3;color:#718093}
+.professional-actions{display:flex;gap:5px;flex-wrap:wrap}
+.professional-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:6px 8px;font-size:10px;cursor:pointer}
+.professional-actions button:disabled,.professional-action:disabled{opacity:.5;cursor:wait}
+.professional-pagination{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:12px;color:#718093;font-size:10px}
+.professional-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.professional-field{display:grid;gap:5px}
+.professional-field label{font-size:10px;font-weight:700;color:#526a80}
+.professional-field input,.professional-field select{width:100%}
+.professional-form .wide{grid-column:1/-1}
+.professional-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}
+.professional-message{min-height:18px;margin-top:8px;font-size:11px;color:#a12626}
+.professional-history{margin-top:12px;border-top:1px solid #e8edf2;padding-top:10px}
+.professional-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}
+.professional-history-item strong{display:block;color:#244766}
+@media(max-width:650px){.professional-form{grid-template-columns:1fr}.professional-form .wide{grid-column:auto}}
+  </style>
 </head>
 <body>
   <main class="shell">
@@ -230,6 +264,46 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 <div class="catalog-card"><div class="field"><label for="patientName">Nome completo *</label><input id="patientName" maxlength="180" autocomplete="name" required></div><div class="field"><label for="patientCpf">CPF *</label><input id="patientCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required></div><div class="field"><label for="patientBirth">Data de nascimento</label><input id="patientBirth" type="date"></div><div class="field"><label for="patientAge">Idade</label><input id="patientAge" readonly></div><div class="field"><label for="patientSex">Sexo</label><select id="patientSex"><option value="">Não informado</option><option value="FEMININO">Feminino</option><option value="MASCULINO">Masculino</option><option value="OUTRO">Outro</option></select></div><div class="field"><label for="patientPhone">Telefone</label><input id="patientPhone" type="tel" maxlength="40" autocomplete="tel"></div><div class="field"><label for="patientEmail">E-mail</label><input id="patientEmail" type="email" maxlength="254" autocomplete="email"></div><div class="field"><label for="patientAddress">Endereço completo</label><input id="patientAddress" maxlength="500" autocomplete="street-address"></div></div>
 <div class="catalog-card"><div class="field"><label for="patientInsurance">Convênio</label><input id="patientInsurance" maxlength="180"></div><div class="field"><label for="patientJob">Cargo / função</label><input id="patientJob" maxlength="160"></div><div class="field"><label for="patientEmergencyContact">Contato de emergência</label><input id="patientEmergencyContact" maxlength="180"></div><div class="field"><label for="patientEmergencyPhone">Telefone de emergência</label><input id="patientEmergencyPhone" type="tel" maxlength="40"></div><div class="field"><label for="patientPdf">Documento PDF (até 10 MB)</label><input id="patientPdf" type="file" accept="application/pdf,.pdf"></div><div class="field" style="grid-column:1/-1"><label for="patientAdministrativeNotes">Observações administrativas</label><textarea id="patientAdministrativeNotes" maxlength="2000" rows="3" style="width:100%;border:1px solid #ccd6e1;border-radius:4px;padding:9px;font:12px system-ui;resize:vertical"></textarea></div></div><div class="patient-form-actions"><button id="patientSubmit" class="patient-action primary-action" type="submit">Cadastrar paciente</button><button id="cancelPatientForm" class="patient-action" type="button">Cancelar</button></div></form>
 <section id="patientDetail" class="patient-detail hidden"><div class="patient-form-heading"><h4 id="patientDetailName">Ficha do paciente</h4><button id="closePatientDetail" class="patient-action" type="button">Voltar à lista</button></div><div id="patientDetailData" class="patient-detail-grid"></div><div class="patient-history-columns"><div><h5>Histórico de atendimentos</h5><div id="patientAttendanceHistory"></div></div><div><h5>Consultas / prontuários</h5><div id="patientEncounterHistory"></div></div></div></section></section>
+<section id="professionalWorkspace" class="workspace hidden professional-workspace">
+  <div class="patient-heading"><div><h3>Gestão de profissionais</h3><p class="sub">Equipe clínica, registros em conselhos, especialidades e histórico de atuação.</p></div><button id="newProfessionalButton" class="professional-action primary" type="button">+ Vincular profissional</button></div>
+  <div class="professional-panel">
+    <div class="professional-toolbar"><input id="professionalSearch" type="search" maxlength="120" placeholder="Buscar por nome, conselho, especialidade ou e-mail"><select id="professionalStatus"><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option><option value="ALL">Todos</option></select><button id="professionalSearchButton" class="professional-action" type="button">Pesquisar</button><button id="professionalRefresh" class="professional-action" type="button">Atualizar</button></div>
+    <div class="professional-summary"><span>Profissionais exibidos<strong id="professionalTotal">0</strong></span><span>Ativos<strong id="professionalActive">0</strong></span><span>Atendimentos em andamento<strong id="professionalInService">0</strong></span></div>
+    <div id="professionalMessage" class="professional-message" role="status" aria-live="polite"></div>
+    <div class="professional-table-wrap"><table class="professional-table"><thead><tr><th>PROFISSIONAL</th><th>CONSELHO / REGISTRO</th><th>ESPECIALIDADE</th><th>CONTA DE ACESSO</th><th>ATUAÇÃO</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="professionalRows"><tr><td colspan="7">Carregando...</td></tr></tbody></table></div>
+    <div class="professional-pagination"><span id="professionalPageInfo">0 registros</span><div><button id="professionalPrev" class="professional-action" type="button" disabled>Anterior</button> <span id="professionalPage">Página 1 de 1</span> <button id="professionalNext" class="professional-action" type="button" disabled>Próxima</button></div></div>
+  </div>
+  <form id="professionalForm" class="professional-panel professional-form hidden">
+    <div class="patient-form-heading wide"><h4 id="professionalFormTitle">Vincular profissional</h4><button id="professionalCancelTop" class="professional-action" type="button">Fechar</button></div>
+    <div class="professional-field wide" id="professionalAccountField"><label for="professionalMembership">Conta de acesso profissional *</label><select id="professionalMembership" required><option value="">Carregando contas elegíveis...</option></select><small class="professional-muted">A conta deve existir no módulo Acessos e possuir perfil PROFISSIONAL nesta clínica.</small></div>
+    <div class="professional-field"><label for="professionalName">Nome de exibição *</label><input id="professionalName" maxlength="180" required></div>
+    <div class="professional-field"><label for="professionalSpecialty">Especialidade *</label><input id="professionalSpecialty" maxlength="120" placeholder="Ex.: Medicina do Trabalho" required></div>
+    <div class="professional-field"><label for="professionalCouncil">Conselho profissional *</label><select id="professionalCouncil" required><option value="">Selecione</option><option>CRM</option><option>CRP</option><option>CRO</option><option>COREN</option><option>CREFITO</option><option>CREF</option><option>CRN</option><option>CRFa</option><option>CRBM</option><option>CRBio</option><option>OUTRO</option></select></div>
+    <div class="professional-field"><label for="professionalRegistration">Número de registro *</label><input id="professionalRegistration" maxlength="80" required placeholder="Número e UF, se aplicável"></div>
+    <div class="professional-form-actions"><button id="professionalCancel" class="professional-action" type="button">Cancelar</button><button id="professionalSave" class="professional-action primary" type="submit">Salvar profissional</button></div>
+  </form>
+  <section id="professionalDetail" class="professional-panel hidden"><div class="patient-form-heading"><h4 id="professionalDetailTitle">Ficha profissional</h4><button id="professionalDetailClose" class="professional-action" type="button">Voltar à lista</button></div><div id="professionalDetailData" class="patient-detail-grid"></div><div class="professional-history"><h5>Histórico de atuação</h5><div id="professionalHistory"></div></div></section>
+</section>
+<section id="professionalWorkspace" class="workspace hidden professional-workspace">
+  <div class="patient-heading"><div><h3>Gestão de profissionais</h3><p class="sub">Equipe clínica, registros em conselhos, especialidades e histórico de atuação.</p></div><button id="newProfessionalButton" class="professional-action primary" type="button">+ Vincular profissional</button></div>
+  <div class="professional-panel">
+    <div class="professional-toolbar"><input id="professionalSearch" type="search" maxlength="120" placeholder="Buscar por nome, conselho, especialidade ou e-mail"><select id="professionalStatus"><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option><option value="ALL">Todos</option></select><button id="professionalSearchButton" class="professional-action" type="button">Pesquisar</button><button id="professionalRefresh" class="professional-action" type="button">Atualizar</button></div>
+    <div class="professional-summary"><span>Profissionais exibidos<strong id="professionalTotal">0</strong></span><span>Ativos<strong id="professionalActive">0</strong></span><span>Atendimentos em andamento<strong id="professionalInService">0</strong></span></div>
+    <div id="professionalMessage" class="professional-message" role="status" aria-live="polite"></div>
+    <div class="professional-table-wrap"><table class="professional-table"><thead><tr><th>PROFISSIONAL</th><th>CONSELHO / REGISTRO</th><th>ESPECIALIDADE</th><th>CONTA DE ACESSO</th><th>ATUAÇÃO</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="professionalRows"><tr><td colspan="7">Carregando...</td></tr></tbody></table></div>
+    <div class="professional-pagination"><span id="professionalPageInfo">0 registros</span><div><button id="professionalPrev" class="professional-action" type="button" disabled>Anterior</button> <span id="professionalPage">Página 1 de 1</span> <button id="professionalNext" class="professional-action" type="button" disabled>Próxima</button></div></div>
+  </div>
+  <form id="professionalForm" class="professional-panel professional-form hidden">
+    <div class="patient-form-heading wide"><h4 id="professionalFormTitle">Vincular profissional</h4><button id="professionalCancelTop" class="professional-action" type="button">Fechar</button></div>
+    <div class="professional-field wide" id="professionalAccountField"><label for="professionalMembership">Conta de acesso profissional *</label><select id="professionalMembership" required><option value="">Carregando contas elegíveis...</option></select><small class="professional-muted">A conta deve existir no módulo Acessos e possuir perfil PROFISSIONAL nesta clínica.</small></div>
+    <div class="professional-field"><label for="professionalName">Nome de exibição *</label><input id="professionalName" maxlength="180" required></div>
+    <div class="professional-field"><label for="professionalSpecialty">Especialidade *</label><input id="professionalSpecialty" maxlength="120" placeholder="Ex.: Medicina do Trabalho" required></div>
+    <div class="professional-field"><label for="professionalCouncil">Conselho profissional *</label><select id="professionalCouncil" required><option value="">Selecione</option><option>CRM</option><option>CRP</option><option>CRO</option><option>COREN</option><option>CREFITO</option><option>CREF</option><option>CRN</option><option>CRFa</option><option>CRBM</option><option>CRBio</option><option>OUTRO</option></select></div>
+    <div class="professional-field"><label for="professionalRegistration">Número de registro *</label><input id="professionalRegistration" maxlength="80" required placeholder="Número e UF, se aplicável"></div>
+    <div class="professional-form-actions"><button id="professionalCancel" class="professional-action" type="button">Cancelar</button><button id="professionalSave" class="professional-action primary" type="submit">Salvar profissional</button></div>
+  </form>
+  <section id="professionalDetail" class="professional-panel hidden"><div class="patient-form-heading"><h4 id="professionalDetailTitle">Ficha profissional</h4><button id="professionalDetailClose" class="professional-action" type="button">Voltar à lista</button></div><div id="professionalDetailData" class="patient-detail-grid"></div><div class="professional-history"><h5>Histórico de atuação</h5><div id="professionalHistory"></div></div></section>
+</section>
         <p class="hint" id="sessionHint">Os módulos clínicos serão conectados gradualmente a esta autenticação durante a migração.</p>
         <button id="logoutButton" class="secondary" type="button">Encerrar sessão</button>
       </div>
@@ -704,6 +778,124 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   $("attendanceToday").addEventListener("change",loadAttendance);
   $("attendanceRefresh").addEventListener("click",loadAttendance);
 
+
+  const professionalState = {items:[], page:1, pageSize:30, editingId:null, role:""};
+  const professionalMessage = (message, error=true) => { $("professionalMessage").textContent=message||""; $("professionalMessage").style.color=error?"#a12626":"#287747"; };
+  const professionalRequest = async (path, options={}) => {
+    const headers={...(options.headers||{})};
+    if(options.method && options.method!=="GET") headers["X-XSRF-TOKEN"]=await csrf();
+    const response=await fetch(path,{credentials:"same-origin",...options,headers});
+    const data=response.status===204?null:await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(data.error||"Não foi possível concluir a operação.");
+    return data;
+  };
+  const professionalCanManage = () => professionalState.role==="CLINIC_ADMIN";
+  const loadProfessionals = async () => {
+    professionalMessage("");
+    $("professionalRefresh").disabled=true;
+    try {
+      const params=new URLSearchParams({search:$("professionalSearch").value.trim(),status:$("professionalStatus").value});
+      professionalState.items=await professionalRequest("/api/v1/clinic/professionals?"+params.toString());
+      professionalState.page=1;
+      renderProfessionals();
+    } catch(error) {
+      $("professionalRows").innerHTML="<tr><td colspan='7'>"+escapeHtml(error.message)+"</td></tr>";
+      professionalMessage(error.message);
+    } finally {$("professionalRefresh").disabled=false;}
+  };
+  const renderProfessionals = () => {
+    const items=professionalState.items, pages=Math.max(1,Math.ceil(items.length/professionalState.pageSize));
+    professionalState.page=Math.min(professionalState.page,pages);
+    const start=(professionalState.page-1)*professionalState.pageSize, shown=items.slice(start,start+professionalState.pageSize);
+    $("professionalTotal").textContent=items.length;
+    $("professionalActive").textContent=items.filter(x=>x.status==="ACTIVE").length;
+    $("professionalInService").textContent=items.reduce((n,x)=>n+Number(x.active_queue_count||0),0);
+    $("professionalPageInfo").textContent=items.length?("Exibindo "+(start+1)+"–"+Math.min(start+professionalState.pageSize,items.length)+" de "+items.length):"Nenhum profissional encontrado";
+    $("professionalPage").textContent="Página "+professionalState.page+" de "+pages;
+    $("professionalPrev").disabled=professionalState.page<=1;$("professionalNext").disabled=professionalState.page>=pages;
+    const body=$("professionalRows");body.replaceChildren();
+    if(!shown.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=7;td.className="patient-empty";td.textContent="Nenhum profissional cadastrado para este filtro.";tr.append(td);body.append(tr);return;}
+    shown.forEach(item=>{
+      const tr=document.createElement("tr");
+      const cell=(value)=>{const td=document.createElement("td");td.textContent=value||"—";return td;};
+      const name=cell(item.display_name);name.className="professional-name";
+      const council=cell(item.council_type||"—");
+      const specialty=cell(item.specialty||"Não informada");
+      const account=cell(item.account_email||"—");
+      const activity=cell((item.encounter_count||0)+" consultas • "+(item.active_queue_count||0)+" na fila");
+      const status=cell(item.status==="ACTIVE"?"ATIVO":"INATIVO");status.innerHTML="<span class='professional-state "+(item.status==="ACTIVE"?"":"inactive")+"'>"+(item.status==="ACTIVE"?"ATIVO":"INATIVO")+"</span>";
+      const actions=document.createElement("td");actions.className="professional-actions";
+      const action=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
+      action("Ver ficha",()=>showProfessionalDetail(item.id));
+      if(professionalCanManage()){action("Editar",()=>editProfessional(item.id));action(item.status==="ACTIVE"?"Inativar":"Reativar",()=>toggleProfessional(item));}
+      tr.append(name,council,specialty,account,activity,status,actions);body.append(tr);
+    });
+  };
+  const escapeHtml = value => String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const openProfessionalForm = async (item=null) => {
+    professionalState.editingId=item?.id||null;
+    $("professionalForm").classList.remove("hidden");$("professionalDetail").classList.add("hidden");
+    $("professionalFormTitle").textContent=item?"Editar cadastro profissional":"Vincular profissional";
+    $("professionalAccountField").classList.toggle("hidden",!!item);
+    $("professionalMembership").required=!item;
+    $("professionalName").value=item?.display_name||"";
+    $("professionalSpecialty").value=item?.specialty||"";
+    $("professionalCouncil").value=item?.council_type||"";
+    $("professionalRegistration").value=item?.councilNumber||"";
+    $("professionalSave").textContent=item?"Salvar alterações":"Salvar profissional";
+    if(!item){
+      try{
+        const accounts=await professionalRequest("/api/v1/clinic/professionals/eligible-accounts");
+        const select=$("professionalMembership");select.replaceChildren();
+        const first=document.createElement("option");first.value="";first.textContent=accounts.length?"Selecione a conta profissional":"Nenhuma conta PROFISSIONAL disponível";select.append(first);
+        accounts.forEach(a=>{const o=document.createElement("option");o.value=a.membership_id;o.textContent=a.full_name+" — "+a.email;select.append(o);});
+        select.disabled=!accounts.length;
+      }catch(error){professionalMessage(error.message);return;}
+    }
+    $("professionalForm").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  const editProfessional = async id => {try{const item=await professionalRequest("/api/v1/clinic/professionals/"+id);await openProfessionalForm(item);}catch(error){professionalMessage(error.message);}};
+  const closeProfessionalPanels = () => {$("professionalForm").classList.add("hidden");$("professionalDetail").classList.add("hidden");professionalState.editingId=null;};
+  const toggleProfessional = async item => {
+    const next=item.status==="ACTIVE"?"INACTIVE":"ACTIVE";
+    const action=next==="INACTIVE"?"inativar":"reativar";
+    if(!confirm("Confirma "+action+" o cadastro de "+item.display_name+"? A operação não apaga o histórico profissional."))return;
+    try{await professionalRequest("/api/v1/clinic/professionals/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:next})});professionalMessage("Situação atualizada. Histórico preservado.",false);await loadProfessionals();}
+    catch(error){professionalMessage(error.message);}
+  };
+  const showProfessionalDetail = async id => {
+    try{
+      const [item,history]=await Promise.all([professionalRequest("/api/v1/clinic/professionals/"+id),professionalRequest("/api/v1/clinic/professionals/"+id+"/history")]);
+      $("professionalDetailTitle").textContent=item.display_name;
+      const fields=[["Especialidade",item.specialty],["Conselho",item.council_type],["Registro",item.councilNumber],["Conta vinculada",item.account_email],["Perfil",item.account_role],["Situação",item.status==="ACTIVE"?"Ativo":"Inativo"]];
+      $("professionalDetailData").replaceChildren();
+      fields.forEach(([label,value])=>{const d=document.createElement("div");d.className="patient-detail-cell";const small=document.createElement("small");small.textContent=label;const strong=document.createElement("strong");strong.textContent=value||"—";d.append(small,strong);$("professionalDetailData").append(d);});
+      const target=$("professionalHistory");target.replaceChildren();
+      const entries=[...(history.encounters||[]).map(x=>({...x,kind:"Consulta"})),...(history.queue||[]).map(x=>({...x,kind:"Fila"}))].sort((a,b)=>String(b.started_at||b.arrived_at).localeCompare(String(a.started_at||a.arrived_at)));
+      if(!entries.length){target.textContent="Nenhum atendimento vinculado até o momento.";}
+      entries.forEach(x=>{const d=document.createElement("div");d.className="professional-history-item";const strong=document.createElement("strong");strong.textContent=x.kind+" • "+(x.patient_name||"Paciente");const span=document.createElement("span");span.textContent=[x.status,x.service_label,x.room_name].filter(Boolean).join(" • ");d.append(strong,span);target.append(d);});
+      $("professionalForm").classList.add("hidden");$("professionalDetail").classList.remove("hidden");$("professionalDetail").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){professionalMessage(error.message);}
+  };
+  $("professionalForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=$("professionalSave");button.disabled=true;
+    try{
+      const payload={displayName:$("professionalName").value.trim(),specialty:$("professionalSpecialty").value.trim(),councilType:$("professionalCouncil").value,councilNumber:$("professionalRegistration").value.trim()};
+      const editing=!!professionalState.editingId;
+      if(!editing)payload.membershipId=$("professionalMembership").value;
+      await professionalRequest(editing?"/api/v1/clinic/professionals/"+professionalState.editingId:"/api/v1/clinic/professionals",{method:editing?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      closeProfessionalPanels();professionalMessage(editing?"Cadastro atualizado com sucesso.":"Profissional vinculado com sucesso.",false);await loadProfessionals();
+    }catch(error){professionalMessage(error.message);}finally{button.disabled=false;}
+  });
+  $("newProfessionalButton").addEventListener("click",()=>openProfessionalForm());
+  ["professionalCancel","professionalCancelTop","professionalDetailClose"].forEach(id=>$(id).addEventListener("click",closeProfessionalPanels));
+  $("professionalSearchButton").addEventListener("click",loadProfessionals);
+  $("professionalRefresh").addEventListener("click",loadProfessionals);
+  $("professionalSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadProfessionals();}});
+  $("professionalStatus").addEventListener("change",loadProfessionals);
+  $("professionalPrev").addEventListener("click",()=>{if(professionalState.page>1){professionalState.page--;renderProfessionals();}});
+  $("professionalNext").addEventListener("click",()=>{professionalState.page++;renderProfessionals();});
+
   const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Agendamentos e horários."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
@@ -711,8 +903,9 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
+    if (key === "professionals" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { professionalState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||""; $("professionalWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); $("newProfessionalButton").classList.toggle("hidden",!professionalCanManage()); $("professionalForm").classList.add("hidden"); $("professionalDetail").classList.add("hidden"); loadProfessionals(); }
     if (key === "patients" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("patientWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); $("patient-directory").classList.remove("hidden"); $("patientForm").classList.add("hidden"); $("patientDetail").classList.add("hidden"); loadPatients(); }
     if (key === "rooms" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION"].includes(m.role)))) $("receptionWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
     if (key === "access" && activeData && activeData.globalRole === "MASTER") $("masterTools").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
