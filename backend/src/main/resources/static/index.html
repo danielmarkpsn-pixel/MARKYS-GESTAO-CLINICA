@@ -642,7 +642,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     const rows = $("attendanceRows");
     rows.replaceChildren();
     const loading = document.createElement("tr");
-    const loadingCell = document.createElement("td"); loadingCell.colSpan=5; loadingCell.className="attendance-empty"; loadingCell.textContent="Carregando atendimentos...";
+    const loadingCell = document.createElement("td"); loadingCell.colSpan=6; loadingCell.className="attendance-empty"; loadingCell.textContent="Carregando atendimentos...";
     loading.append(loadingCell); rows.append(loading);
     attendanceMessage("");
     $("attendanceRefresh").disabled = true;
