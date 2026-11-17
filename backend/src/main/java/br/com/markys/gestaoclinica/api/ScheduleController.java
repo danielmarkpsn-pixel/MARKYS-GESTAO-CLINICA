@@ -35,7 +35,7 @@ public class ScheduleController {
                AND (? <> 'PROFESSIONAL' OR p.membership_id=?)
              ORDER BY lower(p.display_name)
             """, clinic, access.role(), access.membershipId());
-        List<Map<String,Object>> patients = jdbc.queryForList("""
+        List<Map<String,Object>> patients = "PROFESSIONAL".equals(access.role()) ? List.of() : jdbc.queryForList("""
             SELECT id, full_name FROM patients
              WHERE clinic_id=? AND status='ACTIVE'
              ORDER BY lower(full_name) LIMIT 1000
@@ -168,7 +168,7 @@ public class ScheduleController {
     @GetMapping("/blocks")
     public ResponseEntity<?> blocks(Authentication auth,@RequestParam String from,@RequestParam String to) {
         Access access=access(auth);
-        if(access==null)return forbidden();
+        if(access==null || !List.of("CLINIC_ADMIN","RECEPTION").contains(access.role()))return forbidden();
         LocalDateTime start,end;
         try{start=LocalDate.parse(from).atStartOfDay();end=LocalDate.parse(to).plusDays(1).atStartOfDay();}
         catch(RuntimeException ex){return badRequest("Período inválido.");}
@@ -385,7 +385,9 @@ public class ScheduleController {
             """,auth.getName(),TenantContext.requireClinicId());
         if(rows.isEmpty())return null;
         Map<String,Object> row=rows.getFirst();
-        return new Access((UUID)row.get("id"),String.valueOf(row.get("role")),(UUID)row.get("professional_id"));
+        String role=String.valueOf(row.get("role"));
+        if(!List.of("CLINIC_ADMIN","RECEPTION","PROFESSIONAL").contains(role))return null;
+        return new Access((UUID)row.get("id"),role,(UUID)row.get("professional_id"));
     }
     private static String clean(String value){return value==null||value.isBlank()?null:value.trim();}
     private ResponseEntity<Map<String,String>> forbidden(){return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","Seu perfil não possui permissão para esta operação."));}
