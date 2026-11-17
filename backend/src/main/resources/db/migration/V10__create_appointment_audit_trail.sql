@@ -27,3 +27,16 @@ ALTER TABLE appointment_events FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation_appointment_events ON appointment_events
     USING (clinic_id = NULLIF(current_setting('app.current_clinic_id', true), '')::uuid)
     WITH CHECK (clinic_id = NULLIF(current_setting('app.current_clinic_id', true), '')::uuid);
+
+CREATE FUNCTION prevent_appointment_event_mutation()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RAISE EXCEPTION 'Appointment audit events are immutable';
+END;
+$$;
+
+CREATE TRIGGER trg_appointment_events_immutable
+    BEFORE UPDATE OR DELETE ON appointment_events
+    FOR EACH ROW EXECUTE FUNCTION prevent_appointment_event_mutation();
