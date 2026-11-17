@@ -44,7 +44,8 @@ public class ScheduleController {
             SELECT id, name FROM clinic_rooms
              WHERE clinic_id=? AND status='ACTIVE' ORDER BY lower(name)
             """, clinic);
-        return ResponseEntity.ok(Map.of("professionals", professionals, "patients", patients, "rooms", rooms));
+        String timezone=jdbc.queryForObject("SELECT timezone FROM clinics WHERE id=?",String.class,clinic);
+        return ResponseEntity.ok(Map.of("professionals", professionals, "patients", patients, "rooms", rooms, "timezone", timezone));
     }
 
     @GetMapping
