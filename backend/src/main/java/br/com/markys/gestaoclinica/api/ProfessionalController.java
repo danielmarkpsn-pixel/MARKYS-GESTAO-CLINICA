@@ -26,7 +26,7 @@ import br.com.markys.gestaoclinica.security.TenantContext;
 @RequestMapping("/api/v1/clinic/professionals")
 public class ProfessionalController {
     private static final List<String> COUNCILS = List.of(
-        "CRM", "CRP", "CRO", "COREN", "CREFITO", "CREF", "CRN", "CRFa", "CRBM", "CRBio", "OUTRO"
+        "CRM", "CRP", "CRO", "COREN", "CREFITO", "CREF", "CRN", "CRFA", "CRBM", "CRBio", "OUTRO"
     );
 
     private final JdbcTemplate jdbc;
