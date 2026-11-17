@@ -255,6 +255,7 @@ class DatabaseMigrationIntegrationTest {
                 .content("""
                     {
                       "fullName":"Paciente Atualizado",
+                      "cpf":"529.982.247-25",
                       "birthDate":"1990-05-20",
                       "insuranceName":"Convênio Atualizado",
                       "jobTitle":"Técnico Sênior",
