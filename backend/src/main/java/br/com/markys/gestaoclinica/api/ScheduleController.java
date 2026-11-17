@@ -65,6 +65,9 @@ public class ScheduleController {
         String term=search==null?"":search.trim();
         if(term.length()>100)term=term.substring(0,100);
         UUID clinic=TenantContext.requireClinicId();
+        ZoneId zone=clinicZone(clinic);
+        OffsetDateTime rangeStart=start.atZone(zone).toOffsetDateTime();
+        OffsetDateTime rangeEnd=end.atZone(zone).toOffsetDateTime();
         UUID ownProfessional=access.professionalId();
         List<Map<String,Object>> rows=jdbc.queryForList("""
             SELECT a.id,a.starts_at,a.ends_at,a.status,a.reason,a.cancellation_reason,
@@ -75,14 +78,13 @@ public class ScheduleController {
               JOIN patients p ON p.clinic_id=a.clinic_id AND p.id=a.patient_id
               JOIN professionals pr ON pr.clinic_id=a.clinic_id AND pr.id=a.professional_id
               LEFT JOIN clinic_rooms r ON r.clinic_id=a.clinic_id AND r.id=a.room_id
-             WHERE a.clinic_id=? AND a.starts_at < ?::timestamp AT TIME ZONE 'UTC'
-               AND a.ends_at > ?::timestamp AT TIME ZONE 'UTC'
+             WHERE a.clinic_id=? AND a.starts_at < ? AND a.ends_at > ?
                AND (?='' OR a.status=?) AND (?::uuid IS NULL OR a.professional_id=?)
                AND (?='' OR p.full_name ILIKE ? OR pr.display_name ILIKE ?
                     OR COALESCE(a.reason,'') ILIKE ?)
                AND (?::uuid IS NULL OR a.professional_id=?)
              ORDER BY a.starts_at LIMIT 1500
-            """, clinic, end, start, state, state, professionalId, professionalId,
+            """, clinic, rangeEnd, rangeStart, state, state, professionalId, professionalId,
                 term, "%"+term+"%", "%"+term+"%", "%"+term+"%", ownProfessional, ownProfessional);
         return ResponseEntity.ok(rows);
     }
@@ -164,16 +166,17 @@ public class ScheduleController {
         LocalDateTime start,end;
         try{start=LocalDate.parse(from).atStartOfDay();end=LocalDate.parse(to).plusDays(1).atStartOfDay();}
         catch(RuntimeException ex){return badRequest("Período inválido.");}
+        UUID clinic=TenantContext.requireClinicId();
+        ZoneId zone=clinicZone(clinic);
         return ResponseEntity.ok(jdbc.queryForList("""
             SELECT b.id,b.starts_at,b.ends_at,b.reason,b.professional_id,p.display_name AS professional_name,
                    b.room_id,r.name AS room_name
               FROM schedule_blocks b
               LEFT JOIN professionals p ON p.clinic_id=b.clinic_id AND p.id=b.professional_id
               LEFT JOIN clinic_rooms r ON r.clinic_id=b.clinic_id AND r.id=b.room_id
-             WHERE b.clinic_id=? AND b.starts_at < ?::timestamp AT TIME ZONE 'UTC'
-               AND b.ends_at > ?::timestamp AT TIME ZONE 'UTC'
+             WHERE b.clinic_id=? AND b.starts_at < ? AND b.ends_at > ?
              ORDER BY b.starts_at
-            """,TenantContext.requireClinicId(),end,start));
+            """,clinic,end.atZone(zone).toOffsetDateTime(),start.atZone(zone).toOffsetDateTime()));
     }
 
     @DeleteMapping("/blocks/{id}")
@@ -214,9 +217,7 @@ public class ScheduleController {
 
         lockResource(clinic,"P:"+body.professionalId(),body.startsAt().toLocalDate());
         if(body.roomId()!=null)lockResource(clinic,"R:"+body.roomId(),body.startsAt().toLocalDate());
-        String timezone=jdbc.queryForObject("SELECT timezone FROM clinics WHERE id=?",String.class,clinic);
-        ZoneId zone;
-        try{zone=ZoneId.of(timezone);}catch(RuntimeException ex){zone=ZoneId.of("America/Manaus");}
+        ZoneId zone=clinicZone(clinic);
         ZonedDateTime localStart=body.startsAt().atZoneSameInstant(zone), localEnd=body.endsAt().atZoneSameInstant(zone);
         if(!localStart.toLocalDate().equals(localEnd.toLocalDate()))return badRequest("O agendamento deve terminar no mesmo dia local.");
         int weekday=localStart.getDayOfWeek().getValue();
@@ -227,7 +228,7 @@ public class ScheduleController {
             """,clinic,body.professionalId(),weekday,localStart.toLocalTime(),localEnd.toLocalTime());
         if(rules.isEmpty())return conflict("Não há horário de atendimento cadastrado para este profissional neste dia e período.");
         boolean aligned=rules.stream().anyMatch(rule->{
-            LocalTime start=((java.sql.Time)rule.get("starts_local")).toLocalTime();
+            LocalTime start=LocalTime.parse(String.valueOf(rule.get("starts_local")));
             int slot=((Number)rule.get("slot_minutes")).intValue();
             long delta=ChronoUnit.MINUTES.between(start,localStart.toLocalTime());
             return delta>=0 && delta%slot==0 && minutes%slot==0;
@@ -309,6 +310,10 @@ public class ScheduleController {
     private void lockResource(UUID clinic,String resource,LocalDate date) {
         jdbc.queryForObject("SELECT pg_advisory_xact_lock(hashtextextended(?,0))",Object.class,
             clinic+":"+resource+":"+date);
+    }
+    private ZoneId clinicZone(UUID clinic) {
+        String timezone=jdbc.queryForObject("SELECT timezone FROM clinics WHERE id=?",String.class,clinic);
+        try{return ZoneId.of(timezone);}catch(RuntimeException ex){return ZoneId.of("America/Manaus");}
     }
     private boolean professionalActive(UUID clinic,UUID id) {
         return jdbc.queryForObject("SELECT count(*) FROM professionals WHERE clinic_id=? AND id=? AND status='ACTIVE'",Integer.class,clinic,id)>0;
