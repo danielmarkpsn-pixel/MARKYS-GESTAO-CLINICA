@@ -123,6 +123,9 @@ public class SecurityConfig {
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
             )
             .authorizeHttpRequests(auth -> auth
+                // The login shell must be available before the user has a session.
+                // Only the entry page and its favicon are public; clinical APIs remain protected.
+                .requestMatchers("/", "/index.html", "/favicon.svg").permitAll()
                 .requestMatchers(
                     "/api/v1/health",
                     "/actuator/health",
