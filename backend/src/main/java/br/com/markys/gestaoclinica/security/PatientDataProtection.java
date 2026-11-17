@@ -55,6 +55,26 @@ public class PatientDataProtection {
         }
     }
 
+    public String decrypt(byte[] encryptedValue) {
+        requireConfigured();
+        if (encryptedValue == null || encryptedValue.length < 29) {
+            throw new IllegalArgumentException("Documento protegido inválido.");
+        }
+        try {
+            ByteBuffer buffer = ByteBuffer.wrap(encryptedValue);
+            byte[] nonce = new byte[12];
+            buffer.get(nonce);
+            byte[] ciphertext = new byte[buffer.remaining()];
+            buffer.get(ciphertext);
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(encryptionKey, "AES"),
+                new GCMParameterSpec(128, nonce));
+            return new String(cipher.doFinal(ciphertext), StandardCharsets.UTF_8);
+        } catch (GeneralSecurityException ex) {
+            throw new IllegalStateException("Não foi possível descriptografar os dados do paciente.", ex);
+        }
+    }
+
     public byte[] fingerprint(String value) {
         requireConfigured();
         try {
