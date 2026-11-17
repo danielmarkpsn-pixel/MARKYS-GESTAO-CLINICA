@@ -403,9 +403,6 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   const resetPatientForm = () => {
     $("patientForm").reset(); editingPatientId = null;
     $("patientCpf").disabled = false; $("patientCpf").placeholder = "000.000.000-00";
-    $("patientServiceType").disabled = false;
-    $("patientExamChoices").querySelectorAll("input[type=checkbox]").forEach(input => input.disabled = false);
-    $("patientServiceType").required = false;
     $("patientSubmit").textContent = "Cadastrar paciente";
     $("cancelPatientEdit").classList.add("hidden"); calculatePatientAge();
   };
@@ -423,43 +420,65 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("patientAge").value = age >= 0 ? age + " anos" : "";
   };
   $("patientBirth").addEventListener("change", calculatePatientAge);
-  const loadPatientChoices = () => {
-    const service = $("patientServiceType");
-    service.replaceChildren();
-    const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = "Selecione"; service.append(placeholder);
-    currentCatalog.serviceTypes.filter(x => x.active).forEach(item => {
-      const option = document.createElement("option"); option.value = item.id; option.textContent = item.name; service.append(option);
-    });
-    const choices = $("patientExamChoices"); choices.replaceChildren();
-    currentCatalog.exams.filter(x => x.active).forEach(item => {
-      const label = document.createElement("label"); label.className = "exam-choice";
-      const input = document.createElement("input"); input.type = "checkbox"; input.value = item.id;
-      const text = document.createElement("span"); text.textContent = item.category + " • " + item.name + " — " + item.room_name;
-      label.append(input, text); choices.append(label);
-    });
-    if (!choices.childElementCount) choices.textContent = "Nenhum exame ativo cadastrado.";
-  };
+  const loadPatientChoices = () => {};
   const patientDate = v => v ? new Date(v+"T00:00:00").toLocaleDateString("pt-BR") : "Não informado";
   const patientAgeLabel = v => {if(!v)return "Não informada";const b=new Date(v+"T00:00:00"),n=new Date();let y=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))y--;return y>=0?y+" anos":"Não informada";};
+  let patientItems = [];
+  let patientPage = 1;
+  const patientPageSize = 30;
+  const renderPatientPage = () => {
+    const list = $("patientList"); list.replaceChildren();
+    const total = patientItems.length;
+    const pages = Math.max(1, Math.ceil(total / patientPageSize));
+    patientPage = Math.min(Math.max(1, patientPage), pages);
+    const start = (patientPage - 1) * patientPageSize;
+    const pageItems = patientItems.slice(start, start + patientPageSize);
+    if (!pageItems.length) {
+      const tr=document.createElement("tr"),td=document.createElement("td");
+      td.colSpan=6;td.className="patient-empty";td.textContent="Nenhum paciente encontrado.";
+      tr.append(td);list.append(tr);
+    }
+    pageItems.forEach(item => {
+      const tr=document.createElement("tr"),nameCell=document.createElement("td"),name=document.createElement("div");
+      name.className="patient-name";name.textContent=item.full_name;nameCell.append(name);tr.append(nameCell);
+      const birth=document.createElement("td");birth.textContent=patientDate(item.birth_date)+" • "+patientAgeLabel(item.birth_date);tr.append(birth);
+      const insurance=document.createElement("td");insurance.textContent=item.insurance_name||"Particular";tr.append(insurance);
+      const last=document.createElement("td");last.textContent=item.last_attendance?new Date(item.last_attendance).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"Sem atendimento";tr.append(last);
+      const status=document.createElement("td"),pill=document.createElement("span");pill.className="patient-state"+(item.status==="INACTIVE"?" inactive":"");pill.textContent=item.status==="INACTIVE"?"Inativo":"Ativo";status.append(pill);tr.append(status);
+      const td=document.createElement("td"),actions=document.createElement("div");actions.className="patient-row-actions";
+      const add=(label,fn,extraClass="")=>{const b=document.createElement("button");b.type="button";b.textContent=label;if(extraClass)b.className=extraClass;b.addEventListener("click",fn);actions.append(b);};
+      add("FICHA",()=>showPatientDetail(item.id));
+      if(canManagePatientRecords){
+        add("EDITAR",()=>editPatient(item.id));
+        add("EXCLUIR",()=>deletePatient(item.id,item.full_name),"patient-delete");
+        add(item.status==="ACTIVE"?"Inativar":"Reativar",async()=>{if(item.status==="ACTIVE"&&!confirm("Inativar este paciente? O histórico será preservado."))return;try{await catalogRequest("/api/v1/clinic/patients/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:item.status==="ACTIVE"?"INACTIVE":"ACTIVE"})});patientMessage("Situação atualizada.",true);await loadPatients();}catch(err){patientMessage(err.message);}});
+      }
+      td.append(actions);tr.append(td);list.append(tr);
+    });
+    $("patientCount").textContent=total+" paciente(s)";
+    $("patientPaginationInfo").textContent=total?("Exibindo "+(start+1)+"–"+Math.min(start+patientPageSize,total)+" de "+total+" pacientes"):"0 pacientes";
+    $("patientCurrentPage").textContent="Página "+patientPage+" de "+pages;
+    $("patientPreviousPage").disabled=patientPage<=1;$("patientNextPage").disabled=patientPage>=pages;
+    $("patientPagination").style.display=total>patientPageSize?"flex":"none";
+  };
   const loadPatients = async () => {
     const list=$("patientList");list.replaceChildren();
-    try{
+    try {
       const p=new URLSearchParams({search:$("patientSearch").value.trim(),status:$("patientStatusFilter").value});
-      const items=await catalogRequest("/api/v1/clinic/patients?"+p.toString());$("patientCount").textContent=items.length+" paciente(s)";
-      if(!items.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=6;td.className="patient-empty";td.textContent="Nenhum paciente encontrado.";tr.append(td);list.append(tr);return;}
-      items.forEach(item=>{
-        const tr=document.createElement("tr"),nameCell=document.createElement("td"),name=document.createElement("div");name.className="patient-name";name.textContent=item.full_name;nameCell.append(name);tr.append(nameCell);
-        const birth=document.createElement("td");birth.textContent=patientDate(item.birth_date)+" • "+patientAgeLabel(item.birth_date);tr.append(birth);
-        const insurance=document.createElement("td");insurance.textContent=item.insurance_name||"Particular";tr.append(insurance);
-        const last=document.createElement("td");last.textContent=item.last_attendance?new Date(item.last_attendance).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"Sem atendimento";tr.append(last);
-        const status=document.createElement("td"),pill=document.createElement("span");pill.className="patient-state"+(item.status==="INACTIVE"?" inactive":"");pill.textContent=item.status==="INACTIVE"?"Inativo":"Ativo";status.append(pill);tr.append(status);
-        const td=document.createElement("td"),actions=document.createElement("div");actions.className="patient-row-actions";
-        const add=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
-        add("Ficha",()=>showPatientDetail(item.id));if(canManagePatientRecords)add("Editar",()=>editPatient(item.id));
-        if(canManagePatientRecords)add(item.status==="ACTIVE"?"Inativar":"Reativar",async()=>{if(item.status==="ACTIVE"&&!confirm("Inativar este paciente? O histórico será preservado."))return;try{await catalogRequest("/api/v1/clinic/patients/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:item.status==="ACTIVE"?"INACTIVE":"ACTIVE"})});patientMessage("Situação atualizada.",true);await loadPatients();}catch(err){patientMessage(err.message);}});
-        td.append(actions);tr.append(td);list.append(tr);
-      });
-    }catch(err){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=6;td.className="patient-empty";td.textContent=err.message;tr.append(td);list.append(tr);patientMessage(err.message);}
+      const items=await catalogRequest("/api/v1/clinic/patients?"+p.toString());
+      patientItems=Array.isArray(items)?items:[];patientPage=1;renderPatientPage();
+    } catch(err) {
+      const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=6;td.className="patient-empty";td.textContent=err.message;tr.append(td);list.append(tr);patientMessage(err.message);
+    }
+  };
+  const deletePatient = async (id, name) => {
+    if (!id || !confirm("Confirma EXCLUIR DEFINITIVAMENTE o cadastro de "+name+"? Esta ação não pode ser desfeita. Se houver histórico clínico ou documentos vinculados, o servidor bloqueará a exclusão para proteger esses registros.")) return;
+    try {
+      const result=await catalogRequest("/api/v1/clinic/patients/"+encodeURIComponent(id),{method:"DELETE"});
+      patientItems=patientItems.filter(item=>String(item.id)!==String(id));
+      renderPatientPage();patientMessage(result.message||"Cadastro excluído definitivamente.",true);
+      await loadPatients();
+    } catch(err) { patientMessage(err.message); }
   };
   const showPatientDetail = async id => {
     try{
@@ -475,73 +494,62 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   $("newPatientButton").addEventListener("click",()=>{resetPatientForm();$("patientFormTitle").textContent="Novo paciente";$("patientForm").classList.remove("hidden");$("patient-directory").classList.add("hidden");$("patientDetail").classList.add("hidden");});
   $("cancelPatientForm").addEventListener("click",()=>{resetPatientForm();$("patientForm").classList.add("hidden");$("patient-directory").classList.remove("hidden");});
   $("patientSearchButton").addEventListener("click",loadPatients);$("patientSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadPatients();}});$("patientStatusFilter").addEventListener("change",loadPatients);$("patientRefreshButton").addEventListener("click",loadPatients);
+  $("patientPreviousPage").addEventListener("click",()=>{if(patientPage>1){patientPage--;renderPatientPage();}});
+  $("patientNextPage").addEventListener("click",()=>{patientPage++;renderPatientPage();});
   const editPatient = async id => {
     try {
       const patient = await catalogRequest("/api/v1/clinic/patients/" + id);
       editingPatientId = id;
-      $("patientName").value = patient.full_name || "";
-      $("patientBirth").value = patient.birth_date || ""; calculatePatientAge();
-      $("patientSex").value = patient.sex || "";
-      $("patientInsurance").value = patient.insurance_name || "";
-      $("patientJob").value = patient.job_title || "";
-      $("patientCpf").value = ""; $("patientCpf").disabled = true;
-      $("patientCpf").placeholder = "CPF protegido — não editável";
-      $("patientServiceType").value = patient.serviceTypeId || "";
-      $("patientServiceType").required = false;
-      const canEditQueue = !!patient.serviceTypeId;
-      $("patientServiceType").disabled = !canEditQueue;
-      $("patientExamChoices").querySelectorAll("input[type=checkbox]").forEach(input => input.disabled = !canEditQueue);
-      const selected = new Set(patient.examIds || []);
-      $("patientExamChoices").querySelectorAll("input[type=checkbox]").forEach(input => { input.checked = selected.has(input.value); });
-      $("patientSubmit").textContent = "Salvar alterações";
-      $("patientFormTitle").textContent = "Editar paciente";
-      $("patientForm").classList.remove("hidden"); $("patient-directory").classList.add("hidden"); $("patientDetail").classList.add("hidden");
-      $("cancelPatientEdit").classList.remove("hidden");
-      $("patientName").focus(); patientMessage("Editando cadastro. O CPF permanece protegido.");
-    } catch (error) { patientMessage(error.message); }
+      $("patientName").value=patient.full_name||"";
+      $("patientCpf").value=patient.cpf||"";
+      $("patientCpf").disabled=false;$("patientCpf").placeholder="000.000.000-00";
+      $("patientBirth").value=patient.birth_date||"";calculatePatientAge();
+      $("patientSex").value=patient.sex||"";
+      $("patientInsurance").value=patient.insurance_name||"";
+      $("patientJob").value=patient.job_title||"";
+      $("patientPhone").value=patient.phone||"";
+      $("patientEmail").value=patient.email||"";
+      $("patientAddress").value=patient.address||"";
+      $("patientEmergencyContact").value=patient.emergencyContact||"";
+      $("patientEmergencyPhone").value=patient.emergencyPhone||"";
+      $("patientAdministrativeNotes").value=patient.administrativeNotes||"";
+      $("patientSubmit").textContent="Salvar alterações";
+      $("patientFormTitle").textContent="Editar paciente";
+      $("patientForm").classList.remove("hidden");$("patient-directory").classList.add("hidden");$("patientDetail").classList.add("hidden");
+      $("cancelPatientEdit").classList.remove("hidden");$("patientName").focus();
+      patientMessage("Editando cadastro completo do paciente.");
+    } catch(error){patientMessage(error.message);}
   };
-  $("cancelPatientEdit").addEventListener("click", () => { resetPatientForm(); $("patientForm").classList.add("hidden"); $("patient-directory").classList.remove("hidden"); });
-  $("patientForm").addEventListener("submit", async event => {
-    event.preventDefault();
-    const form = event.currentTarget; const button = $("patientSubmit");
-    button.disabled = true; patientMessage("");
-    const examIds = [...$("patientExamChoices").querySelectorAll("input:checked")].map(input => input.value);
-    const payload = {
-      fullName: $("patientName").value.trim(),
-      birthDate: $("patientBirth").value || null, sex: $("patientSex").value || null,
-      insuranceName: $("patientInsurance").value, jobTitle: $("patientJob").value,
-      serviceTypeId: $("patientServiceType").value || null, examIds
+  $("cancelPatientEdit").addEventListener("click",()=>{resetPatientForm();$("patientForm").classList.add("hidden");$("patient-directory").classList.remove("hidden");});
+  $("patientForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=$("patientSubmit");button.disabled=true;patientMessage("");
+    const payload={
+      fullName:$("patientName").value.trim(),cpf:$("patientCpf").value,
+      birthDate:$("patientBirth").value||null,sex:$("patientSex").value||null,
+      insuranceName:$("patientInsurance").value,jobTitle:$("patientJob").value,
+      phone:$("patientPhone").value,email:$("patientEmail").value,
+      address:$("patientAddress").value,emergencyContact:$("patientEmergencyContact").value,
+      emergencyPhone:$("patientEmergencyPhone").value,administrativeNotes:$("patientAdministrativeNotes").value
     };
-    try {
-      let patientId = editingPatientId;
-      let successMessage;
-      if (editingPatientId) {
-        const result = await catalogRequest("/api/v1/clinic/patients/" + editingPatientId, {
-          method: "PUT", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload)
-        });
-        successMessage = result.message;
-      } else {
-        const result = await catalogRequest("/api/v1/clinic/patients", {
-          method: "POST", headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({...payload, cpf: $("patientCpf").value})
-        });
-        patientId = result.patientId; successMessage = result.message;
+    try{
+      let patientId=editingPatientId,successMessage;
+      if(editingPatientId){
+        const result=await catalogRequest("/api/v1/clinic/patients/"+encodeURIComponent(editingPatientId),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+        successMessage=result.message;
+      }else{
+        const result=await catalogRequest("/api/v1/clinic/patients",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+        patientId=result.patientId;successMessage=result.message;
       }
-      let uploadWarning = "";
-      const pdf = $("patientPdf").files[0];
-      if (pdf) {
-        try {
-          const data = new FormData(); data.append("file", pdf);
-          await catalogRequest("/api/v1/clinic/patients/" + patientId + "/documents", {method:"POST", body:data});
-        } catch (uploadError) { uploadWarning = " O cadastro foi salvo, mas o PDF não foi anexado: " + uploadError.message; }
-      }
-      resetPatientForm(); $("patientForm").classList.add("hidden"); $("patient-directory").classList.remove("hidden"); $("patientDetail").classList.add("hidden"); patientMessage(successMessage + uploadWarning, !uploadWarning); await loadPatients();
-    } catch (error) { patientMessage(error.message); }
-    finally { button.disabled = false; }
+      let uploadWarning="";const pdf=$("patientPdf").files[0];
+      if(pdf){try{const data=new FormData();data.append("file",pdf);await catalogRequest("/api/v1/clinic/patients/"+encodeURIComponent(patientId)+"/documents",{method:"POST",body:data});}catch(uploadError){uploadWarning=" O cadastro foi salvo, mas o PDF não foi anexado: "+uploadError.message;}}
+      resetPatientForm();$("patientForm").classList.add("hidden");$("patient-directory").classList.remove("hidden");$("patientDetail").classList.add("hidden");
+      patientMessage(successMessage+uploadWarning,!uploadWarning);await loadPatients();
+    }catch(error){patientMessage(error.message);}
+    finally{button.disabled=false;}
   });
-  $("patientCpf").addEventListener("input", event => {
-    const digits = event.target.value.replace(/\\D/g, "").slice(0,11);
-    event.target.value = digits.replace(/(\\d{3})(\\d)/, "$1.$2").replace(/(\\d{3})(\\d)/, "$1.$2").replace(/(\\d{3})(\\d{1,2})$/, "$1-$2");
+  $("patientCpf").addEventListener("input",event=>{
+    const digits=event.target.value.replace(/\D/g,"").slice(0,11);
+    event.target.value=digits.replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d)/,"$1.$2").replace(/(\d{3})(\d{1,2})$/,"$1-$2");
   });
   const showSession = data => {
     $("authPanel").classList.add("hidden");
