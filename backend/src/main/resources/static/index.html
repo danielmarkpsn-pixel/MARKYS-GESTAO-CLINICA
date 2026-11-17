@@ -322,30 +322,6 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   </form>
   <section id="professionalDetail" class="professional-panel hidden"><div class="patient-form-heading"><h4 id="professionalDetailTitle">Ficha profissional</h4><button id="professionalDetailClose" class="professional-action" type="button">Voltar à lista</button></div><div id="professionalDetailData" class="patient-detail-grid"></div><div class="professional-history"><h5>Histórico de atuação</h5><div id="professionalHistory"></div></div></section>
 </section>
-<section id="professionalWorkspace" class="workspace hidden professional-workspace">
-  <div class="patient-heading"><div><h3>Gestão de profissionais</h3><p class="sub">Equipe clínica, registros em conselhos, especialidades e histórico de atuação.</p></div><button id="newProfessionalButton" class="professional-action primary" type="button">+ Vincular profissional</button></div>
-  <div class="professional-panel">
-    <div class="professional-toolbar"><input id="professionalSearch" type="search" maxlength="120" placeholder="Buscar por nome, conselho, especialidade ou e-mail"><select id="professionalStatus"><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option><option value="ALL">Todos</option></select><button id="professionalSearchButton" class="professional-action" type="button">Pesquisar</button><button id="professionalRefresh" class="professional-action" type="button">Atualizar</button></div>
-    <div class="professional-summary"><span>Profissionais exibidos<strong id="professionalTotal">0</strong></span><span>Ativos<strong id="professionalActive">0</strong></span><span>Atendimentos em andamento<strong id="professionalInService">0</strong></span></div>
-    <div id="professionalMessage" class="professional-message" role="status" aria-live="polite"></div>
-    <div class="professional-table-wrap"><table class="professional-table"><thead><tr><th>PROFISSIONAL</th><th>CONSELHO / REGISTRO</th><th>ESPECIALIDADE</th><th>CONTA DE ACESSO</th><th>ATUAÇÃO</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="professionalRows"><tr><td colspan="7">Carregando...</td></tr></tbody></table></div>
-    <div class="professional-pagination"><span id="professionalPageInfo">0 registros</span><div><button id="professionalPrev" class="professional-action" type="button" disabled>Anterior</button> <span id="professionalPage">Página 1 de 1</span> <button id="professionalNext" class="professional-action" type="button" disabled>Próxima</button></div></div>
-  </div>
-  <form id="professionalForm" class="professional-panel professional-form hidden">
-    <div class="patient-form-heading wide"><h4 id="professionalFormTitle">Vincular profissional</h4><button id="professionalCancelTop" class="professional-action" type="button">Fechar</button></div>
-    <div class="professional-field wide" id="professionalAccountField"><label for="professionalMembership">Conta de acesso profissional *</label><select id="professionalMembership" required><option value="">Carregando contas elegíveis...</option></select><small class="professional-muted">A conta deve existir no módulo Acessos e possuir perfil PROFISSIONAL nesta clínica.</small></div>
-    <div class="professional-field"><label for="professionalName">Nome de exibição *</label><input id="professionalName" maxlength="180" required></div>
-    <div class="professional-field"><label for="professionalSpecialty">Especialidade *</label><input id="professionalSpecialty" maxlength="120" placeholder="Ex.: Medicina do Trabalho" required></div>
-    <div class="professional-field"><label for="professionalCouncil">Conselho profissional *</label><select id="professionalCouncil" required><option value="">Selecione</option><option>CRM</option><option>CRP</option><option>CRO</option><option>COREN</option><option>CREFITO</option><option>CREF</option><option>CRN</option><option>CRFa</option><option>CRBM</option><option>CRBio</option><option>OUTRO</option></select></div>
-    <div class="professional-field"><label for="professionalRegistration">Número de registro *</label><input id="professionalRegistration" maxlength="80" required placeholder="Número e UF, se aplicável"></div>
-    <div class="professional-form-actions"><button id="professionalCancel" class="professional-action" type="button">Cancelar</button><button id="professionalSave" class="professional-action primary" type="submit">Salvar profissional</button></div>
-  </form>
-  <section id="professionalDetail" class="professional-panel hidden"><div class="patient-form-heading"><h4 id="professionalDetailTitle">Ficha profissional</h4><button id="professionalDetailClose" class="professional-action" type="button">Voltar à lista</button></div><div id="professionalDetailData" class="patient-detail-grid"></div><div class="professional-history"><h5>Histórico de atuação</h5><div id="professionalHistory"></div></div></section>
-</section>
-        <p class="hint" id="sessionHint">Os módulos clínicos serão conectados gradualmente a esta autenticação durante a migração.</p>
-        <button id="logoutButton" class="secondary" type="button">Encerrar sessão</button>
-      </div>
-    </section>
   </main>
 
 <section id="scheduleWorkspace" class="schedule-workspace hidden" aria-label="Agenda clínica">
