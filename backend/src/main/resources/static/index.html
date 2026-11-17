@@ -989,15 +989,184 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   $("professionalPrev").addEventListener("click",()=>{if(professionalState.page>1){professionalState.page--;renderProfessionals();}});
   $("professionalNext").addEventListener("click",()=>{professionalState.page++;renderProfessionals();});
 
-  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Agendamentos e horários."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
+
+  const scheduleState={items:[],resources:null,editingId:null,role:"",rules:[],blocks:[],timezone:"America/Manaus"};
+  const scheduleMessage=(message,error=true)=>{ $("scheduleMessage").textContent=message||"";$("scheduleMessage").style.color=error?"#a12c26":"#287747";};
+  const scheduleRequest=async(path,options={})=>{
+    const headers={...(options.headers||{})};
+    if(options.method&&options.method!=="GET")headers["X-XSRF-TOKEN"]=await csrf();
+    const response=await fetch(path,{credentials:"same-origin",...options,headers});
+    const data=response.status===204?null:await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data?.error||"Não foi possível concluir a operação da Agenda.");
+    return data;
+  };
+  const localDateString=(date)=>{const d=date||new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
+  const clinicDateParts=(value)=>{const d=new Date(value);const parts=new Intl.DateTimeFormat("en-CA",{timeZone:scheduleState.timezone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(d);const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));return {date:p.year+"-"+p.month+"-"+p.day,time:p.hour+":"+p.minute};};
+  const clinicDateTime=(value)=>new Intl.DateTimeFormat("pt-BR",{timeZone:scheduleState.timezone,dateStyle:"short",timeStyle:"short"}).format(new Date(value));
+  const fillScheduleSelect=(id,items,firstLabel,selected="")=>{
+    const select=$(id);select.replaceChildren();const first=document.createElement("option");first.value="";first.textContent=firstLabel;select.append(first);
+    items.forEach(item=>{const option=document.createElement("option");option.value=item.id;option.textContent=item.display_name||item.full_name||item.name;select.append(option);});
+    if(selected)select.value=selected;
+  };
+  const loadScheduleResources=async()=>{
+    const data=await scheduleRequest("/api/v1/clinic/schedule/resources");
+    scheduleState.resources=data;scheduleState.timezone=data.timezone||"America/Manaus";
+    fillScheduleSelect("scheduleProfessionalFilter",data.professionals,"Todos os profissionais");
+    fillScheduleSelect("scheduleProfessional",data.professionals,"Selecione o profissional");
+    fillScheduleSelect("scheduleRuleProfessional",data.professionals,"Selecione o profissional");
+    fillScheduleSelect("scheduleBlockProfessional",data.professionals,"Não bloquear profissional");
+    fillScheduleSelect("schedulePatient",data.patients,"Selecione o paciente");
+    fillScheduleSelect("scheduleRoom",data.rooms,"Sem consultório definido");
+    fillScheduleSelect("scheduleBlockRoom",data.rooms,"Não bloquear consultório");
+  };
+  const scheduleRange=()=>({from:$("scheduleFrom").value,to:$("scheduleTo").value});
+  const loadScheduleRules=async()=>{
+    const professionalId=$("scheduleRuleProfessional").value;
+    const target=$("scheduleRules");target.replaceChildren();
+    if(!professionalId){target.textContent="Selecione um profissional para consultar os horários cadastrados.";return;}
+    try{
+      const rows=await scheduleRequest("/api/v1/clinic/schedule/rules?professionalId="+encodeURIComponent(professionalId));
+      scheduleState.rules=rows;
+      if(!rows.length){target.textContent="Nenhum horário semanal cadastrado. Cadastre ao menos um período para permitir agendamentos.";return;}
+      const days=["","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado","Domingo"];
+      rows.forEach(rule=>{
+        const line=document.createElement("div");line.className="schedule-rule";
+        const label=document.createElement("span");label.textContent=days[Number(rule.weekday)]+" • "+String(rule.starts_local).slice(0,5)+"–"+String(rule.ends_local).slice(0,5)+" • intervalos de "+rule.slot_minutes+" min";
+        const remove=document.createElement("button");remove.type="button";remove.className="schedule-btn";remove.textContent="Remover";
+        remove.addEventListener("click",async()=>{if(!confirm("Remover este horário semanal?"))return;try{await scheduleRequest("/api/v1/clinic/schedule/rules/"+rule.id,{method:"DELETE"});await loadScheduleRules();scheduleMessage("Horário semanal removido.",false);}catch(e){scheduleMessage(e.message);}});
+        line.append(label,remove);target.append(line);
+      });
+    }catch(error){target.textContent=error.message;}
+  };
+  const loadScheduleBlocks=async()=>{
+    const {from,to}=scheduleRange();const target=$("scheduleBlocks");target.replaceChildren();
+    if(!from||!to)return;
+    try{
+      const rows=await scheduleRequest("/api/v1/clinic/schedule/blocks?"+new URLSearchParams({from,to}));
+      scheduleState.blocks=rows;
+      if(!rows.length){target.textContent="Nenhum bloqueio no período.";return;}
+      rows.forEach(block=>{
+        const line=document.createElement("div");line.className="schedule-rule";
+        const label=document.createElement("span");label.textContent=clinicDateTime(block.starts_at)+" – "+clinicDateTime(block.ends_at)+" • "+[block.professional_name,block.room_name,block.reason].filter(Boolean).join(" • ");
+        const remove=document.createElement("button");remove.type="button";remove.className="schedule-btn";remove.textContent="Excluir";
+        remove.addEventListener("click",async()=>{if(!confirm("Excluir este bloqueio de agenda?"))return;try{await scheduleRequest("/api/v1/clinic/schedule/blocks/"+block.id,{method:"DELETE"});await loadScheduleBlocks();scheduleMessage("Bloqueio removido.",false);}catch(e){scheduleMessage(e.message);}});
+        line.append(label,remove);target.append(line);
+      });
+    }catch(error){target.textContent=error.message;}
+  };
+  const loadSchedule=async()=>{
+    scheduleMessage("");
+    $("scheduleRows").innerHTML="<tr><td colspan='7' class='schedule-empty'>Consultando agenda...</td></tr>";
+    try{
+      if(!scheduleState.resources)await loadScheduleResources();
+      const {from,to}=scheduleRange();
+      if(!from||!to||to<from)throw new Error("Informe um período válido.");
+      const params=new URLSearchParams({from,to,status:$("scheduleStatusFilter").value,search:""});
+      if($("scheduleProfessionalFilter").value)params.set("professionalId",$("scheduleProfessionalFilter").value);
+      scheduleState.items=await scheduleRequest("/api/v1/clinic/schedule?"+params);
+      renderSchedule();
+      if(scheduleState.role==="CLINIC_ADMIN"){await loadScheduleRules();await loadScheduleBlocks();}
+    }catch(error){$("scheduleRows").innerHTML="<tr><td colspan='7' class='schedule-empty'>"+escapeHtml(error.message)+"</td></tr>";scheduleMessage(error.message);}
+  };
+  const renderSchedule=()=>{
+    const items=scheduleState.items;
+    $("scheduleTotal").textContent=items.length;
+    $("schedulePending").textContent=items.filter(x=>["SCHEDULED","CONFIRMED"].includes(x.status)).length;
+    $("scheduleCheckedIn").textContent=items.filter(x=>x.status==="CHECKED_IN").length;
+    $("scheduleCompleted").textContent=items.filter(x=>x.status==="COMPLETED").length;
+    const body=$("scheduleRows");body.replaceChildren();
+    if(!items.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=7;td.className="schedule-empty";td.textContent="Nenhum agendamento encontrado neste período.";tr.append(td);body.append(tr);return;}
+    const labels={SCHEDULED:"AGENDADO",CONFIRMED:"CONFIRMADO",CHECKED_IN:"CHECK-IN",COMPLETED:"CONCLUÍDO",CANCELLED:"CANCELADO",NO_SHOW:"NÃO COMPARECEU"};
+    items.forEach(item=>{
+      const tr=document.createElement("tr");
+      const cell=value=>{const td=document.createElement("td");td.textContent=value||"—";return td;};
+      const date=cell(clinicDateTime(item.starts_at)+" – "+new Intl.DateTimeFormat("pt-BR",{timeZone:scheduleState.timezone,hour:"2-digit",minute:"2-digit"}).format(new Date(item.ends_at)));
+      const patient=cell(item.patient_name);patient.style.fontWeight="750";
+      const professional=cell(item.professional_name+(item.specialty?" • "+item.specialty:""));
+      const room=cell(item.room_name||"A definir");const reason=cell(item.reason||"Consulta");
+      const status=cell("");status.innerHTML="<span class='schedule-state "+(item.status==="CANCELLED"||item.status==="NO_SHOW"?"cancelled":item.status==="COMPLETED"?"completed":"")+"'>"+(labels[item.status]||item.status)+"</span>";
+      const actions=cell("");actions.className="schedule-actions";
+      const add=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
+      if(["SCHEDULED","CONFIRMED"].includes(item.status)&&["CLINIC_ADMIN","RECEPTION"].includes(scheduleState.role))add("Editar",()=>editSchedule(item));
+      const next={SCHEDULED:[["Confirmar","CONFIRMED"],["Check-in","CHECKED_IN"],["Cancelar","CANCELLED"]],CONFIRMED:[["Check-in","CHECKED_IN"],["Cancelar","CANCELLED"]],CHECKED_IN:[["Concluir","COMPLETED"],["Cancelar","CANCELLED"]]}[item.status]||[];
+      next.forEach(([label,state])=>{if(state==="CANCELLED"&&scheduleState.role==="PROFESSIONAL")return;if(state==="COMPLETED"&&scheduleState.role==="RECEPTION")return;add(label,()=>changeScheduleStatus(item,state));});
+      tr.append(date,patient,professional,room,reason,status,actions);body.append(tr);
+    });
+  };
+  const openScheduleForm=(item=null)=>{
+    scheduleState.editingId=item?.id||null;
+    $("scheduleForm").classList.remove("hidden");
+    $("scheduleFormTitle").textContent=item?"Remarcar / editar agendamento":"Novo agendamento";
+    $("schedulePatient").value=item?.patient_id||"";
+    $("scheduleProfessional").value=item?.professional_id||"";
+    $("scheduleRoom").value=item?.room_id||"";
+    const start=item?clinicDateParts(item.starts_at):{date:localDateString(),time:"09:00"};
+    const end=item?clinicDateParts(item.ends_at):{date:start.date,time:"09:30"};
+    $("scheduleDate").value=start.date;$("scheduleStart").value=start.time;$("scheduleEnd").value=end.time;
+    $("scheduleReason").value=item?.reason||"";
+    $("scheduleSave").textContent=item?"Salvar remarcação":"Criar agendamento";
+    $("scheduleForm").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  const editSchedule=item=>openScheduleForm(item);
+  const closeScheduleForm=()=>{$("scheduleForm").classList.add("hidden");scheduleState.editingId=null;};
+  const changeScheduleStatus=async(item,status)=>{
+    let cancellationReason="";
+    if(status==="CANCELLED"){cancellationReason=prompt("Informe o motivo do cancelamento:")||"";if(!cancellationReason.trim())return;}
+    const labels={CONFIRMED:"confirmar",CHECKED_IN:"registrar o check-in",COMPLETED:"concluir",CANCELLED:"cancelar"};
+    if(!confirm("Confirma "+labels[status]+" o agendamento de "+item.patient_name+"?"))return;
+    try{await scheduleRequest("/api/v1/clinic/schedule/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status,cancellationReason})});scheduleMessage("Situação do agendamento atualizada.",false);await loadSchedule();}
+    catch(error){scheduleMessage(error.message);}
+  };
+  $("scheduleForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=$("scheduleSave");button.disabled=true;
+    try{
+      const date=$("scheduleDate").value;
+      const payload={patientId:$("schedulePatient").value,professionalId:$("scheduleProfessional").value,roomId:$("scheduleRoom").value||null,startsAt:date+"T"+$("scheduleStart").value,endsAt:date+"T"+$("scheduleEnd").value,reason:$("scheduleReason").value.trim()};
+      const editing=!!scheduleState.editingId;
+      await scheduleRequest(editing?"/api/v1/clinic/schedule/"+scheduleState.editingId:"/api/v1/clinic/schedule",{method:editing?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      closeScheduleForm();scheduleMessage(editing?"Agendamento atualizado.":"Agendamento criado com sucesso.",false);await loadSchedule();
+    }catch(error){scheduleMessage(error.message);}finally{button.disabled=false;}
+  });
+  $("scheduleNew").addEventListener("click",()=>openScheduleForm());
+  $("scheduleCancelForm").addEventListener("click",closeScheduleForm);
+  $("scheduleSearch").addEventListener("click",loadSchedule);
+  $("scheduleStatusFilter").addEventListener("change",loadSchedule);
+  $("scheduleProfessionalFilter").addEventListener("change",loadSchedule);
+  $("scheduleRuleProfessional").addEventListener("change",loadScheduleRules);
+  $("scheduleRuleForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
+    try{
+      const payload={professionalId:$("scheduleRuleProfessional").value,weekday:Number($("scheduleRuleDay").value),startsLocal:$("scheduleRuleStart").value,endsLocal:$("scheduleRuleEnd").value,slotMinutes:Number($("scheduleRuleSlot").value)};
+      await scheduleRequest("/api/v1/clinic/schedule/rules",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      await loadScheduleRules();scheduleMessage("Disponibilidade semanal cadastrada.",false);
+    }catch(error){scheduleMessage(error.message);}finally{button.disabled=false;}
+  });
+  $("scheduleBlockForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
+    try{
+      const payload={professionalId:$("scheduleBlockProfessional").value||null,roomId:$("scheduleBlockRoom").value||null,startsAt:$("scheduleBlockStart").value,endsAt:$("scheduleBlockEnd").value,reason:$("scheduleBlockReason").value.trim()};
+      await scheduleRequest("/api/v1/clinic/schedule/blocks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      event.currentTarget.reset();await loadScheduleBlocks();scheduleMessage("Bloqueio registrado.",false);
+    }catch(error){scheduleMessage(error.message);}finally{button.disabled=false;}
+  });
+
+  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
     const info = moduleLabels[key] || moduleLabels.attendance;
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
+    if (key === "schedule" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
+      scheduleState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
+      $("scheduleWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden");
+      $("scheduleNew").classList.toggle("hidden",!["CLINIC_ADMIN","RECEPTION"].includes(scheduleState.role));
+      $("scheduleAdminTools").classList.toggle("hidden",scheduleState.role!=="CLINIC_ADMIN");
+      if(!$("scheduleFrom").value){const today=localDateString();$("scheduleFrom").value=today;$("scheduleTo").value=today;}
+      scheduleState.resources=null;loadSchedule();
+    }
     if (key === "professionals" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { professionalState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||""; $("professionalWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); $("newProfessionalButton").classList.toggle("hidden",!professionalCanManage()); $("professionalForm").classList.add("hidden"); $("professionalDetail").classList.add("hidden"); loadProfessionals(); }
     if (key === "patients" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("patientWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); $("patient-directory").classList.remove("hidden"); $("patientForm").classList.add("hidden"); $("patientDetail").classList.add("hidden"); loadPatients(); }
     if (key === "rooms" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION"].includes(m.role)))) $("receptionWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
