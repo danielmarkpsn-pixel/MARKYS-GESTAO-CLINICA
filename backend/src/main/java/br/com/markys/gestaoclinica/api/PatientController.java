@@ -119,7 +119,10 @@ public class PatientController {
         UUID clinic = TenantContext.requireClinicId();
         UUID membership = currentMembership(auth, clinic);
         UUID patientId = UUID.randomUUID();
-        UUID queueId = UUID.randomUUID();
+        UUID queueId = body.serviceTypeId() == null ? null : UUID.randomUUID();
+        if (queueId == null && body.examIds() != null && !body.examIds().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Selecione um tipo de atendimento para vincular os exames à fila."));
+        }
         try {
             jdbc.update("""
                 INSERT INTO patients (id, clinic_id, full_name, birth_date, sex, insurance_name,
@@ -130,31 +133,33 @@ public class PatientController {
                 clean(body.insuranceName()), clean(body.jobTitle()), protection.fingerprint(cpf),
                 protection.encrypt(cpf), membership);
 
-            int serviceTypeCount = jdbc.update("""
-                UPDATE service_types SET updated_at=now()
-                 WHERE clinic_id=? AND id=? AND active=true
-                """, clinic, body.serviceTypeId());
-            if (serviceTypeCount != 1) throw new InvalidRequest("Selecione um tipo de atendimento ativo.");
+            if (queueId != null) {
+                int serviceTypeCount = jdbc.update("""
+                    UPDATE service_types SET updated_at=now()
+                     WHERE clinic_id=? AND id=? AND active=true
+                    """, clinic, body.serviceTypeId());
+                if (serviceTypeCount != 1) throw new InvalidRequest("Selecione um tipo de atendimento ativo.");
 
-            jdbc.update("""
-                INSERT INTO queue_entries (id, clinic_id, patient_id, service_type_id, service_label,
-                    status, created_by_membership_id)
-                SELECT ?, ?, ?, st.id, st.name, 'WAITING', ?
-                  FROM service_types st
-                 WHERE st.clinic_id=? AND st.id=? AND st.active=true
-                """, queueId, clinic, patientId, membership, clinic, body.serviceTypeId());
+                jdbc.update("""
+                    INSERT INTO queue_entries (id, clinic_id, patient_id, service_type_id, service_label,
+                        status, created_by_membership_id)
+                    SELECT ?, ?, ?, st.id, st.name, 'WAITING', ?
+                      FROM service_types st
+                     WHERE st.clinic_id=? AND st.id=? AND st.active=true
+                    """, queueId, clinic, patientId, membership, clinic, body.serviceTypeId());
 
-            if (body.examIds() != null) {
-                for (UUID examId : body.examIds().stream().distinct().toList()) {
-                    int added = jdbc.update("""
-                        INSERT INTO queue_entry_exams
-                            (clinic_id, queue_entry_id, exam_id, exam_name_snapshot, room_id, room_name_snapshot)
-                        SELECT ?, ?, e.id, e.name, r.id, r.name
-                          FROM exam_catalog e
-                          JOIN clinic_rooms r ON r.clinic_id=e.clinic_id AND r.id=e.room_id
-                         WHERE e.clinic_id=? AND e.id=? AND e.active=true AND r.status='ACTIVE'
-                        """, clinic, queueId, clinic, examId);
-                    if (added != 1) throw new InvalidRequest("Um dos exames selecionados não está ativo ou não possui sala válida.");
+                if (body.examIds() != null) {
+                    for (UUID examId : body.examIds().stream().distinct().toList()) {
+                        int added = jdbc.update("""
+                            INSERT INTO queue_entry_exams
+                                (clinic_id, queue_entry_id, exam_id, exam_name_snapshot, room_id, room_name_snapshot)
+                            SELECT ?, ?, e.id, e.name, r.id, r.name
+                              FROM exam_catalog e
+                              JOIN clinic_rooms r ON r.clinic_id=e.clinic_id AND r.id=e.room_id
+                             WHERE e.clinic_id=? AND e.id=? AND e.active=true AND r.status='ACTIVE'
+                            """, clinic, queueId, clinic, examId);
+                        if (added != 1) throw new InvalidRequest("Um dos exames selecionados não está ativo ou não possui sala válida.");
+                    }
                 }
             }
         } catch (DuplicateKeyException ex) {
@@ -162,10 +167,11 @@ public class PatientController {
         } catch (InvalidRequest ex) {
             throw ex;
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-            "patientId", patientId, "queueEntryId", queueId,
-            "message", "Paciente cadastrado e encaminhado para a fila."
-        ));
+        Map<String,Object> response = new java.util.LinkedHashMap<>();
+        response.put("patientId", patientId);
+        response.put("queueEntryId", queueId);
+        response.put("message", queueId == null ? "Paciente cadastrado com sucesso." : "Paciente cadastrado e encaminhado para a fila.");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PatchMapping("/{id}/status")
@@ -394,7 +400,7 @@ public class PatientController {
         @Size(max=30) String sex,
         @Size(max=180) String insuranceName,
         @Size(max=160) String jobTitle,
-        @NotNull UUID serviceTypeId,
+        UUID serviceTypeId,
         List<UUID> examIds
     ) {}
     public record PatientStatusRequest(@NotBlank @Size(max=20) String status) {}
