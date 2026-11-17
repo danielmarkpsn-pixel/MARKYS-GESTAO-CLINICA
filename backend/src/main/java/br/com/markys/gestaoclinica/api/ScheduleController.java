@@ -386,8 +386,10 @@ public class ScheduleController {
         if(rows.isEmpty())return null;
         Map<String,Object> row=rows.getFirst();
         String role=String.valueOf(row.get("role"));
+        UUID professionalId=(UUID)row.get("professional_id");
         if(!List.of("CLINIC_ADMIN","RECEPTION","PROFESSIONAL").contains(role))return null;
-        return new Access((UUID)row.get("id"),role,(UUID)row.get("professional_id"));
+        if("PROFESSIONAL".equals(role) && professionalId==null)return null;
+        return new Access((UUID)row.get("id"),role,professionalId);
     }
     private static String clean(String value){return value==null||value.isBlank()?null:value.trim();}
     private ResponseEntity<Map<String,String>> forbidden(){return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","Seu perfil não possui permissão para esta operação."));}
