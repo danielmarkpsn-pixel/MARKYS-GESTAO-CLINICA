@@ -1440,8 +1440,15 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
+    if (key === "finance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION"].includes(m.role))) {
+      financeState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
+      $("financeWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden");
+      if(!$("financeFrom").value){const today=localDateString();$("financeFrom").value=today.slice(0,8)+"01";$("financeTo").value=today;}
+      $("financeEntryPanel").classList.add("hidden");$("financePaymentPanel").classList.add("hidden");$("financeHistoryPanel").classList.add("hidden");
+      financeState.page=1;loadFinanceResources().then(()=>loadFinance()).catch(error=>financeMessage(error.message));
+    }
     if (key === "schedule" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       scheduleState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
       $("scheduleWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden");
