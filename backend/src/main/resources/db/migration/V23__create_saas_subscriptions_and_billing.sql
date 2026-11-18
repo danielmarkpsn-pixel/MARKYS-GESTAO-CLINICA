@@ -53,6 +53,7 @@ CREATE TABLE subscription_payments (
     provider_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_subscription_payment_clinic_id UNIQUE (clinic_id,id),
     CONSTRAINT uq_subscription_payment_reference UNIQUE (external_reference),
     CONSTRAINT uq_subscription_payment_external UNIQUE (clinic_id,external_payment_id),
     CONSTRAINT fk_subscription_payment_subscription FOREIGN KEY (clinic_id,subscription_id)
