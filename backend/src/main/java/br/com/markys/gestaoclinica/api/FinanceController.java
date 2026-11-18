@@ -91,11 +91,12 @@ public class FinanceController {
                 WHERE e.clinic_id=c.id AND e.direction='EXPENSE'
                   AND (fp.paid_at AT TIME ZONE c.timezone)::date BETWEEN ? AND ?) AS expense_paid,
               (SELECT count(*) FROM finance_entries e WHERE e.clinic_id=c.id
-                AND e.status NOT IN ('PAID','CANCELLED') AND e.due_date < current_date) AS overdue_count,
+                AND e.status NOT IN ('PAID','CANCELLED') AND e.due_date < current_date
+                AND e.due_date BETWEEN ? AND ?) AS overdue_count,
               (SELECT count(*) FROM finance_entries e WHERE e.clinic_id=c.id
-                AND e.status NOT IN ('PAID','CANCELLED')) AS open_count
+                AND e.status NOT IN ('PAID','CANCELLED') AND e.due_date BETWEEN ? AND ?) AS open_count
             FROM clinics c WHERE c.id=?
-            """, start,end,start,end,start,end,start,end,clinic);
+            """, start,end,start,end,start,end,start,end,start,end,start,end,clinic);
         return ResponseEntity.ok(Map.of(
             "from", start, "to", end,
             "incomeDue", money(totals.get("income_due")),
