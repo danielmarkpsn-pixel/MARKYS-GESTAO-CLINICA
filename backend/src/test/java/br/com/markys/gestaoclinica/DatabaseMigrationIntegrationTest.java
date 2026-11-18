@@ -395,7 +395,7 @@ class DatabaseMigrationIntegrationTest {
             .andExpect(jsonPath("$.total").value(1))
             .andExpect(jsonPath("$.items[0].status").value("PAID"));
         mockMvc.perform(get("/api/v1/clinic/finance/summary")
-                .param("from",appointmentDay.toString()).param("to",appointmentDay.toString())
+                .param("from",java.time.LocalDate.now(java.time.ZoneId.of("America/Manaus")).toString()).param("to",appointmentDay.toString())
                 .session(clinicAdminSession))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.incomeReceived").value(250.00));
