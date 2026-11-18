@@ -280,7 +280,7 @@ public class LaboratoryController {
             String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
             jdbc.update("""
                 INSERT INTO lab_result_documents(id,clinic_id,specimen_id,file_name,content_type,file_size,sha256,content,uploaded_by_membership_id)
-                VALUES(?,?,?,?, 'application/pdf',?,?,?,?,?)
+                VALUES(?,?,?,?, 'application/pdf',?,?,?,?)
                 ON CONFLICT (clinic_id,specimen_id) DO UPDATE SET file_name=EXCLUDED.file_name,
                     content_type=EXCLUDED.content_type,file_size=EXCLUDED.file_size,sha256=EXCLUDED.sha256,
                     content=EXCLUDED.content,uploaded_by_membership_id=EXCLUDED.uploaded_by_membership_id,updated_at=now()

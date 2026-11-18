@@ -2991,7 +2991,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     RELEASED:"Liberar resultado",REJECTED:"Rejeitar amostra",CANCELLED:"Cancelar solicitação"};
   const syncLabActionFields=()=>{
     const next=$("labNextStatus").value;
-    $("labResultWrap").classList.toggle("hidden",next!=="RESULT_READY");
+    $("labResultWrap").classList.toggle("hidden",next!=="RESULT_READY"&&!(labState.selected?.collection_status==="RESULT_READY"&&next==="RELEASED"));
     $("labRejectionWrap").classList.toggle("hidden",next!=="REJECTED");
     $("labActionSave").textContent=labTransitionLabel[next]||"Confirmar etapa";
     $("labActionSave").classList.toggle("danger",next==="CANCELLED"||next==="REJECTED");
