@@ -151,26 +151,33 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 .patient-row-actions button.patient-edit{background:#fff7e8;border-color:#f0dfb9;color:#94600b}
 .patient-row-actions button.patient-toggle{background:#eaf7ef;border-color:#c8e7d2;color:#287747}
 .patient-row-actions button.patient-toggle.inactive{background:#f0efff;border-color:#d8d2f5;color:#6251a4}.patient-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:#718093;font-size:10px}.patient-pagination>div{display:flex;align-items:center;gap:8px}.patient-pagination button:disabled{opacity:.45;cursor:not-allowed}.patient-empty{text-align:center;padding:25px!important;color:#8492a1!important}.patient-form .catalog-card{padding:11px}.patient-form .field{margin-bottom:9px}.patient-form label{font-size:10px;margin-bottom:4px}.patient-form input,.patient-form select{height:34px;font-size:12px;border-radius:4px}.patient-form-heading{grid-column:1/-1}.patient-form-heading h4{margin:0;color:#21486b}.patient-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}.patient-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.patient-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.patient-detail-cell small{display:block;color:#7b8998;font-size:9px}.patient-detail-cell strong{font-size:11px;color:#244766}.patient-history-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.patient-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px}.patient-history-item strong{display:block;color:#244766}@media(max-width:760px){.patient-detail-grid,.patient-history-columns{grid-template-columns:1fr}}  /* Módulo Profissionais — gestão da equipe e vínculos */
-.professional-workspace{padding:16px;background:#f3f5f8}
-.professional-panel{background:#fff;border:1px solid #dce3eb;border-radius:6px;padding:14px;margin-top:10px}
-.professional-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.professional-toolbar input,.professional-toolbar select,.professional-form input,.professional-form select{height:36px;border:1px solid #ccd6e1;border-radius:4px;padding:0 10px;font:12px system-ui;color:#29445f;background:#fff}
-.professional-toolbar input{flex:1;min-width:220px}
-.professional-action{height:34px;padding:0 12px;border:1px solid #c6d3e0;border-radius:4px;background:#fff;color:#245779;font-size:11px;font-weight:750;cursor:pointer}
-.professional-action.primary{background:#0867b2;border-color:#0867b2;color:#fff}
-.professional-action.danger{color:#a12626;border-color:#edc8c8;background:#fff7f7}
-.professional-summary{display:flex;gap:18px;flex-wrap:wrap;padding:12px 2px;color:#718397;font-size:10px}
-.professional-summary strong{display:block;color:#1e4569;font-size:18px;margin-top:2px}
-.professional-table-wrap{overflow:auto}
-.professional-table{width:100%;min-width:800px;border-collapse:collapse;font-size:11px}
-.professional-table th{padding:10px;text-align:left;background:#f1f5f9;color:#63768a;font-size:10px;border-bottom:1px solid #dce4ec}
-.professional-table td{padding:10px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.professional-workspace{padding:18px;background:#f4f7fb;border:1px solid #e0e8f0;border-radius:12px}
+.professional-panel{background:#fff;border:1px solid #dce6ef;border-radius:12px;padding:18px;margin-top:12px;box-shadow:0 4px 16px rgba(22,55,88,.045)}
+.professional-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:12px;background:#f7f9fc;border:1px solid #e5ebf2;border-radius:9px}
+.professional-toolbar input,.professional-toolbar select,.professional-form input,.professional-form select{height:40px;border:1px solid #d2deea;border-radius:7px;padding:0 12px;font:12px system-ui;color:#29445f;background:#fff}
+.professional-toolbar input{flex:1;min-width:240px}
+.professional-action{height:36px;padding:0 13px;border:1px solid #d1deea;border-radius:7px;background:#fff;color:#245779;font-size:10px;font-weight:800;letter-spacing:.2px;cursor:pointer;transition:.15s}
+.professional-action:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(25,60,95,.08)}
+.professional-action.primary{height:38px;background:linear-gradient(110deg,#07549a,#1478bb);border-color:#0867b2;color:#fff}
+.professional-action.danger{color:#a12626;border-color:#edc8c8;background:#fff1f1}
+.professional-summary{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:10px;padding:14px 0;color:#718397;font-size:10px}
+.professional-summary span{padding:12px 14px;border:1px solid #e1e9f1;border-radius:9px;background:linear-gradient(145deg,#fff,#f8fbfe)}
+.professional-summary strong{display:block;color:#1e4569;font-size:22px;margin-top:5px}
+.professional-table-wrap{overflow:auto;border:1px solid #e4ebf2;border-radius:9px}
+.professional-table{width:100%;min-width:800px;border-collapse:separate;border-spacing:0;font-size:11px}
+.professional-table th{padding:12px;text-align:left;background:#f1f6fb;color:#63768a;font-size:9px;letter-spacing:.45px;border-bottom:1px solid #dce4ec}
+.professional-table td{padding:12px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.professional-table tbody tr:hover{background:#f8fbfe}
 .professional-name{font-weight:800;color:#1c3d5d}
 .professional-muted{display:block;color:#8391a0;font-size:10px;margin-top:3px}
 .professional-state{padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:10px;font-weight:800}
 .professional-state.inactive{background:#f0f1f3;color:#718093}
 .professional-actions{display:flex;gap:5px;flex-wrap:wrap}
-.professional-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:6px 8px;font-size:10px;cursor:pointer}
+.professional-actions button{border:1px solid #cbdceb;background:#edf6ff;color:#145a91;border-radius:7px;padding:7px 10px;font-size:9px;font-weight:800;cursor:pointer;transition:.15s}
+.professional-actions button:hover{filter:brightness(.97);transform:translateY(-1px)}
+.professional-actions button.professional-edit{background:#fff7e8;border-color:#f0dfb9;color:#94600b}
+.professional-actions button.professional-inactive{background:#fff1f1;border-color:#f0caca;color:#a12626}
+.professional-actions button.professional-reactivate{background:#eaf7ef;border-color:#c8e7d2;color:#287747}
 .professional-actions button:disabled,.professional-action:disabled{opacity:.5;cursor:wait}
 .professional-pagination{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:12px;color:#718093;font-size:10px}
 .professional-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -183,7 +190,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 .professional-history{margin-top:12px;border-top:1px solid #e8edf2;padding-top:10px}
 .professional-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}
 .professional-history-item strong{display:block;color:#244766}
-@media(max-width:650px){.professional-form{grid-template-columns:1fr}.professional-form .wide{grid-column:auto}}
+@media(max-width:760px){.professional-summary{grid-template-columns:1fr}} @media(max-width:650px){.professional-workspace{padding:10px}.professional-panel{padding:11px}.professional-form{grid-template-columns:1fr}.professional-form .wide{grid-column:auto}}
   
     /* Módulo Agenda — planejamento, disponibilidade e controle de conflitos */
     .schedule-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
@@ -1771,9 +1778,9 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       const activity=cell((item.encounter_count||0)+" consultas • "+(item.active_queue_count||0)+" na fila");
       const status=cell(item.status==="ACTIVE"?"ATIVO":"INATIVO");status.innerHTML="<span class='professional-state "+(item.status==="ACTIVE"?"":"inactive")+"'>"+(item.status==="ACTIVE"?"ATIVO":"INATIVO")+"</span>";
       const actions=document.createElement("td");actions.className="professional-actions";
-      const action=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
-      action("Ver ficha",()=>showProfessionalDetail(item.id));
-      if(professionalCanManage()){action("Editar",()=>editProfessional(item.id));action(item.status==="ACTIVE"?"Inativar":"Reativar",()=>toggleProfessional(item));}
+      const action=(label,fn,kind="")=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.className=kind;b.addEventListener("click",fn);actions.append(b);};
+      action("VER FICHA",()=>showProfessionalDetail(item.id));
+      if(professionalCanManage()){action("EDITAR",()=>editProfessional(item.id),"professional-edit");action(item.status==="ACTIVE"?"INATIVAR":"REATIVAR",()=>toggleProfessional(item),item.status==="ACTIVE"?"professional-inactive":"professional-reactivate");}
       tr.append(name,council,specialty,account,activity,status,actions);body.append(tr);
     });
   };
