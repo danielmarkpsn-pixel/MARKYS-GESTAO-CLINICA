@@ -532,6 +532,26 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .subscription-methods{display:grid;gap:10px}.subscription-method{display:grid;gap:4px;padding:12px 14px;border:1px solid #dce6ef;border-radius:12px;background:#f8fbfe}.subscription-method strong{font-size:12px;color:#18314e}.subscription-method span,.subscription-note{font-size:11px;line-height:1.55;color:#718397}.subscription-note{margin:12px 0 0}.signature-kpi strong{overflow-wrap:anywhere}
   
     .about-workspace{max-width:1180px;margin:0 auto 32px;color:#20344b}.about-hero{display:flex;align-items:center;gap:22px;padding:30px;border:1px solid #dce6ef;border-radius:18px;background:linear-gradient(120deg,#f2f8fd,#fff 75%);margin-bottom:22px}.about-brand-mark{width:76px;height:76px;flex:0 0 76px;display:grid;place-items:center;border-radius:20px;background:#173c60;color:#fff;font-size:38px;font-weight:800;box-shadow:0 8px 22px #173c6022}.about-eyebrow{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#3880ad}.about-hero h3{font-size:25px;margin:6px 0;color:#173653}.about-hero p{margin:0;max-width:760px;color:#64788c;font-size:13px;line-height:1.65}.about-intro,.about-feature,.about-pillars>div,.about-footer{border:1px solid #e1e9f0;border-radius:14px;background:#fff}.about-intro{padding:24px 26px;margin-bottom:25px}.about-intro h3,.about-section-title{font-size:17px;color:#1c3855;margin:0 0 12px}.about-intro p{font-size:13px;line-height:1.8;color:#62758a;margin:8px 0}.about-section-title{margin-bottom:14px}.about-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.about-feature{display:flex;gap:15px;padding:18px;min-height:112px}.about-feature>span{font-size:12px;font-weight:800;color:#4a91bd;background:#edf6fc;border-radius:9px;padding:7px 9px;height:max-content}.about-feature h4{font-size:13px;margin:1px 0 7px;color:#1e3a57}.about-feature p,.about-pillars p{font-size:12px;line-height:1.65;color:#718397;margin:0}.about-pillars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}.about-pillars>div{padding:17px}.about-pillars strong{font-size:12px;color:#244866}.about-pillars p{margin-top:7px}.about-footer{margin-top:20px;padding:20px 22px;background:#f8fbfd}.about-footer strong{font-size:13px;color:#1c405e}.about-footer p{font-size:12px;color:#62788d;margin:7px 0}.about-footer span{font-size:10px;color:#8796a5}@media(max-width:760px){.about-hero{padding:20px;align-items:flex-start}.about-brand-mark{width:56px;height:56px;flex-basis:56px;font-size:28px}.about-hero h3{font-size:20px}.about-feature-grid,.about-pillars{grid-template-columns:1fr}.about-intro{padding:19px}}
+
+    /* MARKYS 2026: consistent compact clinical workspace styling */
+    .patient-workspace,.professional-workspace,.schedule-workspace{--workspace-border:#dce5ef;--workspace-shadow:0 12px 34px rgba(19,53,89,.055)}
+    .patient-heading,.professional-workspace .patient-heading{align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+    .patient-heading h3,.professional-workspace .patient-heading h3{font-size:clamp(19px,2vw,25px);letter-spacing:-.035em;color:#143b65}
+    .patient-directory,.patient-form,.patient-detail,.professional-panel,.schedule-workspace{border:1px solid var(--workspace-border);border-radius:14px;box-shadow:var(--workspace-shadow);background:#fff}
+    .patient-directory,.patient-form,.patient-detail,.professional-panel{padding:clamp(12px,1.8vw,22px)}
+    .patient-filters,.professional-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;border:1px solid #e1eaf4;background:#f5f9fe;border-radius:11px}
+    .patient-filters input,.patient-filters select,.professional-toolbar input,.professional-toolbar select,.schedule-field input,.schedule-field select{min-height:39px;border:1px solid #cddbea;border-radius:8px;background:#fff;color:#24415f;font-size:13px}
+    .patient-filters input,.professional-toolbar input{flex:1 1 250px}
+    .patient-action,.professional-action{min-height:39px;border-radius:8px;font-weight:650;transition:background .16s ease,box-shadow .16s ease}
+    .patient-action:focus-visible,.professional-action:focus-visible,.patient-filters input:focus-visible,.professional-toolbar input:focus-visible,.schedule-field input:focus-visible,.schedule-field select:focus-visible{outline:3px solid #9fd3fa;outline-offset:2px}
+    .patient-table-wrap{border:1px solid #e7edf4;border-radius:10px;overflow:auto}
+    .patient-table{min-width:720px}
+    .patient-table th{background:#edf4fb;color:#355878;font-size:11px;letter-spacing:.02em}
+    .patient-table td{font-size:12px;padding:12px 10px}
+    .patient-table tbody tr:hover{background:#f6faff}
+    .patient-list-meta,.professional-summary{padding:10px 2px}
+    .schedule-toolbar{background:#f5f9fe;border:1px solid #e1eaf4;border-radius:11px;padding:13px;gap:10px}
+    @media(max-width:760px){.patient-filters input,.professional-toolbar input{flex-basis:100%}.patient-filters button,.professional-toolbar button{flex:1 1 auto}.patient-directory,.patient-form,.patient-detail,.professional-panel{padding:12px}.schedule-toolbar{padding:10px}}
   </style>
 </head>
 <body>
