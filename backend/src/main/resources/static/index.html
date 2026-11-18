@@ -115,6 +115,30 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .attendance-actions{display:flex;gap:4px;flex-wrap:wrap;min-width:130px}.attendance-actions button{border:1px solid #c8d7e5;background:#f5f9fd;color:#07549a;border-radius:3px;padding:5px 7px;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}.attendance-actions button:disabled{opacity:.55;cursor:wait}
     .attendance-message{font-size:11px;color:#a12c27;min-height:17px;margin:6px 0}
     @media(max-width:760px){.attendance-workspace{padding:9px}.attendance-search{max-width:none;flex-basis:100%}.attendance-toolbar select{flex:1}}
+/* Módulo 13 — Tela de chamados */
+.calls-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:6px;padding:15px;margin-bottom:18px}
+.calls-banner{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:#fff;border:1px solid #dce4ed;border-left:4px solid #0867b2;border-radius:5px;padding:12px 14px;margin-bottom:12px}
+.calls-banner strong{display:block;color:#21486b;font-size:13px}.calls-banner p{margin:4px 0 0;color:#718297;font-size:10px;line-height:1.5}
+.calls-toolbar{display:flex;align-items:end;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:5px;padding:11px;margin-bottom:10px}
+.calls-field{display:grid;gap:5px;min-width:140px;flex:1}.calls-field.search{min-width:220px;flex:2}
+.calls-field label{font-size:9px;font-weight:800;color:#5b7085}
+.calls-field input,.calls-field select{height:34px;width:100%;min-width:0;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:11px system-ui;color:#29445f;background:#fff}
+.calls-btn{height:33px;border:1px solid #c5d5e4;background:#fff;color:#145a91;border-radius:4px;padding:0 10px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}
+.calls-btn.primary{background:#0867b2;border-color:#0867b2;color:#fff}.calls-btn.success{background:#eaf6ee;border-color:#b8dfc5;color:#287747}.calls-btn.warning{background:#fff6e5;border-color:#ead7a8;color:#956315}.calls-btn.danger{background:#fff3f3;border-color:#eccaca;color:#a12626}.calls-btn:disabled{opacity:.5;cursor:not-allowed}
+.calls-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:11px}
+.calls-kpi{background:#fff;border:1px solid #dce4ed;border-radius:5px;padding:10px 12px}.calls-kpi small{display:block;color:#718297;font-size:9px}.calls-kpi strong{display:block;margin-top:3px;color:#17436c;font-size:21px}
+.calls-message{min-height:18px;color:#a12626;font-size:10px;margin:4px 0}.calls-message.ok{color:#287747}
+.calls-table-wrap{overflow:auto;background:#fff;border:1px solid #dce4ed;border-radius:5px}
+.calls-table{width:100%;min-width:1050px;border-collapse:collapse;font-size:10px}
+.calls-table th{padding:10px 8px;text-align:left;background:#f1f5f9;color:#63768a;font-size:9px;border-bottom:1px solid #dce4ed;white-space:nowrap}
+.calls-table td{padding:9px 8px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.calls-table tr:last-child td{border-bottom:0}.calls-patient{font-weight:800;color:#244766;font-size:11px}.calls-muted{display:block;color:#8795a3;font-size:9px;margin-top:3px}
+.calls-tag{display:inline-block;padding:4px 6px;margin:2px 3px 2px 0;border-radius:3px;background:#eef3f8;color:#526b82;font-size:9px;font-weight:800}
+.calls-tag.waiting{background:#fff5dd;color:#956315}.calls-tag.called{background:#e8f2fb;color:#145a91}.calls-tag.service{background:#f4eafb;color:#75409a}.calls-tag.done{background:#eaf6ee;color:#287747}.calls-tag.priority{background:#fff0df;color:#a15b13}.calls-destination{display:grid;gap:5px;min-width:150px}.calls-destination select{height:29px;width:100%;border:1px solid #d1dce6;border-radius:3px;background:#fff;padding:0 6px;font-size:10px;color:#29445f}
+.calls-actions{display:flex;gap:4px;flex-wrap:wrap;min-width:190px}.calls-history{background:#fff;border:1px solid #dce4ed;border-radius:5px;padding:12px;margin-top:12px}.calls-history h4{margin:0 0 9px;color:#21486b;font-size:12px}.calls-history-item{display:grid;grid-template-columns:130px 110px 1fr;gap:9px;padding:8px 0;border-top:1px solid #edf0f4;font-size:10px;color:#64778a}.calls-history-item strong{color:#244766}
+.calls-empty{text-align:center;padding:26px!important;color:#718196}
+@media(max-width:850px){.calls-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.calls-banner{display:block}}
+@media(max-width:560px){.calls-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.calls-toolbar .calls-field{min-width:100%}.calls-history-item{grid-template-columns:1fr;gap:3px}}
 /* Módulo 2 — Pacientes */.patient-workspace{padding:16px;background:#f3f5f8}.patient-heading,.patient-form-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.patient-heading h3{margin:0;color:#193e64;font-size:17px}.patient-heading .sub{margin:3px 0 0;font-size:11px}.patient-action{height:33px;padding:0 12px;border:1px solid #c6d3e0;border-radius:4px;background:#fff;color:#245779;font-size:11px;font-weight:750;cursor:pointer}.patient-action.primary-action{background:#0867b2;border-color:#0867b2;color:#fff}.patient-directory,.patient-form,.patient-detail{background:#fff;border:1px solid #dce3eb;border-radius:5px;padding:12px;margin-top:10px}.patient-filters{display:flex;gap:7px;flex-wrap:wrap}.patient-filters input,.patient-filters select{height:34px;border:1px solid #ccd6e1;border-radius:4px;padding:0 10px;font:12px system-ui}.patient-filters input{flex:1;min-width:210px}.patient-list-meta{display:flex;justify-content:space-between;margin:11px 0 7px;color:#748397;font-size:10px}.patient-table-wrap{overflow:auto}.patient-table{width:100%;min-width:780px;border-collapse:collapse;font-size:11px}.patient-table th{padding:9px;text-align:left;background:#f1f5f9;color:#63768a;font-size:10px;border-bottom:1px solid #dce4ec}.patient-table td{padding:9px;border-bottom:1px solid #edf0f4;color:#40566d}.patient-name{font-weight:800;color:#1c3d5d;text-transform:uppercase}.patient-state{padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:10px;font-weight:800}.patient-state.inactive{background:#f0f1f3;color:#718093}.patient-row-actions{display:flex;gap:4px;flex-wrap:wrap}.patient-row-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:10px;cursor:pointer}.patient-row-actions button.patient-delete{border-color:#edc8c8;color:#a12626;background:#fff6f6}.patient-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:#718093;font-size:10px}.patient-pagination>div{display:flex;align-items:center;gap:8px}.patient-pagination button:disabled{opacity:.45;cursor:not-allowed}.patient-empty{text-align:center;padding:25px!important;color:#8492a1!important}.patient-form .catalog-card{padding:11px}.patient-form .field{margin-bottom:9px}.patient-form label{font-size:10px;margin-bottom:4px}.patient-form input,.patient-form select{height:34px;font-size:12px;border-radius:4px}.patient-form-heading{grid-column:1/-1}.patient-form-heading h4{margin:0;color:#21486b}.patient-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}.patient-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.patient-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.patient-detail-cell small{display:block;color:#7b8998;font-size:9px}.patient-detail-cell strong{font-size:11px;color:#244766}.patient-history-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.patient-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px}.patient-history-item strong{display:block;color:#244766}@media(max-width:760px){.patient-detail-grid,.patient-history-columns{grid-template-columns:1fr}}  /* Módulo Profissionais — gestão da equipe e vínculos */
 .professional-workspace{padding:16px;background:#f3f5f8}
 .professional-panel{background:#fff;border:1px solid #dce3eb;border-radius:6px;padding:14px;margin-top:10px}
@@ -508,6 +532,28 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     </table>
   </div>
   <div id="attendanceMessage" class="attendance-message" role="status" aria-live="polite"></div>
+</section>
+<section id="callsWorkspace" class="calls-workspace hidden" aria-label="Tela de chamados">
+  <div class="calls-banner"><div><strong>Central de chamadas e encaminhamentos</strong><p>Organize a fila, direcione cada atendimento e acompanhe as chamadas realizadas. As alterações são gravadas no histórico da clínica.</p></div><button id="callsRefresh" class="calls-btn" type="button">Atualizar fila</button></div>
+  <div class="calls-toolbar">
+    <div class="calls-field search"><label for="callsSearch">PESQUISAR PACIENTE / SERVIÇO / DESTINO</label><input id="callsSearch" type="search" maxlength="120" placeholder="Nome do paciente, atendimento, profissional ou consultório"></div>
+    <div class="calls-field"><label for="callsStatus">SITUAÇÃO</label><select id="callsStatus"><option value="">Todas as situações</option><option value="WAITING">Aguardando</option><option value="CALLED">Chamado</option><option value="IN_SERVICE">Em atendimento</option><option value="COMPLETED">Finalizado</option><option value="RELEASED">Liberado</option><option value="CANCELLED">Cancelado</option></select></div>
+    <label class="attendance-toggle"><input id="callsToday" type="checkbox" checked> Somente hoje</label>
+    <button id="callsSearchButton" class="calls-btn primary" type="button">Pesquisar</button>
+  </div>
+  <div class="calls-kpis" aria-live="polite">
+    <div class="calls-kpi"><small>NA LISTA</small><strong id="callsTotal">0</strong></div>
+    <div class="calls-kpi"><small>AGUARDANDO</small><strong id="callsWaiting">0</strong></div>
+    <div class="calls-kpi"><small>CHAMADOS</small><strong id="callsCalled">0</strong></div>
+    <div class="calls-kpi"><small>EM ATENDIMENTO</small><strong id="callsInService">0</strong></div>
+    <div class="calls-kpi"><small>FINALIZADOS</small><strong id="callsCompleted">0</strong></div>
+  </div>
+  <div id="callsMessage" class="calls-message" role="status" aria-live="polite"></div>
+  <div class="calls-table-wrap"><table class="calls-table">
+    <thead><tr><th>CHEGADA / SITUAÇÃO</th><th>PACIENTE</th><th>ATENDIMENTO</th><th>ENCAMINHAMENTO</th><th>AÇÕES</th></tr></thead>
+    <tbody id="callsRows"><tr><td colspan="5" class="calls-empty">Carregando fila...</td></tr></tbody>
+  </table></div>
+  <section id="callsHistory" class="calls-history hidden" aria-label="Histórico da chamada"><h4 id="callsHistoryTitle">Histórico do atendimento</h4><div id="callsHistoryRows"></div></section>
 </section>
         <h2>Acesso confirmado</h2>
         <p class="sub">Sua sessão está ativa no MARKYS.</p>
@@ -1500,6 +1546,100 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   $("attendanceToday").addEventListener("change",loadAttendance);
   $("attendanceRefresh").addEventListener("click",loadAttendance);
 
+
+  const callsState = { role:"", rooms:[], professionals:[], items:[] };
+  const callsMessage = (message, ok=false) => { $("callsMessage").textContent=message||""; $("callsMessage").classList.toggle("ok",ok); };
+  const callsRequest = async (path, options={}) => {
+    const headers={...(options.headers||{})};
+    if(options.method && options.method!=="GET") headers["X-XSRF-TOKEN"]=await csrf();
+    const response=await fetch(path,{credentials:"same-origin",cache:"no-store",...options,headers});
+    const data=response.status===204?null:await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data?.error||"Não foi possível concluir a operação.");
+    return data;
+  };
+  const loadCallsResources = async () => {
+    const data=await callsRequest("/api/v1/clinic/queue/resources");
+    callsState.rooms=Array.isArray(data.rooms)?data.rooms:[];
+    callsState.professionals=Array.isArray(data.professionals)?data.professionals:[];
+  };
+  const callsTime = value => {if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});};
+  const callsAddButton = (parent,label,kind,handler,disabled=false) => {
+    const b=document.createElement("button");b.type="button";b.className="calls-btn "+(kind||"");b.textContent=label;b.disabled=disabled;
+    b.addEventListener("click",async()=>{b.disabled=true;try{await handler();}catch(e){callsMessage(e.message);}finally{b.disabled=false;}});parent.append(b);return b;
+  };
+  const callsSelect = (items,selected,placeholder) => {
+    const select=document.createElement("select");const first=document.createElement("option");first.value="";first.textContent=placeholder;select.append(first);
+    items.forEach(item=>{const o=document.createElement("option");o.value=item.id;o.textContent=item.display_name||item.name;select.append(o);});
+    select.value=selected||"";return select;
+  };
+  const loadCalls = async () => {
+    const body=$("callsRows");body.replaceChildren();
+    const loading=document.createElement("tr"),loadingCell=document.createElement("td");loadingCell.colSpan=5;loadingCell.className="calls-empty";loadingCell.textContent="Atualizando fila...";loading.append(loadingCell);body.append(loading);
+    callsMessage("");$("callsRefresh").disabled=true;
+    try{
+      const params=new URLSearchParams({search:$("callsSearch").value.trim(),status:$("callsStatus").value,today:String($("callsToday").checked)});
+      const items=await callsRequest("/api/v1/clinic/queue?"+params.toString());callsState.items=Array.isArray(items)?items:[];
+      const list=callsState.items;
+      $("callsTotal").textContent=list.length;$("callsWaiting").textContent=list.filter(x=>x.status==="WAITING").length;
+      $("callsCalled").textContent=list.filter(x=>x.status==="CALLED").length;$("callsInService").textContent=list.filter(x=>x.status==="IN_SERVICE").length;
+      $("callsCompleted").textContent=list.filter(x=>["COMPLETED","RELEASED"].includes(x.status)).length;
+      body.replaceChildren();
+      if(!list.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.className="calls-empty";td.textContent="Nenhum atendimento encontrado para os filtros selecionados.";tr.append(td);body.append(tr);return;}
+      list.forEach(item=>{
+        const tr=document.createElement("tr"),when=document.createElement("td");
+        const time=document.createElement("strong");time.textContent=callsTime(item.arrived_at);const status=document.createElement("span");status.className="calls-muted";status.textContent=({WAITING:"Aguardando",CALLED:"Chamado",IN_SERVICE:"Em atendimento",COMPLETED:"Finalizado",RELEASED:"Liberado",CANCELLED:"Cancelado"})[item.status]||item.status;when.append(time,status);
+        const patient=document.createElement("td"),name=document.createElement("div");name.className="calls-patient";name.textContent=item.patient_name||"Paciente não identificado";
+        const birth=document.createElement("span");birth.className="calls-muted";birth.textContent=item.birth_date?attendanceAge(item.birth_date):"Nascimento não informado";patient.append(name,birth);
+        const service=document.createElement("td"),serviceName=document.createElement("span");serviceName.className="calls-tag";serviceName.textContent=item.service_label||"Atendimento";service.append(serviceName);
+        const stateTag=document.createElement("span");stateTag.className="calls-tag "+(item.status==="WAITING"?"waiting":item.status==="CALLED"?"called":item.status==="IN_SERVICE"?"service":["COMPLETED","RELEASED"].includes(item.status)?"done":"");stateTag.textContent=status.textContent;service.append(stateTag);
+        if(item.priority&&item.priority!=="NORMAL"){const p=document.createElement("span");p.className="calls-tag priority";p.textContent=item.priority==="URGENT"?"URGENTE":"PRIORIDADE";service.append(p);}
+        const destination=document.createElement("td"),destinationBox=document.createElement("div");destinationBox.className="calls-destination";
+        const roomSelect=callsSelect(callsState.rooms,item.room_id,"Selecionar consultório");
+        const professionalSelect=callsSelect(callsState.professionals,item.assigned_professional_id,"Selecionar profissional");
+        if(["CLINIC_ADMIN","RECEPTION"].includes(callsState.role)&&["WAITING","CALLED"].includes(item.status)){
+          destinationBox.append(roomSelect,professionalSelect);
+          callsAddButton(destinationBox,"Salvar encaminhamento","",async()=>{
+            if(!roomSelect.value&&!professionalSelect.value)throw new Error("Selecione ao menos um consultório ou profissional.");
+            await callsRequest("/api/v1/clinic/queue/"+item.id+"/assignment",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({roomId:roomSelect.value||null,professionalId:professionalSelect.value||null})});
+            callsMessage("Encaminhamento atualizado com sucesso.",true);await loadCalls();
+          });
+        }else{
+          const dest=document.createElement("span");dest.textContent=(item.room_name||"Consultório não definido")+" • "+(item.professional_name||"Profissional não atribuído");destinationBox.append(dest);
+        }
+        destination.append(destinationBox);
+        const actions=document.createElement("td"),actionBox=document.createElement("div");actionBox.className="calls-actions";
+        const statusChange=async next=>{await callsRequest("/api/v1/clinic/queue/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:next})});await loadCalls();};
+        if(item.status==="WAITING"&&["CLINIC_ADMIN","RECEPTION"].includes(callsState.role)){
+          callsAddButton(actionBox,"Chamar","primary",()=>statusChange("CALLED"),!item.room_id);
+        }
+        if(item.status==="CALLED"){
+          if(["CLINIC_ADMIN","RECEPTION"].includes(callsState.role))callsAddButton(actionBox,"Repetir chamada","warning",async()=>{await callsRequest("/api/v1/clinic/queue/"+item.id+"/recall",{method:"POST"});callsMessage("Repetição registrada no histórico.",true);});
+          callsAddButton(actionBox,"Iniciar atendimento","success",()=>statusChange("IN_SERVICE"));
+          if(["CLINIC_ADMIN","RECEPTION"].includes(callsState.role))callsAddButton(actionBox,"Voltar à fila","",()=>statusChange("WAITING"));
+        }
+        if(item.status==="IN_SERVICE"){
+          callsAddButton(actionBox,"Finalizar","success",()=>statusChange("COMPLETED"));
+          callsAddButton(actionBox,"Liberar","",()=>statusChange("RELEASED"));
+        }
+        callsAddButton(actionBox,"Histórico","",async()=>{
+          const history=await callsRequest("/api/v1/clinic/queue/"+item.id+"/history");
+          $("callsHistoryTitle").textContent="Histórico — "+(item.patient_name||"Paciente");
+          const list=$("callsHistoryRows");list.replaceChildren();
+          if(!history.length){const empty=document.createElement("p");empty.className="calls-muted";empty.textContent="Ainda não há movimentações registradas.";list.append(empty);}
+          history.forEach(event=>{const row=document.createElement("div");row.className="calls-history-item";const date=document.createElement("strong");date.textContent=new Date(event.created_at).toLocaleString("pt-BR");const type=document.createElement("strong");type.textContent=({ASSIGNED:"Encaminhado",CALLED:"Chamado",RECALLED:"Chamada repetida",STARTED:"Atendimento iniciado",COMPLETED:"Finalizado",RELEASED:"Liberado",CANCELLED:"Cancelado",RETURNED:"Retornado à fila"})[event.event_type]||event.event_type;const detail=document.createElement("span");detail.textContent=[event.detail,event.actor_name?"Responsável: "+event.actor_name:"",event.new_room_name?"Consultório: "+event.new_room_name:"",event.new_professional_name?"Profissional: "+event.new_professional_name:""].filter(Boolean).join(" • ");row.append(date,type,detail);list.append(row);});
+          $("callsHistory").classList.remove("hidden");$("callsHistory").scrollIntoView({behavior:"smooth",block:"nearest"});
+        });
+        actions.append(actionBox);tr.append(when,patient,service,destination,actions);body.append(tr);
+      });
+    }catch(error){body.replaceChildren();const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.className="calls-empty";td.textContent=error.message;tr.append(td);body.append(tr);callsMessage("Verifique a sessão e tente atualizar a fila.");}
+    finally{$("callsRefresh").disabled=false;}
+  };
+  $("callsRefresh").addEventListener("click",()=>loadCalls());
+  $("callsSearchButton").addEventListener("click",()=>loadCalls());
+  $("callsSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadCalls();}});
+  $("callsStatus").addEventListener("change",()=>loadCalls());
+  $("callsToday").addEventListener("change",()=>loadCalls());
+  setInterval(()=>{if(!$("callsWorkspace").classList.contains("hidden"))loadCalls();},20000);
 
   const professionalState = {items:[], page:1, pageSize:30, editingId:null, role:""};
   const professionalMessage = (message, error=true) => { $("professionalMessage").textContent=message||""; $("professionalMessage").style.color=error?"#a12626":"#287747"; };
@@ -2645,14 +2785,14 @@ $("esocialCancelEvent").addEventListener("click",async()=>{if(!esocialState.sele
 $("esocialWorkerFilter").addEventListener("click",loadEsocialWorkers);$("esocialWorkerSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadEsocialWorkers();}});
 document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("click",()=>esocialTab(b.dataset.esocialTab)));
 
-  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Contas, perfis, bloqueios e permissões da clínica."],laboratory:["Laboratório","Coleta, rastreabilidade de amostras e liberação de resultados."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
+  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Contas, perfis, bloqueios e permissões da clínica."],laboratory:["Laboratório","Coleta, rastreabilidade de amostras e liberação de resultados."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Gerencie a fila, encaminhe pacientes e controle as chamadas por consultório e profissional."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
     const info = moduleLabels[key] || moduleLabels.attendance;
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("laboratoryWorkspace").classList.add("hidden"); $("esocialWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("laboratoryWorkspace").classList.add("hidden"); $("esocialWorkspace").classList.add("hidden"); $("callsWorkspace").classList.add("hidden"); $("callsHistory").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
     if (key === "exams" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       examState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
@@ -2694,6 +2834,11 @@ document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("c
       $("esocialWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
       $("esocialEventForm").classList.add("hidden");$("esocialEventDetail").classList.add("hidden");esocialTab("events");esocialState.page=1;
       loadEsocialResources().then(()=>{loadEsocialEvents();loadEsocialWorkers();}).catch(error=>esocialMsg(error.message));
+    }
+    if (key === "calls" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
+      callsState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
+      $("callsWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
+      $("callsHistory").classList.add("hidden");loadCallsResources().then(loadCalls).catch(error=>callsMessage(error.message));
     }
     if (key === "rooms" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       roomState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
