@@ -367,6 +367,40 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 @media(max-width:800px){.access-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.access-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.access-form-grid,.access-detail-grid,.access-password-grid{grid-template-columns:1fr}.access-form-grid .wide{grid-column:auto}.access-field.search{min-width:100%}}
 
+
+/* Módulo Laboratório — rastreabilidade de amostras e liberação de resultados */
+.lab-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
+.lab-toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px;margin-bottom:12px}
+.lab-field{display:grid;gap:5px;min-width:135px;flex:1}.lab-field.search{min-width:220px;flex:2}
+.lab-field label{font-size:10px;color:#52677d;margin:0}
+.lab-field input,.lab-field select,.lab-form-grid input,.lab-form-grid select,.lab-form-grid textarea{height:35px;width:100%;min-width:0;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;color:#29445f;background:#fff}
+.lab-btn{height:35px;border:1px solid #c5d5e4;background:#fff;color:#145a91;border-radius:4px;padding:0 12px;font-size:11px;font-weight:750;cursor:pointer}
+.lab-btn.primary{background:#0867b2;border-color:#0867b2;color:white}.lab-btn.danger{border-color:#e8caca;background:#fff7f7;color:#a12626}
+.lab-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.lab-kpi{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:11px 13px}.lab-kpi small{display:block;color:#718297;font-size:9px;margin-bottom:5px}.lab-kpi strong{font-size:21px;color:#17436c}
+.lab-message{min-height:19px;font-size:11px;margin:5px 0;color:#a12c26}
+.lab-table-wrap{overflow:auto;background:#fff;border:1px solid #dce4ed;border-radius:6px}
+.lab-table{width:100%;min-width:980px;border-collapse:collapse;font-size:11px}
+.lab-table th{padding:10px;text-align:left;background:#f1f5f9;color:#63768a;font-size:9px;border-bottom:1px solid #dce4ec}
+.lab-table td{padding:10px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.lab-name{font-weight:800;color:#1c3d5d}.lab-muted{display:block;color:#8391a0;font-size:9px;margin-top:3px}
+.lab-status{display:inline-block;padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:9px;font-weight:800}
+.lab-status.pending{background:#fff4df;color:#956315}.lab-status.processing{background:#eaf2ff;color:#245d9a}.lab-status.ready{background:#efeaff;color:#5b45a1}.lab-status.rejected,.lab-status.cancelled{background:#fff0f0;color:#a12626}
+.lab-actions{display:flex;gap:4px;flex-wrap:wrap}.lab-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:9px;cursor:pointer}
+.lab-pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:11px;color:#718093;font-size:10px}
+.lab-panel{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:14px;margin-top:12px}
+.lab-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.lab-panel-heading h4{margin:0;color:#21486b;font-size:14px}
+.lab-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.lab-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.lab-detail-cell small{display:block;color:#7b8998;font-size:9px}.lab-detail-cell strong{font-size:11px;color:#244766;overflow-wrap:anywhere}
+.lab-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.lab-form-grid>div{display:grid;gap:5px;min-width:0}.lab-form-grid label{font-size:9px;font-weight:800;color:#526a80}.lab-form-grid .wide{grid-column:1/-1}
+.lab-form-grid textarea{height:auto;min-height:80px;padding:8px;resize:vertical}
+.lab-form-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}
+.lab-form-note{font-size:10px;color:#7b8998;line-height:1.5}
+.lab-event{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}.lab-event strong{display:block;color:#244766}
+.lab-empty{text-align:center;padding:24px!important;color:#8492a1!important}
+@media(max-width:900px){.lab-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.lab-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.lab-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.lab-form-grid,.lab-detail-grid{grid-template-columns:1fr}.lab-form-grid .wide{grid-column:auto}.lab-field.search{min-width:100%}}
+
 </style>
 </head>
 <body>
@@ -623,6 +657,43 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 
 
 
+
+
+<section id="laboratoryWorkspace" class="lab-workspace hidden" aria-label="Gestão do laboratório">
+  <div class="lab-toolbar">
+    <div class="lab-field search"><label for="labSearch">PACIENTE / EXAME / PROTOCOLO</label><input id="labSearch" type="search" maxlength="120" placeholder="Pesquisar solicitações laboratoriais"></div>
+    <div class="lab-field"><label for="labStatusFilter">ETAPA</label><select id="labStatusFilter"><option value="ALL">Todas</option><option value="PENDING_COLLECTION">Aguardando coleta</option><option value="COLLECTED">Coletada</option><option value="RECEIVED">Recebida</option><option value="PROCESSING">Em processamento</option><option value="RESULT_READY">Resultado pronto</option><option value="RELEASED">Liberada</option><option value="REJECTED">Rejeitada</option><option value="CANCELLED">Cancelada</option></select></div>
+    <button id="labSearchButton" class="lab-btn primary" type="button">Filtrar</button>
+    <button id="labRefreshButton" class="lab-btn" type="button">Atualizar</button>
+  </div>
+  <div class="lab-kpis">
+    <div class="lab-kpi"><small>AGUARDANDO COLETA</small><strong id="labPending">0</strong></div>
+    <div class="lab-kpi"><small>COLETADAS / RECEBIDAS</small><strong id="labCollected">0</strong></div>
+    <div class="lab-kpi"><small>EM PROCESSAMENTO</small><strong id="labProcessing">0</strong></div>
+    <div class="lab-kpi"><small>RESULTADO PRONTO</small><strong id="labReady">0</strong></div>
+    <div class="lab-kpi"><small>RESULTADOS LIBERADOS</small><strong id="labReleased">0</strong></div>
+  </div>
+  <div id="labMessage" class="lab-message" role="status" aria-live="polite"></div>
+  <div class="lab-table-wrap"><table class="lab-table"><thead><tr><th>SOLICITAÇÃO</th><th>PACIENTE</th><th>EXAME</th><th>AMOSTRA / PROTOCOLO</th><th>PROFISSIONAL / SALA</th><th>ETAPA</th><th>AÇÕES</th></tr></thead><tbody id="labRows"><tr><td colspan="7" class="lab-empty">Carregando laboratório...</td></tr></tbody></table></div>
+  <div class="lab-pager"><span id="labPageInfo">0 solicitações</span><div><button id="labPrev" class="lab-btn" type="button" disabled>Anterior</button> <span id="labPage">Página 1 de 1</span> <button id="labNext" class="lab-btn" type="button" disabled>Próxima</button></div></div>
+  <section id="labDetailPanel" class="lab-panel hidden">
+    <div class="lab-panel-heading"><h4 id="labDetailTitle">Detalhes da amostra</h4><button id="labDetailClose" class="lab-btn" type="button">Voltar à lista</button></div>
+    <div id="labDetailData" class="lab-detail-grid"></div>
+    <form id="labActionForm" class="lab-panel">
+      <div class="lab-panel-heading"><h4>Atualizar fluxo da amostra</h4></div>
+      <div class="lab-form-grid">
+        <div><label for="labNextStatus">PRÓXIMA ETAPA *</label><select id="labNextStatus" required></select></div>
+        <div><label for="labReference">PROTOCOLO DO LABORATÓRIO</label><input id="labReference" maxlength="80" placeholder="Número de rastreio"></div>
+        <div class="wide"><label for="labCollectionNotes">OBSERVAÇÕES DE COLETA / RECEBIMENTO</label><textarea id="labCollectionNotes" maxlength="2000" placeholder="Observações protegidas"></textarea></div>
+        <div class="wide hidden" id="labResultWrap"><label for="labResult">RESULTADO LABORATORIAL (CRIPTOGRAFADO ATÉ A LIBERAÇÃO) *</label><textarea id="labResult" maxlength="12000" placeholder="Digite o resultado e os valores de referência"></textarea></div>
+        <div class="wide hidden" id="labRejectionWrap"><label for="labRejectionReason">MOTIVO DA REJEIÇÃO *</label><textarea id="labRejectionReason" maxlength="500" placeholder="Informe o motivo e a necessidade de nova coleta"></textarea></div>
+      </div>
+      <p class="lab-form-note">O resultado permanece restrito ao laboratório até a liberação. Após liberado, passa a integrar o histórico de exames do paciente.</p>
+      <div class="lab-form-actions"><button id="labActionSave" class="lab-btn primary" type="submit">Confirmar etapa</button></div>
+    </form>
+    <div class="lab-panel"><div class="lab-panel-heading"><h4>Histórico de rastreabilidade</h4></div><div id="labHistoryRows"></div></div>
+  </section>
+</section>
 
 <section id="accessWorkspace" class="access-workspace hidden" aria-label="Gestão de acessos da clínica">
   <div class="access-toolbar">
