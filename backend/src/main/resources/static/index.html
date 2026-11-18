@@ -627,7 +627,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 <section id="accessWorkspace" class="access-workspace hidden" aria-label="Gestão de acessos da clínica">
   <div class="access-toolbar">
     <div class="access-field search"><label for="accessSearch">NOME / E-MAIL</label><input id="accessSearch" type="search" maxlength="120" placeholder="Pesquisar usuários"></div>
-    <div class="access-field"><label for="accessRoleFilter">PERFIL</label><select id="accessRoleFilter"><option value="ALL">Todos</option><option value="CLINIC_ADMIN">Administrador</option><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option></select></div>
+    <div class="access-field"><label for="accessRoleFilter">PERFIL</label><select id="accessRoleFilter"><option value="ALL">Todos</option><option value="CLINIC_ADMIN">Administrador</option><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option><option value="LAB_TECHNICIAN">Laboratório</option></select></div>
     <div class="access-field"><label for="accessStatusFilter">SITUAÇÃO</label><select id="accessStatusFilter"><option value="ALL">Todas</option><option value="ACTIVE">Ativos</option><option value="SUSPENDED">Suspensos</option><option value="REVOKED">Revogados</option></select></div>
     <button id="accessSearchButton" class="access-btn primary" type="button">Filtrar</button>
     <button id="accessNewButton" class="access-btn primary" type="button">+ Criar acesso</button>
@@ -647,7 +647,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="access-form-grid">
       <div><label for="accessFullName">NOME COMPLETO *</label><input id="accessFullName" maxlength="180" required></div>
       <div><label for="accessEmail">E-MAIL DE LOGIN *</label><input id="accessEmail" type="email" maxlength="254" required></div>
-      <div><label for="accessRole">PERFIL *</label><select id="accessRole" required><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option><option value="CLINIC_ADMIN">Administrador da clínica</option></select></div>
+      <div><label for="accessRole">PERFIL *</label><select id="accessRole" required><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option><option value="LAB_TECHNICIAN">Laboratório</option><option value="CLINIC_ADMIN">Administrador da clínica</option></select></div>
       <div><label for="accessInitialPassword">SENHA INICIAL</label><input id="accessInitialPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" placeholder="Mínimo de 12 caracteres"></div>
       <div class="wide access-form-note">A senha inicial é obrigatória somente para um e-mail novo. Se a conta já existir na plataforma, ela será vinculada à clínica e a senha atual não será alterada. Para profissionais, o perfil também precisa ser associado a um cadastro no módulo Profissionais.</div>
     </div>
@@ -657,7 +657,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="access-panel-heading"><h4 id="accessDetailTitle">Detalhes do acesso</h4><button id="accessDetailClose" class="access-btn" type="button">Voltar à lista</button></div>
     <div id="accessDetailData" class="access-detail-grid"></div>
     <div class="access-detail-controls">
-      <div><label for="accessDetailRole">PERFIL DA CLÍNICA</label><select id="accessDetailRole"><option value="CLINIC_ADMIN">Administrador</option><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option></select></div>
+      <div><label for="accessDetailRole">PERFIL DA CLÍNICA</label><select id="accessDetailRole"><option value="CLINIC_ADMIN">Administrador</option><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option><option value="LAB_TECHNICIAN">Laboratório</option></select></div>
       <button id="accessSaveRole" class="access-btn primary" type="button">Salvar perfil</button>
       <button id="accessToggleStatus" class="access-btn danger" type="button">Suspender acesso</button>
       <button id="accessUnlock" class="access-btn" type="button">Desbloquear conta</button>
@@ -2160,7 +2160,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     if(!response.ok)throw new Error(data?.error||"Não foi possível concluir a operação de acesso.");
     return data;
   };
-  const accessRoleLabel={CLINIC_ADMIN:"ADMINISTRADOR",RECEPTION:"RECEPÇÃO",PROFESSIONAL:"PROFISSIONAL",TRIAGE:"TRIAGEM",AUDITOR:"AUDITORIA"};
+  const accessRoleLabel={CLINIC_ADMIN:"ADMINISTRADOR",RECEPTION:"RECEPÇÃO",PROFESSIONAL:"PROFISSIONAL",TRIAGE:"TRIAGEM",AUDITOR:"AUDITORIA",LAB_TECHNICIAN:"LABORATÓRIO"};
   const accessStatusLabel={ACTIVE:"ATIVO",SUSPENDED:"SUSPENSO",REVOKED:"REVOGADO"};
   const loadAccess=async()=>{
     try{
