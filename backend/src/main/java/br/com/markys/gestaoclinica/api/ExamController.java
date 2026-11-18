@@ -140,6 +140,12 @@ public class ExamController {
              WHERE e.clinic_id=? AND e.id=? AND e.active=true AND r.status='ACTIVE'
         """,clinic,body.examId());
         if(exam.isEmpty())return badRequest("Exame não encontrado ou inativo no catálogo desta clínica.");
+        String examCategory=String.valueOf(exam.getFirst().get("category"));
+        String specimenType=body.specimenType()==null?null:body.specimenType().trim();
+        if("LABORATORIO".equals(examCategory)&&(specimenType==null||specimenType.isBlank()))
+            return badRequest("Informe o tipo de amostra para solicitações laboratoriais.");
+        if(!"LABORATORIO".equals(examCategory)&&specimenType!=null&&!specimenType.isBlank())
+            return badRequest("Tipo de amostra só pode ser informado para exames laboratoriais.");
         if(!activePatient(clinic,body.patientId()))return badRequest("Paciente não encontrado ou inativo.");
         UUID professional=body.professionalId();
         if(professional!=null&&!activeProfessional(clinic,professional))return badRequest("Profissional não encontrado ou inativo.");
@@ -180,6 +186,17 @@ public class ExamController {
             priority,body.scheduledAt(),
             encryptOptional(body.notes()),a.membershipId(),a.membershipId());
         record(clinic,id,"CREATED",null,"REQUESTED","Solicitação de exame criada",a.membershipId());
+        if("LABORATORIO".equals(examCategory)){
+            UUID specimenId=UUID.randomUUID();
+            jdbc.update("""
+                INSERT INTO lab_specimens(id,clinic_id,exam_order_id,specimen_type,created_by_membership_id,updated_by_membership_id)
+                VALUES(?,?,?,?,?,?)
+            """,specimenId,clinic,id,specimenType,a.membershipId(),a.membershipId());
+            jdbc.update("""
+                INSERT INTO lab_specimen_events(clinic_id,specimen_id,event_type,new_status,detail,actor_membership_id)
+                VALUES(?,?,'CREATED','PENDING_COLLECTION','Amostra aguardando coleta',?)
+            """,clinic,specimenId,a.membershipId());
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"status","REQUESTED","message","Exame solicitado."));
     }
 
@@ -220,10 +237,12 @@ public class ExamController {
         if(!STATUSES.contains(next))return badRequest("Situação de exame inválida.");
         UUID clinic=TenantContext.requireClinicId();
         List<Map<String,Object>> rows=jdbc.queryForList("""
-            SELECT status,professional_id FROM exam_orders WHERE clinic_id=? AND id=? FOR UPDATE
+            SELECT status,professional_id,exam_category_snapshot FROM exam_orders WHERE clinic_id=? AND id=? FOR UPDATE
         """,clinic,id);
         if(rows.isEmpty())return ResponseEntity.notFound().build();
         String previous=String.valueOf(rows.getFirst().get("status"));
+        if("LABORATORIO".equals(String.valueOf(rows.getFirst().get("exam_category_snapshot"))))
+            return conflict("Solicitações laboratoriais devem ser processadas no módulo Laboratório.");
         UUID assigned=(UUID)rows.getFirst().get("professional_id");
         boolean professional="PROFESSIONAL".equals(a.role());
         if(professional&&(!Objects.equals(assigned,a.professionalId())
@@ -326,7 +345,7 @@ public class ExamController {
     private record Access(UUID membershipId,String role,UUID professionalId){}
     public record CreateRequest(@NotNull UUID patientId,@NotNull UUID examId,UUID appointmentId,
         UUID queueEntryId,UUID professionalId,@NotBlank @Size(max=16) String priority,
-        OffsetDateTime scheduledAt,@Size(max=3000) String notes){}
+        OffsetDateTime scheduledAt,@Size(max=100) String specimenType,@Size(max=3000) String notes){}
     public record StatusRequest(@NotBlank @Size(max=20) String status,OffsetDateTime scheduledAt,
         @Size(max=12000) String result){}
 }
