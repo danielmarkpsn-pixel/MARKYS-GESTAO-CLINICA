@@ -598,6 +598,23 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .schedule-day-event{display:grid;gap:3px;padding:7px 10px;background:#eaf3fc;border-left:3px solid #1975bb;border-radius:5px;color:#234864;font-size:12px}
     .schedule-day-event strong{font-size:11px}
     @media(max-width:760px){.schedule-calendar-layout{grid-template-columns:1fr}.schedule-calendar-sidebar{gap:6px}}
+
+    /* Agenda principal: calendário mensal visível + grade diária conforme imagem de referência */
+    .schedule-month-nav{display:flex;align-items:center;justify-content:space-between;gap:5px;color:#244d76;font-size:12px;text-transform:capitalize}
+    .schedule-month-nav button{border:0;background:#eef5fc;color:#175c96;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:20px}
+    .schedule-month-weekdays,.schedule-month-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center}
+    .schedule-month-weekdays span{font-size:10px;font-weight:800;color:#74869a;padding:7px 0}
+    .schedule-month-days button{border:0;border-radius:5px;background:transparent;min-height:29px;font-size:11px;color:#365a78;cursor:pointer}
+    .schedule-month-days button:hover{background:#eaf3fc}
+    .schedule-month-days button.today{outline:1px solid #4d9cce}
+    .schedule-month-days button.selected{background:#1472b6;color:#fff;font-weight:800}
+    .schedule-calendar-sidebar .schedule-side-note{font-size:11px;color:#71849a}
+    .schedule-calendar-layout{grid-template-columns:225px minmax(0,1fr);gap:0;border:1px solid #dbe5ee;background:#fff;border-radius:9px;overflow:hidden}
+    .schedule-calendar-sidebar{background:#f4f6f9;border:0;border-right:1px solid #dce5ee;border-radius:0;align-self:stretch}
+    .schedule-day-panel{border:0;border-radius:0}
+    .schedule-day-timeline{max-height:690px}
+    .schedule-hour-slot{min-height:44px}
+    @media(max-width:760px){.schedule-calendar-layout{grid-template-columns:1fr}.schedule-calendar-sidebar{border-right:0;border-bottom:1px solid #dce5ee}}
   </style>
 </head>
 <body>
@@ -822,9 +839,12 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   </div>
   <div class="schedule-calendar-layout">
     <aside class="schedule-calendar-sidebar">
-      <label for="scheduleDayPicker">CALENDÁRIO</label>
+      <div class="schedule-month-nav"><button id="schedulePrevMonth" type="button" aria-label="Mês anterior">‹</button><strong id="scheduleMonthLabel">Calendário</strong><button id="scheduleNextMonth" type="button" aria-label="Próximo mês">›</button></div>
+      <div class="schedule-month-weekdays"><span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span></div>
+      <div id="scheduleMonthDays" class="schedule-month-days"></div>
+      <label for="scheduleDayPicker">DATA SELECIONADA</label>
       <input id="scheduleDayPicker" type="date" aria-label="Selecionar dia na agenda">
-      <p>Selecione uma data para consultar a agenda diária.</p>
+      <label for="scheduleProfessionalFilter" class="schedule-side-note">Agenda da clínica</label>
     </aside>
     <div class="schedule-day-panel">
       <div class="schedule-day-heading"><strong id="scheduleDayTitle">Agenda do dia</strong><span id="scheduleDayCount">0 agendamentos</span></div>
@@ -2158,10 +2178,41 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       if(scheduleState.role==="CLINIC_ADMIN"){await loadScheduleRules();await loadScheduleBlocks();}
     }catch(error){$("scheduleRows").innerHTML="<tr><td colspan='7' class='schedule-empty'>"+escapeHtml(error.message)+"</td></tr>";scheduleMessage(error.message);}
   };
+  let scheduleCalendarMonth="";
+  const renderScheduleMonth=()=>{
+    const selected=$("scheduleDayPicker").value||localDateString();
+    if(!scheduleCalendarMonth)scheduleCalendarMonth=selected.slice(0,7);
+    const [year,month]=scheduleCalendarMonth.split("-").map(Number);
+    $("scheduleMonthLabel").textContent=new Intl.DateTimeFormat("pt-BR",{month:"long",year:"numeric"}).format(new Date(year,month-1,1));
+    const grid=$("scheduleMonthDays");grid.replaceChildren();
+    const first=new Date(year,month-1,1).getDay();
+    const days=new Date(year,month,0).getDate();
+    for(let i=0;i<first;i++){const blank=document.createElement("span");blank.className="schedule-month-blank";grid.append(blank);}
+    for(let day=1;day<=days;day++){
+      const value=scheduleCalendarMonth+"-"+String(day).padStart(2,"0");
+      const button=document.createElement("button");button.type="button";button.textContent=day;
+      if(value===selected)button.classList.add("selected");
+      if(value===localDateString())button.classList.add("today");
+      button.setAttribute("aria-label","Abrir agenda de "+value.split("-").reverse().join("/"));
+      button.addEventListener("click",()=>{
+        $("scheduleFrom").value=value;$("scheduleTo").value=value;
+        $("scheduleDayPicker").value=value;loadSchedule();
+      });
+      grid.append(button);
+    }
+  };
+  ["schedulePrevMonth","scheduleNextMonth"].forEach((id,index)=>$(id).addEventListener("click",()=>{
+    const [year,month]=(scheduleCalendarMonth||localDateString().slice(0,7)).split("-").map(Number);
+    const date=new Date(year,month-1+(index===0?-1:1),1);
+    scheduleCalendarMonth=date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0");
+    renderScheduleMonth();
+  }));
   const renderScheduleDay=()=>{
     const date=$("scheduleFrom").value;
     const singleDay=date&&date===$("scheduleTo").value;
     $("scheduleDayPicker").value=date||localDateString();
+    if(!scheduleCalendarMonth||!scheduleCalendarMonth.startsWith((date||localDateString()).slice(0,7)))scheduleCalendarMonth=(date||localDateString()).slice(0,7);
+    renderScheduleMonth();
     const panel=document.querySelector(".schedule-calendar-layout");
     panel.classList.toggle("hidden",!singleDay);
     if(!singleDay)return;
