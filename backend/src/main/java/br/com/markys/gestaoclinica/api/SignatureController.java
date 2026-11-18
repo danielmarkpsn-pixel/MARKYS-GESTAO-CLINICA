@@ -87,7 +87,7 @@ public class SignatureController {
     @PostMapping
     @Transactional
     public ResponseEntity<?> create(Authentication auth,@Valid @RequestBody CreateRequest body) {
-        Access a=access(auth); if(a==null||"PROFESSIONAL".equals(a.role())==false&&!"CLINIC_ADMIN".equals(a.role())&&!"RECEPTION".equals(a.role()))return forbidden();
+        Access a=access(auth); if(a==null)return forbidden();
         UUID clinic=TenantContext.requireClinicId();
         List<Map<String,Object>> docs=jdbc.queryForList("""
             SELECT d.patient_id,d.original_file_name,d.sha256 FROM patient_documents d
@@ -114,7 +114,7 @@ public class SignatureController {
 
     @PostMapping("/{id}/sign")
     @Transactional
-    public ResponseEntity<?> sign(Authentication auth,@PathVariable UUID id,@Valid @RequestBody SignRequest body) {
+    public ResponseEntity<?> sign(Authentication auth,@PathVariable UUID id,@Valid @RequestBody SignRequest body) throws java.security.NoSuchAlgorithmException {
         Access a=access(auth); if(a==null)return forbidden();
         String signer=body.signerName().trim();
         if(signer.length()<3)return badRequest("Informe o nome completo de quem está assinando.");
