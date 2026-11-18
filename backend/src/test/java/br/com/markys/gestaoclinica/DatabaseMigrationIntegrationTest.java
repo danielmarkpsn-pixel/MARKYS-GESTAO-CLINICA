@@ -58,16 +58,16 @@ class DatabaseMigrationIntegrationTest {
         Integer clinicalTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema()
-               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events', 'clinic_room_events', 'clinic_insurances', 'clinic_insurance_events', 'clinic_membership_events', 'lab_specimens', 'lab_specimen_events', 'esocial_employers', 'esocial_workers', 'esocial_events', 'esocial_event_audit', 'queue_entry_events', 'document_signature_requests', 'document_signature_events', 'insurance_exam_prices', 'service_notes', 'service_note_items', 'service_note_events')
+               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events', 'clinic_room_events', 'clinic_insurances', 'clinic_insurance_events', 'clinic_membership_events', 'lab_specimens', 'lab_specimen_events', 'esocial_employers', 'esocial_workers', 'esocial_events', 'esocial_event_audit', 'queue_entry_events', 'document_signature_requests', 'document_signature_events', 'insurance_exam_prices', 'service_notes', 'service_note_items', 'service_note_events', 'lab_result_documents')
             """, Integer.class);
         Integer masterTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(21);
+        assertThat(migrationCount).isEqualTo(22);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(36);
+        assertThat(clinicalTables).isEqualTo(37);
         assertThat(masterTables).isEqualTo(1);
     }
 
@@ -125,7 +125,7 @@ class DatabaseMigrationIntegrationTest {
         // Test cleanup is intentionally explicit: TRUNCATE is not filtered by RLS,
         // unlike DELETE, and CASCADE clears tenant-owned rows before parent clinics.
         jdbc.execute("""
-            TRUNCATE TABLE service_note_events, service_note_items, service_notes, insurance_exam_prices, esocial_event_audit, esocial_events, esocial_workers, esocial_employers, clinic_membership_events, lab_specimen_events, lab_specimens, clinic_room_events, clinic_insurance_events, exam_order_events, exam_orders, finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
+            TRUNCATE TABLE lab_result_documents, service_note_events, service_note_items, service_notes, insurance_exam_prices, esocial_event_audit, esocial_events, esocial_workers, esocial_employers, clinic_membership_events, lab_specimen_events, lab_specimens, clinic_room_events, clinic_insurance_events, exam_order_events, exam_orders, finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
                 exam_catalog, service_types, clinic_rooms, clinic_insurances, professionals, patients, platform_admins,
                 clinic_memberships, app_users, clinics CASCADE
             """);

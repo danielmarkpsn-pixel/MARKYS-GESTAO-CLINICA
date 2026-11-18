@@ -1,9 +1,13 @@
 package br.com.markys.gestaoclinica.api;
 
 import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.*;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,7 +82,8 @@ public class LaboratoryController {
             SELECT s.*,o.id AS exam_order_id,o.exam_name_snapshot AS exam_name,o.exam_category_snapshot AS category,
                    o.room_name_snapshot AS room_name,o.patient_id,p.full_name AS patient_name,
                    o.professional_id,pr.display_name AS professional_name,o.priority,o.status AS order_status,
-                   o.requested_at,o.scheduled_at,o.notes_ciphertext
+                   o.requested_at,o.scheduled_at,o.notes_ciphertext,
+                   (SELECT d.file_name FROM lab_result_documents d WHERE d.clinic_id=s.clinic_id AND d.specimen_id=s.id) AS result_document_name
               FROM lab_specimens s
               JOIN exam_orders o ON o.clinic_id=s.clinic_id AND o.id=s.exam_order_id
               JOIN patients p ON p.clinic_id=o.clinic_id AND p.id=o.patient_id
@@ -245,6 +250,59 @@ public class LaboratoryController {
         };
         record(clinic,id,event,previous,next,detail,a.membershipId());
         return ResponseEntity.ok(Map.of("id",id,"status",next,"message","Fluxo laboratorial atualizado."));
+    }
+
+    @PostMapping(value="/{id}/result-document",consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Transactional
+    public ResponseEntity<?> uploadResultDocument(Authentication auth,@PathVariable UUID id,
+            @RequestPart("file") MultipartFile file) {
+        Access a=access(auth);if(a==null)return forbidden();
+        if(file==null||file.isEmpty())return badRequest("Selecione um arquivo PDF.");
+        if(file.getSize()>10L*1024*1024)return badRequest("O PDF deve ter no máximo 10 MB.");
+        String contentType=file.getContentType();
+        if(contentType==null||!MediaType.APPLICATION_PDF_VALUE.equalsIgnoreCase(contentType))
+            return badRequest("Somente arquivos PDF são permitidos.");
+        try{
+            byte[] bytes=file.getBytes();
+            if(bytes.length<5||bytes[0]!='%'||bytes[1]!='P'||bytes[2]!='D'||bytes[3]!='F'||bytes[4]!='-')
+                return badRequest("O arquivo selecionado não possui uma assinatura PDF válida.");
+            UUID clinic=TenantContext.requireClinicId();
+            List<Map<String,Object>> rows=jdbc.queryForList("""
+                SELECT collection_status,result_ciphertext FROM lab_specimens
+                 WHERE clinic_id=? AND id=? FOR UPDATE
+            """,clinic,id);
+            if(rows.isEmpty())return ResponseEntity.notFound().build();
+            String status=String.valueOf(rows.getFirst().get("collection_status"));
+            if(!List.of("RESULT_READY","RELEASED").contains(status)||rows.getFirst().get("result_ciphertext")==null)
+                return badRequest("Registre o resultado laboratorial antes de anexar o PDF.");
+            String name=file.getOriginalFilename()==null?"resultado.pdf":file.getOriginalFilename().replaceAll("[^A-Za-z0-9._ -]","_");
+            if(name.length()>180)name=name.substring(name.length()-180);
+            String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+            jdbc.update("""
+                INSERT INTO lab_result_documents(id,clinic_id,specimen_id,file_name,content_type,file_size,sha256,content,uploaded_by_membership_id)
+                VALUES(?,?,?,?, 'application/pdf',?,?,?,?,?)
+                ON CONFLICT (clinic_id,specimen_id) DO UPDATE SET file_name=EXCLUDED.file_name,
+                    content_type=EXCLUDED.content_type,file_size=EXCLUDED.file_size,sha256=EXCLUDED.sha256,
+                    content=EXCLUDED.content,uploaded_by_membership_id=EXCLUDED.uploaded_by_membership_id,updated_at=now()
+            """,UUID.randomUUID(),clinic,id,name,bytes.length,hash,bytes,a.membershipId());
+            return ResponseEntity.ok(Map.of("message","PDF anexado ao resultado laboratorial.","fileName",name,"sha256",hash));
+        }catch(Exception ex){return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error","Não foi possível armazenar o PDF do resultado."));}
+    }
+
+    @GetMapping("/{id}/result-document")
+    public ResponseEntity<byte[]> downloadResultDocument(Authentication auth,@PathVariable UUID id) {
+        if(access(auth)==null)return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        UUID clinic=TenantContext.requireClinicId();
+        List<Map<String,Object>> rows=jdbc.queryForList("""
+            SELECT file_name,content_type,content FROM lab_result_documents WHERE clinic_id=? AND specimen_id=?
+        """,clinic,id);
+        if(rows.isEmpty())return ResponseEntity.notFound().build();
+        Map<String,Object> row=rows.getFirst();
+        String filename=String.valueOf(row.get("file_name"));
+        byte[] content=(byte[])row.get("content");
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+            .header(HttpHeaders.CONTENT_DISPOSITION,ContentDisposition.attachment().filename(filename,StandardCharsets.UTF_8).build().toString())
+            .contentLength(content.length).body(content);
     }
 
     private Access access(Authentication auth){

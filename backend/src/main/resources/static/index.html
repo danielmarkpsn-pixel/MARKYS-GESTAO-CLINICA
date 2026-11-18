@@ -460,6 +460,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 .lab-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.lab-form-grid>div{display:grid;gap:5px;min-width:0}.lab-form-grid label{font-size:9px;font-weight:800;color:#526a80}.lab-form-grid .wide{grid-column:1/-1}
 .lab-form-grid textarea{height:auto;min-height:80px;padding:8px;resize:vertical}
 .lab-form-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}
+.lab-document-link{display:inline-flex;margin:10px 0;padding:9px 12px;border:1px solid #c8def3;border-radius:8px;background:#edf6ff;color:#145a91;font-size:11px;font-weight:800;text-decoration:none}
 .lab-form-note{font-size:10px;color:#7b8998;line-height:1.5}
 .lab-event{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}.lab-event strong{display:block;color:#244766}
 .lab-empty{text-align:center;padding:24px!important;color:#8492a1!important}
@@ -879,9 +880,10 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <div class="lab-toolbar">
     <div class="lab-field search"><label for="labSearch">PACIENTE / EXAME / PROTOCOLO</label><input id="labSearch" type="search" maxlength="120" placeholder="Pesquisar solicitações laboratoriais"></div>
     <div class="lab-field"><label for="labStatusFilter">ETAPA</label><select id="labStatusFilter"><option value="ALL">Todas</option><option value="PENDING_COLLECTION">Aguardando coleta</option><option value="COLLECTED">Coletada</option><option value="RECEIVED">Recebida</option><option value="PROCESSING">Em processamento</option><option value="RESULT_READY">Resultado pronto</option><option value="RELEASED">Liberada</option><option value="REJECTED">Rejeitada</option><option value="CANCELLED">Cancelada</option></select></div>
-    <button id="labSearchButton" class="lab-btn primary" type="button">Filtrar</button>
+    <button id="labNewRequest" class="lab-btn primary" type="button">+ Nova solicitação</button><button id="labSearchButton" class="lab-btn primary" type="button">Filtrar</button>
     <button id="labRefreshButton" class="lab-btn" type="button">Atualizar</button>
   </div>
+  <form id="labRequestForm" class="lab-panel hidden"><div class="lab-panel-heading"><h4>Nova solicitação laboratorial</h4><button id="labRequestClose" class="lab-btn" type="button">Fechar</button></div><div class="lab-form-grid"><div><label for="labRequestPatient">PACIENTE *</label><select id="labRequestPatient" required></select></div><div><label for="labRequestExam">EXAME *</label><select id="labRequestExam" required></select></div><div><label for="labRequestSpecimen">TIPO DE AMOSTRA *</label><select id="labRequestSpecimen" required><option value="">Selecione</option><option value="SANGUE">Sangue</option><option value="URINA">Urina</option><option value="FEZES">Fezes</option><option value="SWAB">Swab</option><option value="SECRECAO">Secreção</option><option value="TECIDO">Tecido / biópsia</option><option value="OUTRO">Outro</option></select></div><div><label for="labRequestProfessional">PROFISSIONAL</label><select id="labRequestProfessional"><option value="">A definir</option></select></div><div><label for="labRequestPriority">PRIORIDADE</label><select id="labRequestPriority"><option value="NORMAL">Normal</option><option value="URGENT">Urgente</option></select></div><div class="wide"><label for="labRequestNotes">OBSERVAÇÕES</label><textarea id="labRequestNotes" maxlength="3000"></textarea></div></div><div class="lab-form-actions"><button class="lab-btn primary" type="submit">Registrar solicitação</button></div></form>
   <div class="lab-kpis">
     <div class="lab-kpi"><small>AGUARDANDO COLETA</small><strong id="labPending">0</strong></div>
     <div class="lab-kpi"><small>COLETADAS / RECEBIDAS</small><strong id="labCollected">0</strong></div>
@@ -894,14 +896,14 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <div class="lab-pager"><span id="labPageInfo">0 solicitações</span><div><button id="labPrev" class="lab-btn" type="button" disabled>Anterior</button> <span id="labPage">Página 1 de 1</span> <button id="labNext" class="lab-btn" type="button" disabled>Próxima</button></div></div>
   <section id="labDetailPanel" class="lab-panel hidden">
     <div class="lab-panel-heading"><h4 id="labDetailTitle">Detalhes da amostra</h4><button id="labDetailClose" class="lab-btn" type="button">Voltar à lista</button></div>
-    <div id="labDetailData" class="lab-detail-grid"></div>
+    <div id="labDetailData" class="lab-detail-grid"></div><div id="labResultDocument"></div>
     <form id="labActionForm" class="lab-panel">
       <div class="lab-panel-heading"><h4>Atualizar fluxo da amostra</h4></div>
       <div class="lab-form-grid">
         <div><label for="labNextStatus">PRÓXIMA ETAPA *</label><select id="labNextStatus" required></select></div>
         <div><label for="labReference">PROTOCOLO DO LABORATÓRIO</label><input id="labReference" maxlength="80" placeholder="Número de rastreio"></div>
         <div class="wide"><label for="labCollectionNotes">OBSERVAÇÕES DE COLETA / RECEBIMENTO</label><textarea id="labCollectionNotes" maxlength="2000" placeholder="Observações protegidas"></textarea></div>
-        <div class="wide hidden" id="labResultWrap"><label for="labResult">RESULTADO LABORATORIAL (CRIPTOGRAFADO ATÉ A LIBERAÇÃO) *</label><textarea id="labResult" maxlength="12000" placeholder="Digite o resultado e os valores de referência"></textarea></div>
+        <div class="wide hidden" id="labResultWrap"><label for="labResult">RESULTADO LABORATORIAL (CRIPTOGRAFADO ATÉ A LIBERAÇÃO) *</label><textarea id="labResult" maxlength="12000" placeholder="Digite o resultado e os valores de referência"></textarea><label for="labResultPdf">ANEXAR PDF (OPCIONAL • MÁXIMO 10 MB)</label><input id="labResultPdf" type="file" accept="application/pdf,.pdf"></div>
         <div class="wide hidden" id="labRejectionWrap"><label for="labRejectionReason">MOTIVO DA REJEIÇÃO *</label><textarea id="labRejectionReason" maxlength="500" placeholder="Informe o motivo e a necessidade de nova coleta"></textarea></div>
       </div>
       <p class="lab-form-note">O resultado permanece restrito ao laboratório até a liberação. Após liberado, passa a integrar o histórico de exames do paciente.</p>
@@ -3007,19 +3009,43 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
         ["Liberado em",clinicDateTime(data.released_at)],["Instruções clínicas da solicitação",data.exam_notes||"—"],["Observações de coleta",data.collection_notes||"—"],
         ["Motivo da rejeição",data.rejection_reason||"—"]];
       if(data.result)fields.push(["Resultado",data.result]);
+      $("labResultDocument").replaceChildren();
+      if(data.result_document_name){const link=document.createElement("a");link.href="/api/v1/clinic/laboratory/"+data.id+"/result-document";link.textContent="Baixar PDF: "+data.result_document_name;link.target="_blank";link.rel="noopener";link.className="lab-document-link";$("labResultDocument").append(link);}
       const grid=$("labDetailData");grid.replaceChildren();
       fields.forEach(([label,value])=>{const box=document.createElement("div");box.className="lab-detail-cell";const small=document.createElement("small");small.textContent=label;const strong=document.createElement("strong");strong.textContent=value||"—";box.append(small,strong);grid.append(box);});
       const transitions=labTransitions[data.collection_status]||[],select=$("labNextStatus");select.replaceChildren();
       transitions.forEach(status=>{const option=document.createElement("option");option.value=status;option.textContent=labTransitionLabel[status];select.append(option);});
       $("labActionForm").classList.toggle("hidden",!transitions.length);
       $("labReference").value=data.lab_reference||"";$("labCollectionNotes").value="";
-      $("labResult").value="";$("labRejectionReason").value="";syncLabActionFields();
+      $("labResult").value="";$("labResultPdf").value="";$("labRejectionReason").value="";syncLabActionFields();
       const events=await labRequest("/api/v1/clinic/laboratory/"+item.specimen_id+"/history"),target=$("labHistoryRows");target.replaceChildren();
       if(!events.length)target.textContent="Nenhuma movimentação registrada.";
       events.forEach(ev=>{const line=document.createElement("div");line.className="lab-event";const strong=document.createElement("strong");strong.textContent=ev.event_type+" • "+(labStatusLabel[ev.new_status]||ev.new_status||"");const span=document.createElement("span");span.textContent=clinicDateTime(ev.created_at)+" • "+(ev.actor_name||"Equipe do laboratório")+" • "+(ev.detail||"");line.append(strong,span);target.append(line);});
       $("labDetailPanel").classList.remove("hidden");$("labDetailPanel").scrollIntoView({behavior:"smooth",block:"start"});
     }catch(error){labMessage(error.message);}
   };
+  const loadLabRequestResources=async()=>{
+    const data=await labRequest("/api/v1/clinic/exams/resources");
+    const fill=(id,items,label)=>{const select=$(id);select.replaceChildren(new Option(label,""));(items||[]).forEach(item=>select.add(new Option(item.full_name||item.display_name||item.name,item.id)));};
+    fill("labRequestPatient",data.patients,"Selecione o paciente");
+    fill("labRequestExam",(data.exams||[]).filter(item=>item.category==="LABORATORIO"),"Selecione o exame laboratorial");
+    fill("labRequestProfessional",data.professionals,"A definir");
+  };
+  $("labNewRequest").addEventListener("click",async()=>{
+    try{await loadLabRequestResources();$("labRequestForm").classList.remove("hidden");$("labRequestForm").scrollIntoView({behavior:"smooth",block:"start"});}
+    catch(error){labMessage(error.message);}
+  });
+  $("labRequestClose").addEventListener("click",()=>$("labRequestForm").classList.add("hidden"));
+  $("labRequestForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+    try{
+      await labRequest("/api/v1/clinic/exams",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        patientId:$("labRequestPatient").value,examId:$("labRequestExam").value,specimenType:$("labRequestSpecimen").value,
+        professionalId:$("labRequestProfessional").value||null,priority:$("labRequestPriority").value,notes:$("labRequestNotes").value.trim()||null
+      })});
+      event.currentTarget.reset();$("labRequestForm").classList.add("hidden");labMessage("Solicitação laboratorial registrada.",false);await loadLaboratory();
+    }catch(error){labMessage(error.message);}finally{button.disabled=false;}
+  });
   $("labSearchButton").addEventListener("click",()=>{labState.page=1;loadLaboratory();});
   $("labRefreshButton").addEventListener("click",loadLaboratory);
   $("labSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();labState.page=1;loadLaboratory();}});
@@ -3038,6 +3064,8 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
         result:status==="RESULT_READY"?$("labResult").value.trim()||null:null};
       await labRequest("/api/v1/clinic/laboratory/"+labState.selected.id+"/status",
         {method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      const pdf=$("labResultPdf").files?.[0];
+      if(status==="RESULT_READY"&&pdf){const form=new FormData();form.append("file",pdf);await labRequest("/api/v1/clinic/laboratory/"+labState.selected.id+"/result-document",{method:"POST",body:form});}
       labMessage("Etapa laboratorial atualizada.",false);await loadLaboratory();
       const selected=labState.selected;await showLabDetail({specimen_id:selected.id});
     }catch(error){labMessage(error.message);}finally{button.disabled=false;}

@@ -141,6 +141,8 @@ public class ExamController {
         """,clinic,body.examId());
         if(exam.isEmpty())return badRequest("Exame não encontrado ou inativo no catálogo desta clínica.");
         String examCategory=String.valueOf(exam.getFirst().get("category"));
+        if("LAB_TECHNICIAN".equals(a.role())&&!"LABORATORIO".equals(examCategory))
+            return forbidden();
         String specimenType=body.specimenType()==null?null:body.specimenType().trim();
         if("LABORATORIO".equals(examCategory)&&(specimenType==null||specimenType.isBlank()))
             return badRequest("Informe o tipo de amostra para solicitações laboratoriais.");
@@ -314,7 +316,7 @@ public class ExamController {
         if(rows.isEmpty())return null;
         Map<String,Object> row=rows.getFirst();
         String role=String.valueOf(row.get("role"));
-        if(!List.of("CLINIC_ADMIN","RECEPTION","PROFESSIONAL").contains(role))return null;
+        if(!List.of("CLINIC_ADMIN","RECEPTION","PROFESSIONAL","LAB_TECHNICIAN").contains(role))return null;
         UUID professional=(UUID)row.get("professional_id");
         if("PROFESSIONAL".equals(role)&&professional==null)return null;
         return new Access((UUID)row.get("id"),role,professional);
