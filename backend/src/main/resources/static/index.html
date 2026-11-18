@@ -264,6 +264,42 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 @media(max-width:850px){.exam-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.exam-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.exam-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.exam-form-grid,.exam-action-grid,.exam-detail-grid{grid-template-columns:1fr}.exam-form-grid .wide,.exam-action-grid .wide{grid-column:auto}.exam-field.search{min-width:100%}}
 
+
+/* Módulo Consultórios — cadastro, capacidade, ocupação e histórico */
+.room-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
+.room-toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px;margin-bottom:12px}
+.room-field{display:grid;gap:5px;min-width:135px;flex:1}.room-field.search{min-width:220px;flex:2}
+.room-field label{font-size:10px;color:#52677d;margin:0}
+.room-field input,.room-field select,.room-form-grid input,.room-form-grid select,.room-form-grid textarea{height:35px;width:100%;min-width:0;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;color:#29445f;background:#fff}
+.room-btn{height:35px;border:1px solid #c5d5e4;background:#fff;color:#145a91;border-radius:4px;padding:0 12px;font-size:11px;font-weight:750;cursor:pointer}
+.room-btn.primary{background:#0867b2;border-color:#0867b2;color:white}.room-btn.danger{border-color:#e8caca;background:#fff7f7;color:#a12626}
+.room-btn:disabled{opacity:.55;cursor:wait}
+.room-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.room-kpi{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:11px 13px}.room-kpi small{display:block;color:#718297;font-size:9px;margin-bottom:5px}.room-kpi strong{font-size:21px;color:#17436c}
+.room-message{min-height:19px;font-size:11px;margin:5px 0;color:#a12c26}
+.room-table-wrap{overflow:auto;background:#fff;border:1px solid #dce4ed;border-radius:6px}
+.room-table{width:100%;min-width:850px;border-collapse:collapse;font-size:11px}
+.room-table th{padding:10px;text-align:left;background:#f1f5f9;color:#63768a;font-size:9px;border-bottom:1px solid #dce4ec}
+.room-table td{padding:10px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.room-name{font-weight:800;color:#1c3d5d}.room-muted{display:block;color:#8391a0;font-size:9px;margin-top:3px}
+.room-status{display:inline-block;padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:9px;font-weight:800}.room-status.inactive{background:#f1f2f4;color:#718093}
+.room-actions{display:flex;gap:4px;flex-wrap:wrap}.room-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:9px;cursor:pointer}
+.room-pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:11px;color:#718093;font-size:10px}
+.room-panel{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:14px;margin-top:12px}
+.room-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.room-panel-heading h4{margin:0;color:#21486b;font-size:14px}
+.room-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.room-form-grid>div{display:grid;gap:5px;min-width:0}.room-form-grid label{font-size:9px;font-weight:800;color:#526a80}.room-form-grid .wide{grid-column:1/-1}
+.room-form-grid textarea{height:auto;min-height:75px;padding:8px;resize:vertical}
+.room-form-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}
+.room-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.room-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.room-detail-cell small{display:block;color:#7b8998;font-size:9px}.room-detail-cell strong{font-size:11px;color:#244766;overflow-wrap:anywhere}
+.room-usage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.room-usage-card{background:#fbfdff;border:1px solid #e3eaf1;border-radius:5px;padding:10px;min-width:0}
+.room-usage-card h5{font-size:11px;color:#21486b;margin:0 0 8px}
+.room-usage-item{padding:7px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}.room-usage-item strong{display:block;color:#244766}
+.room-empty{text-align:center;padding:24px!important;color:#8492a1!important}
+@media(max-width:800px){.room-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.room-usage{grid-template-columns:1fr}.room-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.room-form-grid,.room-detail-grid{grid-template-columns:1fr}.room-form-grid .wide{grid-column:auto}.room-field.search{min-width:100%}}
+
 </style>
 </head>
 <body>
@@ -362,10 +398,10 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 
         <section id="receptionWorkspace" class="workspace hidden">
           <h3>Configuração da Recepção</h3>
-          <p class="sub">Gerencie os cadastros utilizados no atendimento da clínica. As alterações ficam restritas à clínica ativa.</p>
+          <p class="sub">Gerencie os tipos de atendimento utilizados na recepção da clínica.</p>
           <div id="catalogMessage" class="catalog-message" role="status" aria-live="polite"></div>
           <div class="catalog-grid">
-            <div class="catalog-card"><h4>Salas e consultórios</h4><form id="roomForm"><input id="roomName" maxlength="100" placeholder="Nome da sala" required><button type="submit">Adicionar</button></form><div id="roomList" class="catalog-list"></div></div>
+            
             <div class="catalog-card"><h4>Tipos de atendimento</h4><form id="serviceTypeForm"><input id="serviceTypeName" maxlength="120" placeholder="Novo tipo de atendimento" required><button type="submit">Adicionar</button></form><div id="serviceTypeList" class="catalog-list"></div></div>
             
           </div>
@@ -517,6 +553,50 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   </section>
 </section>
 
+
+
+<section id="roomWorkspace" class="room-workspace hidden" aria-label="Gestão de consultórios e salas">
+  <div class="room-toolbar">
+    <div class="room-field search"><label for="roomSearch">NOME / LOCALIZAÇÃO</label><input id="roomSearch" type="search" maxlength="100" placeholder="Pesquisar consultórios"></div>
+    <div class="room-field"><label for="roomStatusFilter">SITUAÇÃO</label><select id="roomStatusFilter"><option value="ALL">Todas</option><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option></select></div>
+    <div class="room-field"><label for="roomTypeFilter">TIPO</label><select id="roomTypeFilter"><option value="ALL">Todos os tipos</option><option value="CONSULTORIO">Consultório</option><option value="EXAMES">Exames</option><option value="COLETA">Coleta</option><option value="AUDIOMETRIA">Audiometria</option><option value="RAIO_X">Raio-X</option><option value="MULTIUSO">Multiuso</option></select></div>
+    <button id="roomSearchButton" class="room-btn primary" type="button">Filtrar</button>
+    <button id="roomNewButton" class="room-btn primary" type="button">+ Novo consultório</button>
+    <button id="roomRefreshButton" class="room-btn" type="button">Atualizar</button>
+  </div>
+  <div class="room-kpis">
+    <div class="room-kpi"><small>TOTAL DE SALAS</small><strong id="roomTotal">0</strong></div>
+    <div class="room-kpi"><small>ATIVAS</small><strong id="roomActive">0</strong></div>
+    <div class="room-kpi"><small>INATIVAS</small><strong id="roomInactive">0</strong></div>
+    <div class="room-kpi"><small>COM ATENDIMENTO NA FILA</small><strong id="roomOccupied">0</strong></div>
+  </div>
+  <div id="roomMessage" class="room-message" role="status" aria-live="polite"></div>
+  <div class="room-table-wrap"><table class="room-table"><thead><tr><th>CONSULTÓRIO / LOCAL</th><th>TIPO</th><th>CAPACIDADE</th><th>UTILIZAÇÃO</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="roomRows"><tr><td colspan="6" class="room-empty">Carregando consultórios...</td></tr></tbody></table></div>
+  <div class="room-pager"><span id="roomPageInfo">0 consultórios</span><div><button id="roomPrev" class="room-btn" type="button" disabled>Anterior</button> <span id="roomPage">Página 1 de 1</span> <button id="roomNext" class="room-btn" type="button" disabled>Próxima</button></div></div>
+
+  <form id="roomForm" class="room-panel hidden">
+    <div class="room-panel-heading"><h4 id="roomFormTitle">Novo consultório</h4><button id="roomFormClose" class="room-btn" type="button">Fechar</button></div>
+    <div class="room-form-grid">
+      <div><label for="roomName">NOME DO CONSULTÓRIO *</label><input id="roomName" maxlength="100" required></div>
+      <div><label for="roomType">TIPO *</label><select id="roomType" required><option value="CONSULTORIO">Consultório</option><option value="EXAMES">Exames</option><option value="COLETA">Coleta</option><option value="AUDIOMETRIA">Audiometria</option><option value="RAIO_X">Raio-X</option><option value="MULTIUSO">Multiuso</option></select></div>
+      <div><label for="roomFloor">ANDAR / LOCALIZAÇÃO</label><input id="roomFloor" maxlength="80" placeholder="Ex.: Térreo, 1º andar, Bloco B"></div>
+      <div><label for="roomCapacity">CAPACIDADE DE ATENDIMENTO *</label><input id="roomCapacity" type="number" min="1" max="100" step="1" value="1" required></div>
+      <div class="wide"><label for="roomDescription">DESCRIÇÃO / RECURSOS DISPONÍVEIS</label><textarea id="roomDescription" maxlength="500" placeholder="Equipamentos, acessibilidade e observações operacionais"></textarea></div>
+    </div>
+    <div class="room-form-actions"><button id="roomFormCancel" class="room-btn" type="button">Cancelar</button><button id="roomSave" class="room-btn primary" type="submit">Salvar consultório</button></div>
+  </form>
+
+  <section id="roomDetailPanel" class="room-panel hidden">
+    <div class="room-panel-heading"><h4 id="roomDetailTitle">Detalhes do consultório</h4><button id="roomDetailClose" class="room-btn" type="button">Voltar à lista</button></div>
+    <div id="roomDetailData" class="room-detail-grid"></div>
+    <div class="room-usage">
+      <div class="room-usage-card"><h5>ATENDIMENTOS EM ANDAMENTO</h5><div id="roomQueueItems"></div></div>
+      <div class="room-usage-card"><h5>PRÓXIMOS AGENDAMENTOS</h5><div id="roomAppointmentItems"></div></div>
+      <div class="room-usage-card"><h5>EXAMES AGENDADOS / EM EXECUÇÃO</h5><div id="roomExamItems"></div></div>
+    </div>
+    <div class="room-panel"><div class="room-panel-heading"><h4>Histórico de alterações</h4></div><div id="roomHistoryItems"></div></div>
+  </section>
+</section>
 
 <section id="examWorkspace" class="exam-workspace hidden" aria-label="Gestão de exames">
   <div class="exam-toolbar">
@@ -712,8 +792,6 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     try {
       const data = await catalogRequest("/api/v1/clinic/catalog");
       currentCatalog = data;
-      renderCatalogItems("roomList", data.rooms, item => item.name + (item.status === "INACTIVE" ? " • Inativa" : ""), item =>
-        catalogRequest("/api/v1/clinic/catalog/rooms/" + item.id + "/status", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }) }));
       renderCatalogItems("serviceTypeList", data.serviceTypes, item => item.name + (item.active ? "" : " • Inativo"), item =>
         catalogRequest("/api/v1/clinic/catalog/service-types/" + item.id + "/status", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active: !item.active }) }));
       renderCatalogItems("examList", data.exams, item => item.name + " — " + item.room_name + (item.active ? "" : " • Inativo"), item =>
@@ -730,12 +808,6 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       catalogMessage("Cadastros carregados.", true);
     } catch (error) { catalogMessage(error.message); }
   };
-  $("roomForm").addEventListener("submit", async event => {
-    event.preventDefault();
-    const button = event.currentTarget.querySelector("button"); button.disabled = true;
-    try { await catalogRequest("/api/v1/clinic/catalog/rooms", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: $("roomName").value }) }); event.currentTarget.reset(); await loadCatalog(); }
-    catch (error) { catalogMessage(error.message); } finally { button.disabled = false; }
-  });
   $("serviceTypeForm").addEventListener("submit", async event => {
     event.preventDefault();
     const button = event.currentTarget.querySelector("button"); button.disabled = true;
@@ -1695,6 +1767,109 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     }catch(error){examMessage(error.message);}finally{button.disabled=false;}
   });
 
+
+  const roomState={items:[],page:1,pages:1,total:0,role:"",editingId:null,summary:{}};
+  const roomMessage=(message,error=true)=>{$("roomMessage").textContent=message||"";$("roomMessage").style.color=error?"#a12c26":"#287747";};
+  const roomRequest=async(path,options={})=>{
+    const headers={...(options.headers||{})};if(options.method&&options.method!=="GET")headers["X-XSRF-TOKEN"]=await csrf();
+    const response=await fetch(path,{credentials:"same-origin",...options,headers});
+    const data=response.status===204?null:await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data?.error||"Não foi possível concluir a operação do consultório.");
+    return data;
+  };
+  const roomTypeLabel={CONSULTORIO:"CONSULTÓRIO",EXAMES:"EXAMES",COLETA:"COLETA",AUDIOMETRIA:"AUDIOMETRIA",RAIO_X:"RAIO-X",MULTIUSO:"MULTIUSO"};
+  const loadRooms=async()=>{
+    try{
+      const params=new URLSearchParams({search:$("roomSearch").value.trim(),status:$("roomStatusFilter").value,
+        type:$("roomTypeFilter").value,page:String(roomState.page),size:"20"});
+      const data=await roomRequest("/api/v1/clinic/rooms?"+params);
+      roomState.items=data.items||[];roomState.pages=data.pages||1;roomState.total=data.total||0;roomState.summary=data.summary||{};
+      renderRooms();
+    }catch(error){$("roomRows").innerHTML="<tr><td colspan='6' class='room-empty'>"+escapeHtml(error.message)+"</td></tr>";roomMessage(error.message);}
+  };
+  const renderRooms=()=>{
+    $("roomTotal").textContent=roomState.summary.total||0;$("roomActive").textContent=roomState.summary.active||0;
+    $("roomInactive").textContent=roomState.summary.inactive||0;$("roomOccupied").textContent=roomState.summary.occupied||0;
+    $("roomPageInfo").textContent=roomState.total+" consultórios";$("roomPage").textContent="Página "+roomState.page+" de "+roomState.pages;
+    $("roomPrev").disabled=roomState.page<=1;$("roomNext").disabled=roomState.page>=roomState.pages;
+    const body=$("roomRows");body.replaceChildren();
+    if(!roomState.items.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=6;td.className="room-empty";td.textContent="Nenhum consultório encontrado.";tr.append(td);body.append(tr);return;}
+    roomState.items.forEach(item=>{
+      const tr=document.createElement("tr"),cell=value=>{const td=document.createElement("td");td.textContent=value||"—";return td;};
+      const name=cell(item.name);name.className="room-name";const floor=document.createElement("span");floor.className="room-muted";floor.textContent=item.floor_label||"Localização não informada";name.append(floor);
+      const type=cell(roomTypeLabel[item.room_type]||item.room_type);
+      const capacity=cell(String(item.capacity||1)+" pessoa(s)");
+      const usage=cell((item.active_queue||0)+" na fila • "+(item.upcoming_appointments||0)+" agendamentos • "+(item.active_exam_orders||0)+" exames");
+      const status=cell("");const badge=document.createElement("span");badge.className="room-status"+(item.status==="INACTIVE"?" inactive":"");badge.textContent=item.status==="ACTIVE"?"ATIVO":"INATIVO";status.append(badge);
+      const actions=cell("");actions.className="room-actions";
+      const add=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
+      add("Detalhes",()=>showRoomDetail(item));
+      if(["CLINIC_ADMIN","RECEPTION"].includes(roomState.role)){add("Editar",()=>openRoomForm(item));add(item.status==="ACTIVE"?"Inativar":"Reativar",()=>toggleRoom(item));}
+      tr.append(name,type,capacity,usage,status,actions);body.append(tr);
+    });
+  };
+  const openRoomForm=(item=null)=>{
+    roomState.editingId=item?.id||null;$("roomFormTitle").textContent=item?"Editar consultório":"Novo consultório";
+    $("roomName").value=item?.name||"";$("roomType").value=item?.room_type||"CONSULTORIO";
+    $("roomFloor").value=item?.floor_label||"";$("roomCapacity").value=item?.capacity||1;
+    $("roomDescription").value=item?.description||"";$("roomSave").textContent=item?"Salvar alterações":"Salvar consultório";
+    $("roomForm").classList.remove("hidden");$("roomDetailPanel").classList.add("hidden");
+    $("roomForm").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  const roomListItems=(target,items,render)=>{
+    const el=$(target);el.replaceChildren();
+    if(!items.length){el.textContent="Nenhum registro para exibir.";return;}
+    items.forEach(item=>{const row=document.createElement("div");row.className="room-usage-item";render(row,item);el.append(row);});
+  };
+  const showRoomDetail=async item=>{
+    try{
+      const data=await roomRequest("/api/v1/clinic/rooms/"+item.id),r=data.room;
+      $("roomDetailTitle").textContent=r.name;
+      const fields=[["Tipo",roomTypeLabel[r.room_type]||r.room_type],["Situação",r.status==="ACTIVE"?"Ativo":"Inativo"],
+        ["Andar / localização",r.floor_label||"Não informado"],["Capacidade",String(r.capacity)+" pessoa(s)"],
+        ["Descrição / recursos",r.description||"Não informado"],["Atualizado em",clinicDateTime(r.updated_at)]];
+      const grid=$("roomDetailData");grid.replaceChildren();
+      fields.forEach(([label,value])=>{const box=document.createElement("div");box.className="room-detail-cell";const small=document.createElement("small");small.textContent=label;const strong=document.createElement("strong");strong.textContent=value;box.append(small,strong);grid.append(box);});
+      roomListItems("roomQueueItems",data.activeQueue||[],(row,x)=>{const strong=document.createElement("strong");strong.textContent=x.patient_name;const span=document.createElement("span");span.textContent=clinicDateTime(x.arrived_at)+" • "+x.status+" • "+(x.professional_name||"Sem profissional");row.append(strong,span);});
+      roomListItems("roomAppointmentItems",data.upcomingAppointments||[],(row,x)=>{const strong=document.createElement("strong");strong.textContent=x.patient_name;const span=document.createElement("span");span.textContent=clinicDateTime(x.starts_at)+" • "+x.status+" • "+x.professional_name;row.append(strong,span);});
+      roomListItems("roomExamItems",data.upcomingExams||[],(row,x)=>{const strong=document.createElement("strong");strong.textContent=x.exam_name;const span=document.createElement("span");span.textContent=(x.scheduled_at?clinicDateTime(x.scheduled_at):"Horário a definir")+" • "+x.status;row.append(strong,span);});
+      const events=await roomRequest("/api/v1/clinic/rooms/"+item.id+"/history");
+      roomListItems("roomHistoryItems",events,(row,x)=>{const strong=document.createElement("strong");strong.textContent=x.event_type;const span=document.createElement("span");span.textContent=clinicDateTime(x.created_at)+" • "+(x.actor_name||"Usuário")+" • "+(x.detail||"");row.append(strong,span);});
+      $("roomDetailPanel").classList.remove("hidden");$("roomForm").classList.add("hidden");
+      $("roomDetailPanel").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){roomMessage(error.message);}
+  };
+  const toggleRoom=async item=>{
+    const active=item.status!=="ACTIVE";
+    if(!active&&!confirm("Inativar este consultório? O sistema impedirá a ação se houver exames ativos, atendimentos ou agendamentos vinculados."))return;
+    try{await roomRequest("/api/v1/clinic/rooms/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({active})});
+      roomMessage(active?"Consultório reativado.":"Consultório inativado.",false);await loadRooms();
+    }catch(error){roomMessage(error.message);}
+  };
+  $("roomSearchButton").addEventListener("click",()=>{roomState.page=1;loadRooms();});
+  $("roomRefreshButton").addEventListener("click",loadRooms);
+  $("roomSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();roomState.page=1;loadRooms();}});
+  $("roomStatusFilter").addEventListener("change",()=>{roomState.page=1;loadRooms();});
+  $("roomTypeFilter").addEventListener("change",()=>{roomState.page=1;loadRooms();});
+  $("roomPrev").addEventListener("click",()=>{if(roomState.page>1){roomState.page--;loadRooms();}});
+  $("roomNext").addEventListener("click",()=>{if(roomState.page<roomState.pages){roomState.page++;loadRooms();}});
+  $("roomNewButton").addEventListener("click",()=>openRoomForm());
+  $("roomFormClose").addEventListener("click",()=>$("roomForm").classList.add("hidden"));
+  $("roomFormCancel").addEventListener("click",()=>$("roomForm").classList.add("hidden"));
+  $("roomDetailClose").addEventListener("click",()=>$("roomDetailPanel").classList.add("hidden"));
+  $("roomForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=$("roomSave");button.disabled=true;
+    try{
+      const payload={name:$("roomName").value.trim(),roomType:$("roomType").value,
+        floorLabel:$("roomFloor").value.trim()||null,capacity:Number($("roomCapacity").value),
+        description:$("roomDescription").value.trim()||null};
+      const url=roomState.editingId?"/api/v1/clinic/rooms/"+roomState.editingId:"/api/v1/clinic/rooms";
+      await roomRequest(url,{method:roomState.editingId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      $("roomForm").classList.add("hidden");roomMessage(roomState.editingId?"Consultório atualizado.":"Consultório cadastrado.",false);
+      roomState.page=1;await loadRooms();
+    }catch(error){roomMessage(error.message);}finally{button.disabled=false;}
+  });
+
   const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
@@ -1702,7 +1877,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
     if (key === "exams" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       examState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
@@ -1729,7 +1904,12 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     }
     if (key === "professionals" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { professionalState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||""; $("professionalWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); $("newProfessionalButton").classList.toggle("hidden",!professionalCanManage()); $("professionalForm").classList.add("hidden"); $("professionalDetail").classList.add("hidden"); loadProfessionals(); }
     if (key === "patients" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("patientWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); $("patient-directory").classList.remove("hidden"); $("patientForm").classList.add("hidden"); $("patientDetail").classList.add("hidden"); loadPatients(); }
-    if (key === "rooms" && activeData && (activeData.globalRole === "MASTER" || (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION"].includes(m.role)))) $("receptionWorkspace").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
+    if (key === "rooms" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
+      roomState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
+      $("roomWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
+      $("roomNewButton").classList.toggle("hidden",!["CLINIC_ADMIN","RECEPTION"].includes(roomState.role));
+      $("roomForm").classList.add("hidden");$("roomDetailPanel").classList.add("hidden");roomState.page=1;loadRooms();
+    }
     if (key === "access" && activeData && activeData.globalRole === "MASTER") $("masterTools").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
     document.querySelectorAll("#moduleNav button").forEach(b => b.classList.toggle("active", b.dataset.module === key));
   };
