@@ -557,6 +557,21 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .schedule-shortcuts .schedule-btn:hover{background:#e9f3fd}
     .schedule-shortcuts-hint{color:#6b7d90;font-size:12px;margin-left:auto}
     @media(max-width:760px){.schedule-shortcuts-hint{flex-basis:100%;margin-left:0}}
+
+    /* Formulários compactos: pacientes e profissionais */
+    #patientForm,#professionalForm{width:100%;max-width:100%;min-width:0;box-sizing:border-box;align-items:start}
+    #patientForm .patient-form-heading,#professionalForm .patient-form-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+    #patientForm .catalog-card{min-width:0;box-sizing:border-box;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start}
+    #patientForm .catalog-card .field{min-width:0;display:grid;gap:5px;margin:0}
+    #patientForm .catalog-card .field:has(#patientName),#patientForm .catalog-card .field:has(#patientAddress){grid-column:1/-1}
+    #patientForm .catalog-card input,#patientForm .catalog-card select,#patientForm .catalog-card textarea,#professionalForm input,#professionalForm select{max-width:100%;min-width:0;box-sizing:border-box;font-size:13px}
+    #patientForm .catalog-card label,#professionalForm .professional-field label{font-size:11px;font-weight:700;line-height:1.3}
+    #professionalForm{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+    #professionalForm .professional-field{min-width:0}
+    #professionalForm .professional-field.wide,#professionalForm .patient-form-heading.wide,#professionalForm .professional-form-actions{grid-column:1/-1}
+    #professionalForm .professional-field input,#professionalForm .professional-field select{height:40px}
+    @media(max-width:1000px){#professionalForm{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:680px){#patientForm .catalog-card,#professionalForm{grid-template-columns:1fr}#patientForm .catalog-card .field:has(#patientName),#patientForm .catalog-card .field:has(#patientAddress){grid-column:auto}}
   </style>
 </head>
 <body>
