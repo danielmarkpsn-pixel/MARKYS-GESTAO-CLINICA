@@ -520,6 +520,85 @@ class DatabaseMigrationIntegrationTest {
             jdbc.update("UPDATE clinic_room_events SET detail='alterado' WHERE room_id=?",managedRoomId))
             .isInstanceOf(DataAccessException.class);
 
+        MvcResult labCatalogResult=mockMvc.perform(post("/api/v1/clinic/catalog/exams")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"category":"LABORATORIO","name":"Hemograma Completo","roomId":"%s"}
+                    """.formatted(managedRoomId)))
+            .andExpect(status().isCreated()).andReturn();
+        UUID labExamId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            labCatalogResult.getResponse().getContentAsString(),"$.id"));
+        String missingSpecimenPayload="""
+            {"patientId":"%s","examId":"%s","appointmentId":"%s","professionalId":"%s","priority":"NORMAL"}
+            """.formatted(patientId,labExamId,appointmentId,professionalId);
+        mockMvc.perform(post("/api/v1/clinic/exams")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content(missingSpecimenPayload))
+            .andExpect(status().isBadRequest());
+        String labOrderPayload="""
+            {"patientId":"%s","examId":"%s","appointmentId":"%s","professionalId":"%s",
+             "priority":"URGENT","specimenType":"SANGUE","notes":"Coleta para hemograma"}
+            """.formatted(patientId,labExamId,appointmentId,professionalId);
+        MvcResult labOrderResult=mockMvc.perform(post("/api/v1/clinic/exams")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content(labOrderPayload))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("REQUESTED")).andReturn();
+        UUID labOrderId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            labOrderResult.getResponse().getContentAsString(),"$.id"));
+        UUID specimenId=jdbc.queryForObject("SELECT id FROM lab_specimens WHERE clinic_id=? AND exam_order_id=?",
+            UUID.class,clinicId,labOrderId);
+        assertThat(jdbc.queryForObject("SELECT collection_status FROM lab_specimens WHERE id=?",String.class,specimenId))
+            .isEqualTo("PENDING_COLLECTION");
+        mockMvc.perform(patch("/api/v1/clinic/exams/{id}/status",labOrderId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"IN_PROGRESS\"}"))
+            .andExpect(status().isConflict());
+        mockMvc.perform(get("/api/v1/clinic/laboratory").param("search","Hemograma")
+                .session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
+        mockMvc.perform(patch("/api/v1/clinic/laboratory/{id}/status",specimenId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"status\":\"COLLECTED\",\"labReference\":\"LAB-TEST-001\",\"collectionNotes\":\"Coleta realizada\"}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/clinic/laboratory/{id}/status",specimenId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"RECEIVED\"}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/clinic/laboratory/{id}/status",specimenId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"PROCESSING\"}"))
+            .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("SELECT status FROM exam_orders WHERE id=?",String.class,labOrderId))
+            .isEqualTo("IN_PROGRESS");
+        mockMvc.perform(patch("/api/v1/clinic/laboratory/{id}/status",specimenId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"status\":\"RESULT_READY\",\"result\":\"Hemoglobina 14,2 g/dL; demais parâmetros dentro da referência.\"}"))
+            .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("SELECT result_ciphertext IS NOT NULL FROM exam_orders WHERE id=?",
+            Boolean.class,labOrderId)).isFalse();
+        mockMvc.perform(patch("/api/v1/clinic/laboratory/{id}/status",specimenId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"RELEASED\"}"))
+            .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("SELECT status FROM exam_orders WHERE id=?",String.class,labOrderId))
+            .isEqualTo("COMPLETED");
+        assertThat(jdbc.queryForObject("SELECT collection_status FROM lab_specimens WHERE id=?",String.class,specimenId))
+            .isEqualTo("RELEASED");
+        assertThat(jdbc.queryForObject("SELECT result_ciphertext FROM exam_orders WHERE id=?",byte[].class,labOrderId))
+            .isEqualTo(jdbc.queryForObject("SELECT result_ciphertext FROM lab_specimens WHERE id=?",byte[].class,specimenId));
+        mockMvc.perform(get("/api/v1/clinic/exams/{id}",labOrderId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.result").value("Hemoglobina 14,2 g/dL; demais parâmetros dentro da referência."));
+        mockMvc.perform(get("/api/v1/clinic/laboratory/{id}/history",specimenId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(6));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM lab_specimen_events WHERE specimen_id=?",
+            Integer.class,specimenId)).isEqualTo(6);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            jdbc.update("UPDATE lab_specimen_events SET detail='alterado' WHERE specimen_id=?",specimenId))
+            .isInstanceOf(DataAccessException.class);
+
         UUID adminMembershipId=jdbc.queryForObject("""
             SELECT id FROM clinic_memberships WHERE clinic_id=?
               AND user_id=(SELECT id FROM app_users WHERE lower(email)=lower(?))
