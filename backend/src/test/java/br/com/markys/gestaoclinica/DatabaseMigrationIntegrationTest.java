@@ -58,16 +58,16 @@ class DatabaseMigrationIntegrationTest {
         Integer clinicalTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema()
-               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events', 'clinic_room_events')
+               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events', 'clinic_room_events', 'clinic_insurances', 'clinic_insurance_events')
             """, Integer.class);
         Integer masterTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(13);
+        assertThat(migrationCount).isEqualTo(14);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(20);
+        assertThat(clinicalTables).isEqualTo(22);
         assertThat(masterTables).isEqualTo(1);
     }
 
@@ -125,8 +125,8 @@ class DatabaseMigrationIntegrationTest {
         // Test cleanup is intentionally explicit: TRUNCATE is not filtered by RLS,
         // unlike DELETE, and CASCADE clears tenant-owned rows before parent clinics.
         jdbc.execute("""
-            TRUNCATE TABLE clinic_room_events, exam_order_events, exam_orders, finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
-                exam_catalog, service_types, clinic_rooms, professionals, patients, platform_admins,
+            TRUNCATE TABLE clinic_room_events, clinic_insurance_events, exam_order_events, exam_orders, finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
+                exam_catalog, service_types, clinic_rooms, clinic_insurances, professionals, patients, platform_admins,
                 clinic_memberships, app_users, clinics CASCADE
             """);
 
@@ -213,6 +213,29 @@ class DatabaseMigrationIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM clinic_rooms WHERE clinic_id=?", Integer.class, clinicId)).isEqualTo(10);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM service_types WHERE clinic_id=?", Integer.class, clinicId)).isEqualTo(9);
 
+        MvcResult insuranceResult=mockMvc.perform(post("/api/v1/clinic/insurances")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"name":"Convênio Integração","ansCode":"123456","contactName":"Equipe Comercial",
+                     "phone":"92999990000","email":"contato@convenio.test","billingEmail":"financeiro@convenio.test",
+                     "paymentTermsDays":30,"notes":"Cadastro para teste de integração"}
+                    """))
+            .andExpect(status().isCreated()).andReturn();
+        UUID insuranceId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            insuranceResult.getResponse().getContentAsString(),"$.id"));
+        mockMvc.perform(get("/api/v1/clinic/insurances").param("search","Convênio Integração")
+                .session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
+        mockMvc.perform(put("/api/v1/clinic/insurances/{id}",insuranceId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"name":"Convênio Integração Atualizado","ansCode":"123456","contactName":"Equipe Comercial",
+                     "phone":"92999990000","email":"contato@convenio.test","billingEmail":"financeiro@convenio.test",
+                     "paymentTermsDays":45,"notes":"Cadastro atualizado"}
+                    """))
+            .andExpect(status().isOk());
         MvcResult patientResult = mockMvc.perform(post("/api/v1/clinic/patients")
                 .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -221,21 +244,30 @@ class DatabaseMigrationIntegrationTest {
                       "fullName":"Paciente de Integração",
                       "cpf":"529.982.247-25",
                       "birthDate":"1990-05-20",
-                      "insuranceName":"Convênio Teste",
+                      "insuranceId":"%s",
                       "jobTitle":"Técnico",
                       "serviceTypeId":"%s",
                       "examIds":["%s"]
                     }
-                    """.formatted(serviceTypeId, examId)))
+                    """.formatted(insuranceId, serviceTypeId, examId)))
             .andExpect(status().isCreated())
             .andReturn();
         UUID patientId = UUID.fromString(com.jayway.jsonpath.JsonPath.read(
             patientResult.getResponse().getContentAsString(), "$.patientId"));
         assertThat(jdbc.queryForObject("SELECT document_ciphertext IS NOT NULL FROM patients WHERE id=?",
             Boolean.class, patientId)).isTrue();
+        assertThat(jdbc.queryForObject("SELECT insurance_id FROM patients WHERE id=?",UUID.class,patientId))
+            .isEqualTo(insuranceId);
+        assertThat(jdbc.queryForObject("SELECT insurance_name FROM patients WHERE id=?",String.class,patientId))
+            .isEqualTo("Convênio Integração");
+
         assertThat(jdbc.queryForObject("SELECT count(*) FROM queue_entry_exams WHERE clinic_id=?",
             Integer.class, clinicId)).isEqualTo(1);
 
+        mockMvc.perform(patch("/api/v1/clinic/insurances/{id}/status",insuranceId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("INACTIVE"));
         MockMultipartFile pdf = new MockMultipartFile("file", "ficha.pdf", "application/pdf",
             "%PDF-1.4\nMARKYS TEST\n%%EOF".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         MvcResult documentResult = mockMvc.perform(multipart("/api/v1/clinic/patients/{id}/documents", patientId)
@@ -257,15 +289,28 @@ class DatabaseMigrationIntegrationTest {
                       "fullName":"Paciente Atualizado",
                       "cpf":"529.982.247-25",
                       "birthDate":"1990-05-20",
-                      "insuranceName":"Convênio Atualizado",
+                      "insuranceId":"%s",
                       "jobTitle":"Técnico Sênior",
                       "serviceTypeId":"%s",
                       "examIds":[]
                     }
-                    """.formatted(serviceTypeId)))
+                    """.formatted(insuranceId, serviceTypeId)))
             .andExpect(status().isOk());
         assertThat(jdbc.queryForObject("SELECT full_name FROM patients WHERE id=?", String.class, patientId))
             .isEqualTo("Paciente Atualizado");
+        assertThat(jdbc.queryForObject("SELECT insurance_id FROM patients WHERE id=?",UUID.class,patientId))
+            .isEqualTo(insuranceId);
+        assertThat(jdbc.queryForObject("SELECT insurance_name FROM patients WHERE id=?",String.class,patientId))
+            .isEqualTo("Convênio Integração Atualizado");
+        mockMvc.perform(get("/api/v1/clinic/insurances/{id}",insuranceId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.patient_count").value(1))
+            .andExpect(jsonPath("$.status").value("INACTIVE"));
+        mockMvc.perform(get("/api/v1/clinic/insurances/{id}/history",insuranceId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(3));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            jdbc.update("UPDATE clinic_insurance_events SET detail='alterado' WHERE insurance_id=?",insuranceId))
+            .isInstanceOf(DataAccessException.class);
+
         assertThat(jdbc.queryForObject("SELECT count(*) FROM queue_entry_exams WHERE clinic_id=?",
             Integer.class, clinicId)).isZero();
 
