@@ -530,6 +530,8 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 
   
     .subscription-methods{display:grid;gap:10px}.subscription-method{display:grid;gap:4px;padding:12px 14px;border:1px solid #dce6ef;border-radius:12px;background:#f8fbfe}.subscription-method strong{font-size:12px;color:#18314e}.subscription-method span,.subscription-note{font-size:11px;line-height:1.55;color:#718397}.subscription-note{margin:12px 0 0}.signature-kpi strong{overflow-wrap:anywhere}
+  
+    .about-workspace{max-width:1180px;margin:0 auto 32px;color:#20344b}.about-hero{display:flex;align-items:center;gap:22px;padding:30px;border:1px solid #dce6ef;border-radius:18px;background:linear-gradient(120deg,#f2f8fd,#fff 75%);margin-bottom:22px}.about-brand-mark{width:76px;height:76px;flex:0 0 76px;display:grid;place-items:center;border-radius:20px;background:#173c60;color:#fff;font-size:38px;font-weight:800;box-shadow:0 8px 22px #173c6022}.about-eyebrow{font-size:10px;font-weight:800;letter-spacing:1.5px;color:#3880ad}.about-hero h3{font-size:25px;margin:6px 0;color:#173653}.about-hero p{margin:0;max-width:760px;color:#64788c;font-size:13px;line-height:1.65}.about-intro,.about-feature,.about-pillars>div,.about-footer{border:1px solid #e1e9f0;border-radius:14px;background:#fff}.about-intro{padding:24px 26px;margin-bottom:25px}.about-intro h3,.about-section-title{font-size:17px;color:#1c3855;margin:0 0 12px}.about-intro p{font-size:13px;line-height:1.8;color:#62758a;margin:8px 0}.about-section-title{margin-bottom:14px}.about-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.about-feature{display:flex;gap:15px;padding:18px;min-height:112px}.about-feature>span{font-size:12px;font-weight:800;color:#4a91bd;background:#edf6fc;border-radius:9px;padding:7px 9px;height:max-content}.about-feature h4{font-size:13px;margin:1px 0 7px;color:#1e3a57}.about-feature p,.about-pillars p{font-size:12px;line-height:1.65;color:#718397;margin:0}.about-pillars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}.about-pillars>div{padding:17px}.about-pillars strong{font-size:12px;color:#244866}.about-pillars p{margin-top:7px}.about-footer{margin-top:20px;padding:20px 22px;background:#f8fbfd}.about-footer strong{font-size:13px;color:#1c405e}.about-footer p{font-size:12px;color:#62788d;margin:7px 0}.about-footer span{font-size:10px;color:#8796a5}@media(max-width:760px){.about-hero{padding:20px;align-items:flex-start}.about-brand-mark{width:56px;height:56px;flex-basis:56px;font-size:28px}.about-hero h3{font-size:20px}.about-feature-grid,.about-pillars{grid-template-columns:1fr}.about-intro{padding:19px}}
   </style>
 </head>
 <body>
@@ -583,6 +585,34 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 <button data-module="subscription"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 12l2.5 2.5L16 9"/></svg><span>Assinatura</span></button>
 <button data-module="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7h.01"/></svg><span>Sobre</span></button></nav></aside>
 <header class="app-topbar"><strong>MARKYS | GESTÃO CLÍNICA</strong><div class="app-user"><strong id="topUserName">Usuário</strong><span id="topClinicName">Clínica ativa</span></div></header><div class="page-heading"><h2 id="moduleTitle">Lista de atendimentos</h2><p id="moduleSubtitle">Acompanhe os atendimentos da clínica.</p></div><section id="modulePlaceholder" class="module-placeholder"><h3 id="placeholderTitle">Lista de atendimentos</h3><p id="placeholderText">Este módulo será conectado ao fluxo clínico.</p><span class="module-status">MÓDULO EM IMPLEMENTAÇÃO</span></section>
+<section id="aboutWorkspace" class="about-workspace hidden" aria-label="Sobre o MARKYS Gestão Clínica">
+  <div class="about-hero">
+    <div class="about-brand-mark">M</div>
+    <div><span class="about-eyebrow">PLATAFORMA DE GESTÃO EM SAÚDE</span><h3>MARKYS Gestão Clínica</h3><p>Organização, acompanhamento e controle das rotinas de clínicas e serviços de saúde em um único ambiente.</p></div>
+  </div>
+  <div class="about-intro">
+    <h3>Uma visão integrada da operação clínica</h3>
+    <p>O MARKYS foi concebido para apoiar o trabalho diário das equipes administrativas e assistenciais. A plataforma reúne informações de pacientes, profissionais, atendimentos, agenda, exames, estrutura de consultórios e rotinas financeiras, ajudando a manter os processos organizados e as informações acessíveis conforme o perfil de cada usuário.</p>
+    <p>Seu ambiente de trabalho é organizado por clínica, com usuários vinculados a uma unidade e permissões definidas de acordo com suas responsabilidades. Assim, cada equipe utiliza os recursos necessários à sua rotina, enquanto a administração mantém uma visão organizada da operação.</p>
+  </div>
+  <h3 class="about-section-title">O que você encontra no MARKYS</h3>
+  <div class="about-feature-grid">
+    <article class="about-feature"><span>01</span><div><h4>Atendimento e pacientes</h4><p>Lista de atendimentos, pesquisa e acompanhamento de pacientes, cadastro, atualização e consulta de informações.</p></div></article>
+    <article class="about-feature"><span>02</span><div><h4>Equipe e agenda</h4><p>Cadastro de profissionais, organização de horários, agendamentos e acompanhamento da disponibilidade da equipe.</p></div></article>
+    <article class="about-feature"><span>03</span><div><h4>Exames e laboratório</h4><p>Organização do catálogo de exames, solicitações, coleta, identificação de amostras, resultados e documentos laboratoriais.</p></div></article>
+    <article class="about-feature"><span>04</span><div><h4>Estrutura e convênios</h4><p>Gestão de consultórios, salas e convênios utilizados na operação da clínica.</p></div></article>
+    <article class="about-feature"><span>05</span><div><h4>Financeiro</h4><p>Recursos de controle financeiro, valores de serviços por convênio e registros administrativos relacionados aos atendimentos.</p></div></article>
+    <article class="about-feature"><span>06</span><div><h4>Acessos e administração</h4><p>Gerenciamento de usuários, vínculos, perfis de acesso e permissões, com área MASTER para administração da plataforma.</p></div></article>
+    <article class="about-feature"><span>07</span><div><h4>Chamados e comunicação</h4><p>Tela de chamados para organizar a fila, encaminhar pacientes e acompanhar chamadas por consultório e profissional.</p></div></article>
+    <article class="about-feature"><span>08</span><div><h4>Assinatura da plataforma</h4><p>Área destinada ao plano contratado pela clínica, mensalidades, formas de pagamento e histórico de cobranças.</p></div></article>
+  </div>
+  <div class="about-pillars">
+    <div><strong>Gestão por clínica</strong><p>Informações e operações organizadas no contexto da clínica ativa.</p></div>
+    <div><strong>Perfis e permissões</strong><p>Acesso aos recursos conforme o vínculo e a função do usuário.</p></div>
+    <div><strong>Fluxos conectados</strong><p>Módulos que apoiam diferentes etapas da rotina administrativa e assistencial.</p></div>
+  </div>
+  <div class="about-footer"><strong>MARKYS Gestão Clínica</strong><p>Tecnologia para organizar processos, apoiar equipes e acompanhar a operação clínica.</p><span>As funcionalidades disponíveis podem variar conforme o perfil de acesso e a configuração da clínica.</span></div>
+</section>
 <section id="attendanceWorkspace" class="attendance-workspace hidden" aria-label="Lista de atendimentos">
   <div class="attendance-filter-panel">
     <div class="attendance-search-row">
@@ -3157,14 +3187,14 @@ document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("c
   };
   $("subscriptionRefresh").addEventListener("click",()=>loadSubscription().catch(e=>subscriptionMessage(e.message)));
 
-  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Contas, perfis, bloqueios e permissões da clínica."],laboratory:["Laboratório","Coleta, rastreabilidade de amostras e liberação de resultados."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Gerencie a fila, encaminhe pacientes e controle as chamadas por consultório e profissional."],subscription:["Assinatura","Plano SaaS, mensalidades, formas de pagamento e histórico de cobranças da clínica."],about:["Sobre","Informações da plataforma MARKYS."]};
+  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Contas, perfis, bloqueios e permissões da clínica."],laboratory:["Laboratório","Coleta, rastreabilidade de amostras e liberação de resultados."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Gerencie a fila, encaminhe pacientes e controle as chamadas por consultório e profissional."],subscription:["Assinatura","Plano SaaS, mensalidades, formas de pagamento e histórico de cobranças da clínica."],about:["Sobre","Conheça o MARKYS, seus módulos e como a plataforma apoia a gestão clínica."]};
   let activeData = null;
   const activateModule = key => {
     const info = moduleLabels[key] || moduleLabels.attendance;
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("laboratoryWorkspace").classList.add("hidden"); $("esocialWorkspace").classList.add("hidden"); $("callsWorkspace").classList.add("hidden"); $("callsHistory").classList.add("hidden"); $("subscriptionWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("laboratoryWorkspace").classList.add("hidden"); $("esocialWorkspace").classList.add("hidden"); $("callsWorkspace").classList.add("hidden"); $("callsHistory").classList.add("hidden"); $("subscriptionWorkspace").classList.add("hidden"); $("aboutWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
     if (key === "exams" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       examState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
@@ -3207,6 +3237,7 @@ document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("c
       $("esocialEventForm").classList.add("hidden");$("esocialEventDetail").classList.add("hidden");esocialTab("events");esocialState.page=1;
       loadEsocialResources().then(()=>{loadEsocialEvents();loadEsocialWorkers();}).catch(error=>esocialMsg(error.message));
     }
+    if (key === "about") { $("aboutWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); }
     if (key === "subscription" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       subscriptionState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
       $("subscriptionWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
