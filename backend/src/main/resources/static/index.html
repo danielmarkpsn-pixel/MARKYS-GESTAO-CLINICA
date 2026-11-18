@@ -615,6 +615,36 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .schedule-day-timeline{max-height:690px}
     .schedule-hour-slot{min-height:44px}
     @media(max-width:760px){.schedule-calendar-layout{grid-template-columns:1fr}.schedule-calendar-sidebar{border-right:0;border-bottom:1px solid #dce5ee}}
+
+    /* Agenda visual baseada na captura enviada: tela diária como vista principal. */
+    #scheduleWorkspace{position:relative;background:#fff;padding:0;border:0;min-height:720px}
+    #scheduleWorkspace .schedule-shortcuts,#scheduleWorkspace .schedule-kpis,#scheduleWorkspace .schedule-table-wrap{display:none}
+    #scheduleWorkspace .schedule-toolbar{position:absolute;z-index:2;top:43px;left:calc(215px + 16px);right:18px;display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;box-shadow:none;flex-wrap:nowrap}
+    #scheduleWorkspace .schedule-toolbar .schedule-field{display:none}
+    #scheduleWorkspace .schedule-toolbar .schedule-field:has(#scheduleProfessionalFilter){display:block;flex:1;min-width:0;max-width:none}
+    #scheduleWorkspace .schedule-toolbar .schedule-field:has(#scheduleProfessionalFilter) label{display:none}
+    #scheduleWorkspace .schedule-toolbar #scheduleProfessionalFilter{height:28px;min-height:28px;width:100%;padding:3px 8px;font-size:11px;background:#fff;border:1px solid #d5d9df}
+    #scheduleWorkspace .schedule-toolbar #scheduleSearch{display:none}
+    #scheduleWorkspace .schedule-toolbar #scheduleNew{height:28px;padding:4px 10px;white-space:nowrap;font-size:11px}
+    #scheduleWorkspace .schedule-calendar-layout{display:grid!important;grid-template-columns:215px minmax(0,1fr);min-height:720px;border:0;border-radius:0;margin:0;gap:0}
+    #scheduleWorkspace .schedule-calendar-sidebar{padding:12px 11px;align-content:start;gap:7px;background:#f0f1f5;border-right:1px solid #e2e4e9}
+    #scheduleWorkspace .schedule-month-nav{font-size:12px;font-weight:700}
+    #scheduleWorkspace .schedule-month-nav button{background:transparent;font-size:17px;color:#6c7580}
+    #scheduleWorkspace .schedule-month-weekdays span{padding:5px 0;font-size:10px}
+    #scheduleWorkspace .schedule-month-days button{min-height:25px;font-size:10px;border-radius:2px}
+    #scheduleWorkspace .schedule-month-days button.selected{background:#0575c7;border-radius:50%}
+    #scheduleWorkspace .schedule-calendar-sidebar label[for="scheduleDayPicker"],#scheduleWorkspace #scheduleDayPicker,#scheduleWorkspace .schedule-side-note{display:none}
+    #scheduleWorkspace .schedule-day-panel{padding:0;min-width:0;background:#fff}
+    #scheduleWorkspace .schedule-day-heading{height:35px;box-sizing:border-box;display:flex;justify-content:flex-start;padding:8px 12px;gap:12px;border-bottom:1px solid #e9eaed;font-size:12px}
+    #scheduleWorkspace .schedule-day-heading strong{font-size:12px;color:#3e4650}
+    #scheduleWorkspace .schedule-day-heading span{font-size:10px;color:#8b949e}
+    #scheduleWorkspace .schedule-day-timeline{max-height:none;overflow:visible;border:0;margin-top:44px}
+    #scheduleWorkspace .schedule-hour-slot{min-height:46px;grid-template-columns:54px minmax(0,1fr);border-bottom:1px solid #eef0f3}
+    #scheduleWorkspace .schedule-hour-slot time{border-right:0;color:#9ba2aa;font-size:10px;padding:0 8px;text-align:right;transform:translateY(-6px)}
+    #scheduleWorkspace .schedule-hour-events{border-left:1px solid #eceef1;padding:3px 8px}
+    #scheduleWorkspace .schedule-day-event{border-left:3px solid #1682ca;background:#e9f3fc;font-size:11px;padding:4px 7px}
+    #scheduleWorkspace .schedule-message{margin:6px 0}
+    @media(max-width:760px){#scheduleWorkspace .schedule-calendar-layout{grid-template-columns:1fr}#scheduleWorkspace .schedule-toolbar{position:static;padding:8px}#scheduleWorkspace .schedule-calendar-sidebar{border-right:0;border-bottom:1px solid #e2e4e9}#scheduleWorkspace .schedule-day-timeline{margin-top:8px}}
   </style>
 </head>
 <body>
@@ -2214,8 +2244,17 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     if(!scheduleCalendarMonth||!scheduleCalendarMonth.startsWith((date||localDateString()).slice(0,7)))scheduleCalendarMonth=(date||localDateString()).slice(0,7);
     renderScheduleMonth();
     const panel=document.querySelector(".schedule-calendar-layout");
-    panel.classList.toggle("hidden",!singleDay);
-    if(!singleDay)return;
+    panel.classList.remove("hidden");
+    if(!singleDay){
+      const today=localDateString();
+      $("scheduleFrom").value=today;$("scheduleTo").value=today;
+      $("scheduleDayPicker").value=today;
+      renderScheduleMonth();
+      $("scheduleDayTitle").textContent="Agenda diária • "+today.split("-").reverse().join("/");
+      $("scheduleDayCount").textContent="Selecione uma data";
+      $("scheduleDayTimeline").replaceChildren();
+      return;
+    }
     const items=scheduleState.items.filter(item=>{
       const start=new Date(item.starts_at);
       if(Number.isNaN(start.getTime()))return false;
