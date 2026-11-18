@@ -137,7 +137,7 @@ public class RoomController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> detail(Authentication auth,@PathVariable UUID id){
-        if(access(auth)==null)return forbidden();
+        Access a=access(auth);if(a==null)return forbidden();
         UUID clinic=TenantContext.requireClinicId();
         List<Map<String,Object>> rooms=jdbc.queryForList("""
             SELECT id,name,room_type,floor_label,capacity,description,status,created_at,updated_at
