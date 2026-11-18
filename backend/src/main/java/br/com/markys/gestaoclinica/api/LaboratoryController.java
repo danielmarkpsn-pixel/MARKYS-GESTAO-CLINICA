@@ -123,7 +123,7 @@ public class LaboratoryController {
         if(!STATUSES.contains(next))return badRequest("Situação laboratorial inválida.");
         UUID clinic=TenantContext.requireClinicId();
         List<Map<String,Object>> rows=jdbc.queryForList("""
-            SELECT s.collection_status,s.result_ciphertext,s.lab_reference,o.id AS exam_order_id,
+            SELECT s.collection_status,s.result_ciphertext,s.result_entered_by_membership_id,s.lab_reference,o.id AS exam_order_id,
                    o.status AS order_status
               FROM lab_specimens s JOIN exam_orders o ON o.clinic_id=s.clinic_id AND o.id=s.exam_order_id
              WHERE s.clinic_id=? AND s.id=? FOR UPDATE OF s,o
@@ -166,7 +166,9 @@ public class LaboratoryController {
         byte[] rejection=body.rejectionReason()==null||body.rejectionReason().isBlank()?null:protection.encrypt(body.rejectionReason().trim());
         byte[] result="RESULT_READY".equals(next)?protection.encrypt(body.result().trim()):null;
         byte[] storedResult=(byte[])current.get("result_ciphertext");
-        if("RELEASED".equals(next)&&storedResult==null)return conflict("Registre o resultado antes de liberar a amostra.");
+        UUID resultAuthor=(UUID)current.get("result_entered_by_membership_id");
+        if("RELEASED".equals(next)&&(storedResult==null||resultAuthor==null))
+            return conflict("Registre o resultado antes de liberar a amostra.");
         if("PROCESSING".equals(next)&&("REQUESTED".equals(orderStatus)||"SCHEDULED".equals(orderStatus))){
             int changed=jdbc.update("""
                 UPDATE exam_orders SET status='IN_PROGRESS',started_at=COALESCE(started_at,now()),
@@ -180,7 +182,7 @@ public class LaboratoryController {
                 UPDATE exam_orders SET status='COMPLETED',completed_at=now(),result_ciphertext=?,
                     result_recorded_by_membership_id=?,updated_by_membership_id=?,updated_at=now()
                  WHERE clinic_id=? AND id=? AND status IN ('REQUESTED','SCHEDULED','IN_PROGRESS')
-            """,storedResult,a.membershipId(),a.membershipId(),clinic,orderId);
+            """,storedResult,resultAuthor,a.membershipId(),clinic,orderId);
             if(changed!=1)return conflict("A solicitação foi alterada. Atualize o laboratório.");
             recordOrder(clinic,orderId,"COMPLETED",orderStatus,"COMPLETED","Resultado laboratorial liberado",a.membershipId());
         }
