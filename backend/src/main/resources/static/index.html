@@ -2348,6 +2348,112 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     }catch(error){accessMessage(error.message);}finally{button.disabled=false;}
   });
 
+
+  const labState={items:[],page:1,pages:1,total:0,selected:null,summary:{}};
+  const labMessage=(message,error=true)=>{$("labMessage").textContent=message||"";$("labMessage").style.color=error?"#a12c26":"#287747";};
+  const labRequest=async(path,options={})=>{
+    const headers={...(options.headers||{})};if(options.method&&options.method!=="GET")headers["X-XSRF-TOKEN"]=await csrf();
+    const response=await fetch(path,{credentials:"same-origin",...options,headers});
+    const data=response.status===204?null:await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data?.error||"Não foi possível atualizar o fluxo laboratorial.");
+    return data;
+  };
+  const labStatusLabel={PENDING_COLLECTION:"AGUARDANDO COLETA",COLLECTED:"COLETADA",RECEIVED:"RECEBIDA",
+    PROCESSING:"EM PROCESSAMENTO",RESULT_READY:"RESULTADO PRONTO",RELEASED:"LIBERADA",REJECTED:"REJEITADA",CANCELLED:"CANCELADA"};
+  const labStatusClass=status=>status==="PENDING_COLLECTION"?"pending":status==="PROCESSING"?"processing":
+    status==="RESULT_READY"?"ready":["REJECTED","CANCELLED"].includes(status)?"rejected":"";
+  const loadLaboratory=async()=>{
+    try{
+      const params=new URLSearchParams({search:$("labSearch").value.trim(),status:$("labStatusFilter").value,
+        page:String(labState.page),size:"20"});
+      const data=await labRequest("/api/v1/clinic/laboratory?"+params);
+      labState.items=data.items||[];labState.pages=data.pages||1;labState.total=data.total||0;labState.summary=data.summary||{};
+      renderLaboratory();
+    }catch(error){$("labRows").innerHTML="<tr><td colspan='7' class='lab-empty'>"+escapeHtml(error.message)+"</td></tr>";labMessage(error.message);}
+  };
+  const renderLaboratory=()=>{
+    $("labPending").textContent=labState.summary.pending_collection||0;$("labCollected").textContent=labState.summary.collected||0;
+    $("labProcessing").textContent=labState.summary.processing||0;$("labReady").textContent=labState.summary.result_ready||0;
+    $("labReleased").textContent=labState.summary.released||0;$("labPageInfo").textContent=labState.total+" solicitações";
+    $("labPage").textContent="Página "+labState.page+" de "+labState.pages;$("labPrev").disabled=labState.page<=1;$("labNext").disabled=labState.page>=labState.pages;
+    const body=$("labRows");body.replaceChildren();
+    if(!labState.items.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=7;td.className="lab-empty";td.textContent="Nenhuma solicitação laboratorial encontrada.";tr.append(td);body.append(tr);return;}
+    labState.items.forEach(item=>{
+      const tr=document.createElement("tr"),cell=value=>{const td=document.createElement("td");td.textContent=value||"—";return td;};
+      const date=cell(clinicDateTime(item.requested_at));
+      const patient=cell(item.patient_name);patient.className="lab-name";const patientSub=document.createElement("span");patientSub.className="lab-muted";patientSub.textContent="Prioridade: "+(item.priority||"NORMAL");patient.append(patientSub);
+      const exam=cell(item.exam_name);
+      const specimen=cell(item.specimen_type);const reference=document.createElement("span");reference.className="lab-muted";reference.textContent=item.lab_reference||"Sem protocolo";specimen.append(reference);
+      const staff=cell(item.professional_name||"A definir");const room=document.createElement("span");room.className="lab-muted";room.textContent=item.room_name||"Sala não definida";staff.append(room);
+      const status=cell("");const tag=document.createElement("span");tag.className="lab-status "+labStatusClass(item.collection_status);tag.textContent=labStatusLabel[item.collection_status]||item.collection_status;status.append(tag);
+      const actions=cell("");actions.className="lab-actions";const button=document.createElement("button");button.type="button";button.textContent="Abrir fluxo";button.addEventListener("click",()=>showLabDetail(item));actions.append(button);
+      tr.append(date,patient,exam,specimen,staff,status,actions);body.append(tr);
+    });
+  };
+  const labTransitions={
+    PENDING_COLLECTION:["COLLECTED","CANCELLED"],COLLECTED:["RECEIVED","REJECTED","CANCELLED"],
+    RECEIVED:["PROCESSING","REJECTED","CANCELLED"],PROCESSING:["RESULT_READY","REJECTED","CANCELLED"],
+    RESULT_READY:["RELEASED","CANCELLED"],REJECTED:["PENDING_COLLECTION","CANCELLED"],RELEASED:[],CANCELLED:[]
+  };
+  const labTransitionLabel={PENDING_COLLECTION:"Solicitar nova coleta",COLLECTED:"Registrar coleta",
+    RECEIVED:"Confirmar recebimento",PROCESSING:"Iniciar processamento",RESULT_READY:"Registrar resultado",
+    RELEASED:"Liberar resultado",REJECTED:"Rejeitar amostra",CANCELLED:"Cancelar solicitação"};
+  const syncLabActionFields=()=>{
+    const next=$("labNextStatus").value;
+    $("labResultWrap").classList.toggle("hidden",next!=="RESULT_READY");
+    $("labRejectionWrap").classList.toggle("hidden",next!=="REJECTED");
+    $("labActionSave").textContent=labTransitionLabel[next]||"Confirmar etapa";
+    $("labActionSave").classList.toggle("danger",next==="CANCELLED"||next==="REJECTED");
+  };
+  const showLabDetail=async item=>{
+    try{
+      const data=await labRequest("/api/v1/clinic/laboratory/"+item.specimen_id);
+      labState.selected=data;$("labDetailTitle").textContent=data.patient_name+" • "+data.exam_name;
+      const fields=[["Paciente",data.patient_name],["Exame",data.exam_name],["Tipo de amostra",data.specimen_type],
+        ["Protocolo",data.lab_reference||"Não informado"],["Etapa",labStatusLabel[data.collection_status]||data.collection_status],
+        ["Situação da solicitação",data.order_status],["Prioridade",data.priority],["Profissional",data.professional_name||"A definir"],
+        ["Sala",data.room_name||"Não definida"],["Solicitado em",clinicDateTime(data.requested_at)],
+        ["Coletado em",clinicDateTime(data.collected_at)],["Recebido em",clinicDateTime(data.received_at)],
+        ["Processamento iniciado",clinicDateTime(data.processing_started_at)],["Resultado pronto",clinicDateTime(data.result_ready_at)],
+        ["Liberado em",clinicDateTime(data.released_at)],["Observações de coleta",data.collection_notes||"—"],
+        ["Motivo da rejeição",data.rejection_reason||"—"]];
+      if(data.result)fields.push(["Resultado",data.result]);
+      const grid=$("labDetailData");grid.replaceChildren();
+      fields.forEach(([label,value])=>{const box=document.createElement("div");box.className="lab-detail-cell";const small=document.createElement("small");small.textContent=label;const strong=document.createElement("strong");strong.textContent=value||"—";box.append(small,strong);grid.append(box);});
+      const transitions=labTransitions[data.collection_status]||[],select=$("labNextStatus");select.replaceChildren();
+      transitions.forEach(status=>{const option=document.createElement("option");option.value=status;option.textContent=labTransitionLabel[status];select.append(option);});
+      $("labActionForm").classList.toggle("hidden",!transitions.length);
+      $("labReference").value=data.lab_reference||"";$("labCollectionNotes").value="";
+      $("labResult").value="";$("labRejectionReason").value="";syncLabActionFields();
+      const events=await labRequest("/api/v1/clinic/laboratory/"+item.specimen_id+"/history"),target=$("labHistoryRows");target.replaceChildren();
+      if(!events.length)target.textContent="Nenhuma movimentação registrada.";
+      events.forEach(ev=>{const line=document.createElement("div");line.className="lab-event";const strong=document.createElement("strong");strong.textContent=ev.event_type+" • "+(labStatusLabel[ev.new_status]||ev.new_status||"");const span=document.createElement("span");span.textContent=clinicDateTime(ev.created_at)+" • "+(ev.actor_name||"Equipe do laboratório")+" • "+(ev.detail||"");line.append(strong,span);target.append(line);});
+      $("labDetailPanel").classList.remove("hidden");$("labDetailPanel").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){labMessage(error.message);}
+  };
+  $("labSearchButton").addEventListener("click",()=>{labState.page=1;loadLaboratory();});
+  $("labRefreshButton").addEventListener("click",loadLaboratory);
+  $("labSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();labState.page=1;loadLaboratory();}});
+  $("labStatusFilter").addEventListener("change",()=>{labState.page=1;loadLaboratory();});
+  $("labPrev").addEventListener("click",()=>{if(labState.page>1){labState.page--;loadLaboratory();}});
+  $("labNext").addEventListener("click",()=>{if(labState.page<labState.pages){labState.page++;loadLaboratory();}});
+  $("labDetailClose").addEventListener("click",()=>$("labDetailPanel").classList.add("hidden"));
+  $("labNextStatus").addEventListener("change",syncLabActionFields);
+  $("labActionForm").addEventListener("submit",async event=>{
+    event.preventDefault();if(!labState.selected)return;const button=$("labActionSave");button.disabled=true;
+    try{
+      const status=$("labNextStatus").value;
+      const payload={status,labReference:$("labReference").value.trim()||null,
+        collectionNotes:$("labCollectionNotes").value.trim()||null,
+        rejectionReason:status==="REJECTED"?$("labRejectionReason").value.trim()||null:null,
+        result:status==="RESULT_READY"?$("labResult").value.trim()||null:null};
+      await labRequest("/api/v1/clinic/laboratory/"+labState.selected.id+"/status",
+        {method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      labMessage("Etapa laboratorial atualizada.",false);await loadLaboratory();
+      const selected=labState.selected;await showLabDetail({specimen_id:selected.id});
+    }catch(error){labMessage(error.message);}finally{button.disabled=false;}
+  });
+
   const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Contas, perfis, bloqueios e permissões da clínica."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
@@ -2355,7 +2461,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("laboratoryWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
     if (key === "exams" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       examState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
@@ -2387,6 +2493,10 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       $("insuranceWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
       $("insuranceNewButton").classList.toggle("hidden",!["CLINIC_ADMIN","RECEPTION"].includes(insuranceState.role));
       $("insuranceForm").classList.add("hidden");$("insuranceDetailPanel").classList.add("hidden");insuranceState.page=1;loadInsurances();
+    }
+    if (key === "laboratory" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","LAB_TECHNICIAN"].includes(m.role))) {
+      $("laboratoryWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
+      $("labDetailPanel").classList.add("hidden");labState.page=1;loadLaboratory();
     }
     if (key === "rooms" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       roomState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
