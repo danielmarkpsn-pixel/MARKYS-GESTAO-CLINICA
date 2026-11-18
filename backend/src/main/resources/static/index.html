@@ -631,28 +631,20 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <section id="callsHistory" class="calls-history hidden" aria-label="Histórico da chamada"><h4 id="callsHistoryTitle">Histórico do atendimento</h4><div id="callsHistoryRows"></div></section>
 </section>
 
-<section id="signatureWorkspace" class="signature-workspace hidden" aria-label="Assinatura eletrônica de documentos">
-  <div class="signature-banner"><div><strong>Central de assinaturas de documentos</strong><p>Solicite, acompanhe e registre a manifestação eletrônica vinculada a documentos PDF do prontuário. Cada operação mantém trilha de auditoria e resumo criptográfico do arquivo.</p></div><button id="signatureRefresh" class="signature-btn" type="button">Atualizar</button></div>
-  <div class="signature-kpis"><div class="signature-kpi"><small>TOTAL</small><strong id="signatureTotal">0</strong></div><div class="signature-kpi"><small>PENDENTES</small><strong id="signaturePending">0</strong></div><div class="signature-kpi"><small>ASSINADOS</small><strong id="signatureSigned">0</strong></div><div class="signature-kpi"><small>CANCELADOS</small><strong id="signatureCancelled">0</strong></div></div>
-  <div id="signatureMessage" class="signature-message" role="status" aria-live="polite"></div>
+<section id="subscriptionWorkspace" class="signature-workspace hidden" aria-label="Assinatura e cobrança da plataforma">
+  <div class="signature-banner"><div><strong>Assinatura do MARKYS</strong><p>Consulte seu plano, situação da assinatura, próximas cobranças e histórico financeiro da clínica.</p></div><button id="subscriptionRefresh" class="signature-btn" type="button">Atualizar</button></div>
+  <div class="signature-kpis"><div class="signature-kpi"><small>PLANO ATUAL</small><strong id="subscriptionPlan">—</strong></div><div class="signature-kpi"><small>SITUAÇÃO</small><strong id="subscriptionStatus">—</strong></div><div class="signature-kpi"><small>VALOR MENSAL</small><strong id="subscriptionPrice">—</strong></div><div class="signature-kpi"><small>PRÓXIMO VENCIMENTO</small><strong id="subscriptionDue">—</strong></div></div>
+  <div id="subscriptionMessage" class="signature-message" role="status" aria-live="polite"></div>
   <div class="signature-grid">
-    <div class="signature-card"><h4>CRIAR SOLICITAÇÃO</h4><form id="signatureCreateForm">
-      <div class="signature-field"><label for="signatureDocument">DOCUMENTO PDF DO PRONTUÁRIO</label><select id="signatureDocument" required><option value="">Selecione um documento...</option></select></div>
-      <div class="signature-field"><label for="signaturePatient">PACIENTE</label><input id="signaturePatient" readonly placeholder="Preenchido pelo documento selecionado"></div>
-      
-      <div class="signature-actions"><button class="signature-btn primary" type="submit">Criar solicitação</button></div>
-    </form></div>
-    <div class="signature-card"><h4>REGISTRAR MANIFESTAÇÃO ELETRÔNICA</h4>
-      <div class="signature-field"><label for="signatureSelected">SOLICITAÇÃO PENDENTE</label><select id="signatureSelected"><option value="">Selecione uma solicitação pendente...</option></select></div>
-      <div class="signature-field"><label for="signatureSigner">NOME COMPLETO DO SIGNATÁRIO</label><input id="signatureSigner" maxlength="180" autocomplete="name" placeholder="Nome de quem está assinando"></div>
-      <label class="signature-consent"><input id="signatureConsent" type="checkbox"><span id="signatureConsentText">Confirmo que li o documento e concordo com o registro eletrônico da minha manifestação.</span></label>
-      <div class="signature-actions"><button id="signatureSignButton" class="signature-btn primary" type="button" disabled>Confirmar assinatura</button><button id="signatureCancelButton" class="signature-btn" type="button">Cancelar solicitação</button></div>
-      <p style="font-size:9px;color:#8795a4;line-height:1.5;margin:10px 0 0">O registro eletrônico documenta a manifestação e sua evidência técnica. Não representa, por si só, assinatura qualificada ICP-Brasil nem substitui validações jurídicas específicas.</p>
-    </div>
+    <div class="signature-card"><h4>FORMAS DE PAGAMENTO</h4><div id="subscriptionMethods" class="subscription-methods">
+      <div class="subscription-method"><strong>Cartão de crédito</strong><span>Recorrência automática após habilitação da integração.</span></div>
+      <div class="subscription-method"><strong>PIX</strong><span>Cobrança mensal com QR Code e código copia e cola.</span></div>
+      <div class="subscription-method"><strong>Boleto bancário</strong><span>Emissão e acompanhamento de boletos pela API habilitada.</span></div>
+    </div><p class="subscription-note">A emissão será liberada após a ativação das credenciais comerciais e do produto correspondente no PicPay. Nenhum pagamento será marcado como recebido sem confirmação do provedor.</p></div>
+    <div class="signature-card"><h4>PLANO E CONTRATAÇÃO</h4><div id="subscriptionPlanDetails"><p>Carregando informações do plano...</p></div><p class="subscription-note">A gestão de planos, preços, ativações e cancelamentos é centralizada no MASTER.</p></div>
   </div>
-  <div class="signature-filters"><input id="signatureSearch" type="search" maxlength="120" placeholder="Buscar paciente ou documento"><select id="signatureStatus"><option value="ALL">Todas as situações</option><option value="PENDING">Pendentes</option><option value="SIGNED">Assinados</option><option value="CANCELLED">Cancelados</option></select><button id="signatureSearchButton" class="signature-btn" type="button">Pesquisar</button></div>
-  <div class="signature-table-wrap"><table class="signature-table"><thead><tr><th>DATA DA SOLICITAÇÃO</th><th>PACIENTE / DOCUMENTO</th><th>SITUAÇÃO</th><th>RESPONSÁVEL</th><th>ASSINATURA</th><th>AÇÕES</th></tr></thead><tbody id="signatureRows"><tr><td colspan="6">Carregando...</td></tr></tbody></table></div>
-  <section id="signatureHistory" class="signature-history hidden"><h4>Histórico da solicitação</h4><div id="signatureHistoryRows"></div></section>
+  <div class="signature-filters"><strong>HISTÓRICO DE COBRANÇAS</strong></div>
+  <div class="signature-table-wrap"><table class="signature-table"><thead><tr><th>VENCIMENTO</th><th>VALOR</th><th>FORMA</th><th>SITUAÇÃO</th><th>DATA DO PAGAMENTO</th><th>COMPROVANTE / COBRANÇA</th></tr></thead><tbody id="subscriptionPayments"><tr><td colspan="6">Carregando...</td></tr></tbody></table></div>
 </section>
 
         <div class="session">
@@ -3143,79 +3135,34 @@ $("esocialWorkerFilter").addEventListener("click",loadEsocialWorkers);$("esocial
 document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("click",()=>esocialTab(b.dataset.esocialTab)));
 
 
-  const signatureState={role:"",documents:[],items:[],selected:null,consentText:""};
-  const signatureMessage=(message,ok=false)=>{$("signatureMessage").textContent=message||"";$("signatureMessage").classList.toggle("ok",ok);};
-  const signatureRequest=async(path,options={})=>{
-    const headers={...(options.headers||{})};if(options.method&&options.method!=="GET")headers["X-XSRF-TOKEN"]=await csrf();
-    const response=await fetch(path,{credentials:"same-origin",cache:"no-store",...options,headers});
-    const data=response.status===204?null:await response.json().catch(()=>({}));
-    if(!response.ok)throw new Error(data?.error||"Não foi possível concluir a operação.");return data;
+  const subscriptionState={data:null,role:""};
+  const subscriptionMessage=(message,ok=false)=>{$("subscriptionMessage").textContent=message||"";$("subscriptionMessage").classList.toggle("ok",ok);};
+  const subscriptionRequest=async()=>{const response=await fetch("/api/v1/clinic/subscription",{credentials:"same-origin",cache:"no-store"});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data?.error||"Não foi possível carregar a assinatura.");return data;};
+  const subscriptionMoney=value=>Number(value||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const subscriptionDate=value=>{if(!value)return "—";const d=new Date(String(value).slice(0,10)+"T12:00:00");return Number.isNaN(d.getTime())?"—":d.toLocaleDateString("pt-BR");};
+  const subscriptionStatusLabel=value=>({PENDING:"AGUARDANDO ATIVAÇÃO",TRIALING:"PERÍODO DE TESTE",ACTIVE:"ATIVA",PAST_DUE:"EM ATRASO",SUSPENDED:"SUSPENSA",CANCELLED:"CANCELADA",EXPIRED:"EXPIRADA",PAID:"PAGA",PROCESSING:"PROCESSANDO",OVERDUE:"VENCIDA",FAILED:"FALHOU",REFUNDED:"ESTORNADA"}[value]||value||"NÃO CONFIGURADA");
+  const loadSubscription=async()=>{
+    const data=await subscriptionRequest();subscriptionState.data=data;const sub=data.subscription||{};
+    $("subscriptionPlan").textContent=sub.plan_name||"Não contratado";$("subscriptionStatus").textContent=subscriptionStatusLabel(sub.status);
+    $("subscriptionPrice").textContent=sub.monthly_price==null?"—":subscriptionMoney(sub.monthly_price);$("subscriptionDue").textContent=subscriptionDate(sub.next_due_date);
+    $("subscriptionPlanDetails").textContent=sub.plan_description||(sub.plan_name?("Plano "+sub.plan_name+" · cobrança mensal"):"Ainda não existe um plano vinculado a esta clínica.");
+    const methods=$("subscriptionMethods");methods.replaceChildren();
+    (data.paymentMethods||[]).forEach(method=>{const item=document.createElement("div");item.className="subscription-method";const title=document.createElement("strong");title.textContent=method.label;const detail=document.createElement("span");detail.textContent=method.recurrence;item.append(title,detail);methods.append(item);});
+    const rows=$("subscriptionPayments");rows.replaceChildren();const payments=data.payments||[];
+    if(!payments.length){const tr=rows.insertRow();const td=tr.insertCell();td.colSpan=6;td.textContent="Nenhuma cobrança registrada até o momento.";}
+    payments.forEach(payment=>{const tr=rows.insertRow();tr.insertCell().textContent=subscriptionDate(payment.due_date);tr.insertCell().textContent=subscriptionMoney(payment.amount);tr.insertCell().textContent=({CREDIT_CARD:"Crédito",PIX:"PIX",BOLETO:"Boleto"}[payment.payment_method]||payment.payment_method);tr.insertCell().textContent=subscriptionStatusLabel(payment.status);tr.insertCell().textContent=subscriptionDate(payment.paid_at);const action=tr.insertCell();const url=payment.boleto_url||payment.checkout_url;if(url){const link=document.createElement("a");link.href=url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Abrir cobrança";action.append(link);}else if(payment.pix_copy_paste){const copy=document.createElement("button");copy.type="button";copy.className="signature-btn";copy.textContent="PIX copia e cola";copy.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(payment.pix_copy_paste);subscriptionMessage("Código PIX copiado.",true);}catch(e){subscriptionMessage("Não foi possível copiar o código PIX.");}});action.append(copy);}else action.textContent="—";});
+    subscriptionMessage(!data.gatewayConfigured?"Integração PicPay ainda não configurada. Os dados são somente para consulta; não há emissão ou confirmação simulada.":"Dados da assinatura atualizados.",!!data.gatewayConfigured);
   };
-  const signatureDate=value=>{if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});};
-  const signatureButton=(label,handler,kind="")=>{const b=document.createElement("button");b.type="button";b.className="signature-btn "+kind;b.textContent=label;b.addEventListener("click",async()=>{b.disabled=true;try{await handler();}catch(e){signatureMessage(e.message);}finally{b.disabled=false;}});return b;};
-  const loadSignatureResources=async()=>{
-    const data=await signatureRequest("/api/v1/clinic/signatures/resources");signatureState.documents=data.documents||[];signatureState.consentText=data.consentText||"";
-    $("signatureConsentText").textContent=signatureState.consentText;
-    const select=$("signatureDocument");select.replaceChildren(new Option("Selecione um documento...",""));
-    signatureState.documents.forEach(d=>select.add(new Option(d.patient_name+" — "+d.original_file_name,d.id)));
-    select.addEventListener("change",()=>{const d=signatureState.documents.find(x=>x.id===select.value);$("signaturePatient").value=d?.patient_name||"";},{once:true});
-    select.onchange=()=>{const d=signatureState.documents.find(x=>x.id===select.value);$("signaturePatient").value=d?.patient_name||"";};
-  };
-  const loadSignatures=async()=>{
-    const params=new URLSearchParams({search:$("signatureSearch").value.trim(),status:$("signatureStatus").value});
-    const data=await signatureRequest("/api/v1/clinic/signatures?"+params.toString());signatureState.items=data.items||[];
-    const summary=data.summary||{};$("signatureTotal").textContent=summary.total||0;$("signaturePending").textContent=summary.pending||0;$("signatureSigned").textContent=summary.signed||0;$("signatureCancelled").textContent=summary.cancelled||0;
-    const pending=signatureState.items.filter(x=>x.status==="PENDING"),sel=$("signatureSelected"),previous=sel.value;
-    sel.replaceChildren(new Option("Selecione uma solicitação pendente...",""));
-    pending.forEach(x=>sel.add(new Option(x.patient_name+" — "+x.document_name_snapshot,x.id)));
-    if(pending.some(x=>x.id===previous))sel.value=previous;else signatureState.selected=null;
-    renderSignatures();
-  };
-  const renderSignatures=()=>{
-    const body=$("signatureRows");body.replaceChildren();
-    if(!signatureState.items.length){const tr=body.insertRow();const td=tr.insertCell();td.colSpan=6;td.textContent="Nenhuma solicitação encontrada.";return;}
-    signatureState.items.forEach(item=>{
-      const tr=body.insertRow();const date=tr.insertCell();date.textContent=signatureDate(item.requested_at);
-      const patient=tr.insertCell();const strong=document.createElement("strong");strong.textContent=item.patient_name;patient.append(strong);const small=document.createElement("div");small.textContent=item.document_name_snapshot;small.style.color="#718397";small.style.marginTop="3px";patient.append(small);
-      const status=tr.insertCell();const badge=document.createElement("span");badge.className="signature-status "+item.status;badge.textContent={PENDING:"PENDENTE",SIGNED:"ASSINADO",CANCELLED:"CANCELADO"}[item.status]||item.status;status.append(badge);
-      tr.insertCell().textContent=item.requested_by||"—";const signed=tr.insertCell();signed.textContent=item.signed_at?signatureDate(item.signed_at)+" · "+(item.signer_name_snapshot||item.signed_by||""):"—";
-      const actions=tr.insertCell();actions.append(signatureButton("Histórico",()=>showSignatureHistory(item.id)));
-      if(item.status==="PENDING")actions.append(signatureButton("Selecionar",()=>{$("signatureSelected").value=item.id;signatureState.selected=item.id;$("signatureSigner").focus();},"primary"));
-    });
-  };
-  const showSignatureHistory=async(id)=>{
-    const rows=await signatureRequest("/api/v1/clinic/signatures/"+id+"/history");const panel=$("signatureHistory"),list=$("signatureHistoryRows");list.replaceChildren();
-    rows.forEach(x=>{const div=document.createElement("div");div.textContent=signatureDate(x.created_at)+" · "+x.event_type+" · "+(x.actor_name||"")+(x.detail?" — "+x.detail:"");list.append(div);});
-    panel.classList.remove("hidden");
-  };
-  $("signatureCreateForm").addEventListener("submit",async e=>{
-    e.preventDefault();const documentId=$("signatureDocument").value;if(!documentId){signatureMessage("Selecione um documento PDF.");return;}
-    try{await signatureRequest("/api/v1/clinic/signatures",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({documentId})});signatureMessage("Solicitação de assinatura criada.",true);await loadSignatures();}catch(error){signatureMessage(error.message);}
-  });
-  $("signatureSelected").addEventListener("change",()=>{signatureState.selected=$("signatureSelected").value||null;});
-  $("signatureSignButton").addEventListener("click",async()=>{
-    const id=$("signatureSelected").value,name=$("signatureSigner").value.trim();
-    if(!id){signatureMessage("Selecione uma solicitação pendente.");return;}if(name.length<3){signatureMessage("Informe o nome completo do signatário.");return;}if(!$("signatureConsent").checked){signatureMessage("Confirme a declaração antes de assinar.");return;}
-    if(!confirm("Confirmar o registro da manifestação eletrônica para este documento?"))return;
-    try{await signatureRequest("/api/v1/clinic/signatures/"+id+"/sign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({signerName:name,consent:true})});signatureMessage("Manifestação eletrônica registrada com evidência técnica.",true);$("signatureSigner").value="";$("signatureConsent").checked=false;await loadSignatures();await showSignatureHistory(id);}catch(error){signatureMessage(error.message);}
-  });
-  $("signatureCancelButton").addEventListener("click",async()=>{
-    const id=$("signatureSelected").value;if(!id){signatureMessage("Selecione uma solicitação pendente.");return;}
-    const reason=prompt("Informe o motivo do cancelamento:");if(!reason||!reason.trim())return;
-    try{await signatureRequest("/api/v1/clinic/signatures/"+id+"/cancel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reason:reason.trim()})});signatureMessage("Solicitação cancelada.",true);await loadSignatures();}catch(error){signatureMessage(error.message);}
-  });
-  $("signatureRefresh").addEventListener("click",async()=>{try{await loadSignatureResources();await loadSignatures();signatureMessage("Dados atualizados.",true);}catch(e){signatureMessage(e.message);}});
-  $("signatureSearchButton").addEventListener("click",()=>loadSignatures().catch(e=>signatureMessage(e.message)));
-  $("signatureStatus").addEventListener("change",()=>loadSignatures().catch(e=>signatureMessage(e.message)));
+  $("subscriptionRefresh").addEventListener("click",()=>loadSubscription().catch(e=>subscriptionMessage(e.message)));
 
-  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Contas, perfis, bloqueios e permissões da clínica."],laboratory:["Laboratório","Coleta, rastreabilidade de amostras e liberação de resultados."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Gerencie a fila, encaminhe pacientes e controle as chamadas por consultório e profissional."],subscription:["Assinatura","Solicitações, registro eletrônico e trilha de evidências das assinaturas de documentos clínicos."],about:["Sobre","Informações da plataforma MARKYS."]};
+  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Contas, perfis, bloqueios e permissões da clínica."],laboratory:["Laboratório","Coleta, rastreabilidade de amostras e liberação de resultados."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Gerencie a fila, encaminhe pacientes e controle as chamadas por consultório e profissional."],subscription:["Assinatura","Plano SaaS, mensalidades, formas de pagamento e histórico de cobranças da clínica."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
     const info = moduleLabels[key] || moduleLabels.attendance;
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("laboratoryWorkspace").classList.add("hidden"); $("esocialWorkspace").classList.add("hidden"); $("callsWorkspace").classList.add("hidden"); $("callsHistory").classList.add("hidden"); $("signatureWorkspace").classList.add("hidden"); $("signatureHistory").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("laboratoryWorkspace").classList.add("hidden"); $("esocialWorkspace").classList.add("hidden"); $("callsWorkspace").classList.add("hidden"); $("callsHistory").classList.add("hidden"); $("subscriptionWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
     if (key === "exams" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       examState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
@@ -3259,11 +3206,9 @@ document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("c
       loadEsocialResources().then(()=>{loadEsocialEvents();loadEsocialWorkers();}).catch(error=>esocialMsg(error.message));
     }
     if (key === "subscription" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
-      signatureState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
-      $("signatureWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
-      $("signatureCreateForm").classList.toggle("hidden",signatureState.role==="PROFESSIONAL");
-      $("signatureCancelButton").classList.toggle("hidden",!["CLINIC_ADMIN","RECEPTION"].includes(signatureState.role));
-      loadSignatureResources().then(loadSignatures).catch(error=>signatureMessage(error.message));
+      subscriptionState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
+      $("subscriptionWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
+      loadSubscription().catch(error=>subscriptionMessage(error.message));
     }
     if (key === "calls" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       callsState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
