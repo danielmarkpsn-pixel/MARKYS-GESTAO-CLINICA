@@ -778,7 +778,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="exam-panel-heading"><h4>Nova solicitação de exame</h4><button id="examCreateClose" class="exam-btn" type="button">Fechar</button></div>
     <div class="exam-form-grid">
       <div><label for="examPatient">PACIENTE *</label><select id="examPatient" required><option value="">Selecione o paciente</option></select></div>
-      <div><label for="examCatalogSelect">EXAME *</label><select id="examCatalogSelect" required><option value="">Selecione o exame</option></select></div>
+      <div><label for="examCatalogSelect">EXAME *</label><select id="examCatalogSelect" required><option value="">Selecione o exame</option></select></div><div id="examSpecimenField" class="hidden"><label for="examSpecimenType">TIPO DE AMOSTRA *</label><select id="examSpecimenType"><option value="">Selecione a amostra</option><option value="SANGUE">Sangue</option><option value="URINA">Urina</option><option value="FEZES">Fezes</option><option value="SWAB">Swab</option><option value="SECRECAO">Secreção</option><option value="TECIDO">Tecido / biópsia</option><option value="OUTRO">Outro</option></select></div>
       <div><label for="examAppointment">AGENDAMENTO (OPCIONAL)</label><select id="examAppointment"><option value="">Sem vínculo com agenda</option></select></div>
       <div><label for="examProfessional">PROFISSIONAL RESPONSÁVEL</label><select id="examProfessional"><option value="">A definir</option></select></div>
       <div><label for="examPriority">PRIORIDADE</label><select id="examPriority"><option value="NORMAL">Normal</option><option value="URGENT">Urgente</option></select></div>
@@ -1810,12 +1810,19 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   };
   const examStatusLabel={REQUESTED:"SOLICITADO",SCHEDULED:"AGENDADO",IN_PROGRESS:"EM EXECUÇÃO",COMPLETED:"CONCLUÍDO",CANCELLED:"CANCELADO"};
   const examCategoryLabel={RAIO_X:"RAIO-X",LABORATORIO:"LABORATÓRIO",AUDIOMETRIA:"AUDIOMETRIA",COMPLEMENTAR:"COMPLEMENTAR",OUTROS:"OUTROS"};
+  const syncExamSpecimenField=()=>{
+    const selected=(examState.resources?.exams||[]).find(item=>item.id===$("examCatalogSelect").value);
+    const laboratory=selected?.category==="LABORATORIO";
+    $("examSpecimenField").classList.toggle("hidden",!laboratory);
+    $("examSpecimenType").required=!!laboratory;
+    if(!laboratory)$("examSpecimenType").value="";
+  };
   const loadExamResources=async()=>{
     examState.resources=await examRequest("/api/v1/clinic/exams/resources");
     examState.role=examState.resources.role||examState.role;
     const fill=(id,items,label)=>{const s=$(id);if(!s)return;const old=s.value;s.replaceChildren();const first=document.createElement("option");first.value="";first.textContent=label;s.append(first);items.forEach(item=>{const o=document.createElement("option");o.value=item.id;o.textContent=item.display_name||item.full_name||item.name;s.append(o);});if(old)s.value=old;};
     fill("examPatient",examState.resources.patients||[],"Selecione o paciente");
-    fill("examCatalogSelect",examState.resources.exams||[],"Selecione o exame");
+    fill("examCatalogSelect",examState.resources.exams||[],"Selecione o exame");syncExamSpecimenField();
     fill("examProfessional",examState.resources.professionals||[],"A definir");
     fill("examAppointment",examState.resources.appointments||[],"Sem vínculo com agenda");
     const appointment=$( "examAppointment" );
@@ -1931,6 +1938,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     options.forEach(x=>{const o=document.createElement("option");o.value=x.id;o.textContent=x.patient_name+" • "+clinicDateTime(x.starts_at)+" • "+x.professional_name;select.append(o);});
     if(options.some(x=>x.id===old))select.value=old;
   });
+  $("examCatalogSelect").addEventListener("change",syncExamSpecimenField);
   $("examAppointment").addEventListener("change",()=>{
     const ap=(examState.resources?.appointments||[]).find(x=>x.id===$("examAppointment").value);
     if(ap){$("examPatient").value=ap.patient_id;$("examProfessional").value=ap.professional_id;}
@@ -1941,9 +1949,9 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       const payload={patientId:$("examPatient").value,examId:$("examCatalogSelect").value,
         appointmentId:$("examAppointment").value||null,professionalId:$("examProfessional").value||null,
         priority:$("examPriority").value,scheduledAt:$("examScheduledAt").value?new Date($("examScheduledAt").value).toISOString():null,
-        notes:$("examNotes").value.trim()||null};
+        specimenType:$("examSpecimenType").value||null,notes:$("examNotes").value.trim()||null};
       await examRequest("/api/v1/clinic/exams",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-      event.currentTarget.reset();$("examCreatePanel").classList.add("hidden");examMessage("Solicitação registrada.",false);examState.page=1;await loadExams();
+      event.currentTarget.reset();syncExamSpecimenField();$("examCreatePanel").classList.add("hidden");examMessage("Solicitação registrada.",false);examState.page=1;await loadExams();
     }catch(error){examMessage(error.message);}finally{button.disabled=false;}
   });
 
