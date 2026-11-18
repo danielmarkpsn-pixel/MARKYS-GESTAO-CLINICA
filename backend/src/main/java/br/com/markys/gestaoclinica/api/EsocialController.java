@@ -71,6 +71,8 @@ public class EsocialController {
         String number=body.registrationNumber().replaceAll("\\D","");
         int expected=switch(type){case "CNPJ"->14;case "CPF"->11;case "CAEPF"->14;default->12;};
         if(number.length()!=expected)return badRequest("Número de inscrição incompatível com o tipo selecionado.");
+        if("CPF".equals(type)&&!validCpf(number))return badRequest("CPF do empregador inválido.");
+        if("CNPJ".equals(type)&&!validCnpj(number))return badRequest("CNPJ do empregador inválido.");
         UUID clinic=TenantContext.requireClinicId();
         byte[] encrypted=protection.encrypt(number),fingerprint=protection.fingerprint(type+":"+number);
         jdbc.update("""
@@ -115,6 +117,10 @@ public class EsocialController {
         if(!validCpf(cpf))return badRequest("CPF do trabalhador inválido.");
         if(body.admissionDate().isAfter(LocalDate.now()))return badRequest("A data de admissão não pode estar no futuro.");
         if(body.birthDate().isAfter(LocalDate.now().minusYears(14)))return badRequest("Confira a data de nascimento do trabalhador.");
+        if(!body.admissionDate().isAfter(body.birthDate()))return badRequest("A admissão deve ocorrer depois do nascimento.");
+        if(!body.sex().matches("(?i)[MF]"))return badRequest("Sexo informado fora dos valores aceitos.");
+        if(!body.categoryCode().matches("\\d{3}"))return badRequest("Informe o código de categoria eSocial com três dígitos.");
+        if(body.cboCode()!=null&&!body.cboCode().isBlank()&&!body.cboCode().matches("\\d{6}"))return badRequest("O CBO deve conter seis dígitos.");
         UUID clinic=TenantContext.requireClinicId(),id=UUID.randomUUID();
         try{
             jdbc.update("""
@@ -188,6 +194,7 @@ public class EsocialController {
         if("S-2210".equals(type)&&!"CLINIC_ADMIN".equals(a.role()))return forbidden();
         if(!protection.isConfigured())return badRequest("Proteção de dados pessoais indisponível no servidor.");
         UUID clinic=TenantContext.requireClinicId();
+        if(body.sourceExamOrderId()!=null&&!"S-2220".equals(type))return badRequest("Somente o evento S-2220 pode ser vinculado a um exame.");
         if("S-2220".equals(type)&&body.sourceExamOrderId()!=null){
             Integer count=jdbc.queryForObject("SELECT count(*) FROM exam_orders WHERE clinic_id=? AND id=? AND status='COMPLETED'",
                 Integer.class,clinic,body.sourceExamOrderId());
@@ -308,6 +315,14 @@ public class EsocialController {
         return new Access((UUID)rows.getFirst().get("id"),role);
     }
     private Access admin(Authentication auth){Access a=access(auth);return a!=null&&"CLINIC_ADMIN".equals(a.role())?a:null;}
+    private boolean validCnpj(String value){
+        if(!value.matches("\\d{14}")||value.chars().distinct().count()==1)return false;
+        int[] first={5,4,3,2,9,8,7,6,5,4,3,2},second={6,5,4,3,2,9,8,7,6,5,4,3,2};
+        int sum=0;for(int i=0;i<12;i++)sum+=(value.charAt(i)-'0')*first[i];
+        int digit=sum%11<2?0:11-sum%11;if(digit!=value.charAt(12)-'0')return false;
+        sum=0;for(int i=0;i<13;i++)sum+=(value.charAt(i)-'0')*second[i];
+        digit=sum%11<2?0:11-sum%11;return digit==value.charAt(13)-'0';
+    }
     private boolean validCpf(String cpf){
         if(!cpf.matches("\\d{11}")||cpf.chars().distinct().count()==1)return false;
         int sum=0;for(int i=0;i<9;i++)sum+=(cpf.charAt(i)-'0')*(10-i);
