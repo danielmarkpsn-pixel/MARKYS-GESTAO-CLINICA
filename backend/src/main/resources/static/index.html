@@ -645,6 +645,15 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     #scheduleWorkspace .schedule-day-event{border-left:3px solid #1682ca;background:#e9f3fc;font-size:11px;padding:4px 7px}
     #scheduleWorkspace .schedule-message{margin:6px 0}
     @media(max-width:760px){#scheduleWorkspace .schedule-calendar-layout{grid-template-columns:1fr}#scheduleWorkspace .schedule-toolbar{position:static;padding:8px}#scheduleWorkspace .schedule-calendar-sidebar{border-right:0;border-bottom:1px solid #e2e4e9}#scheduleWorkspace .schedule-day-timeline{margin-top:8px}}
+    #scheduleWorkspace .schedule-toolbar #scheduleConfigToggle{display:block;height:28px;padding:4px 10px;white-space:nowrap;font-size:11px}
+    .schedule-shift-config{padding:12px 16px;background:#f6f9fc;border-bottom:1px solid #dce5ee;display:grid;gap:12px}
+    .schedule-shift-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .schedule-shift-grid label{display:grid;gap:5px;font-size:11px;font-weight:650}
+    .schedule-shift-grid input{height:32px;border:1px solid #ccd6e0;border-radius:5px;padding:4px}
+    .schedule-shift-heading{font-size:11px;font-weight:800;background:#edf2f7;padding:9px 14px;color:#35546d}
+    .schedule-slot-open{width:100%;height:100%;min-height:30px;text-align:left;background:transparent;border:1px dashed transparent;color:#8393a2;font-size:11px;cursor:pointer}
+    .schedule-slot-open:hover{border-color:#80b4dc;background:#f1f8ff;color:#1268a4}
+    @media(max-width:760px){.schedule-shift-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   </style>
 </head>
 <body>
@@ -865,8 +874,20 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="schedule-field"><label for="scheduleSearchTerm">PACIENTE / FINALIDADE</label><input id="scheduleSearchTerm" type="search" maxlength="100" placeholder="Pesquisar na agenda"></div>
     <div class="schedule-field"><label for="scheduleStatusFilter">SITUAÇÃO</label><select id="scheduleStatusFilter"><option value="">Todas as situações</option><option value="SCHEDULED">Agendado</option><option value="CONFIRMED">Confirmado</option><option value="CHECKED_IN">Check-in</option><option value="COMPLETED">Concluído</option><option value="CANCELLED">Cancelado</option><option value="NO_SHOW">Não compareceu</option></select></div>
     <button id="scheduleSearch" class="schedule-btn primary" type="button">Consultar agenda</button>
-    <button id="scheduleNew" class="schedule-btn primary" type="button">+ Novo agendamento</button>
+    <button id="scheduleConfigToggle" class="schedule-btn primary" type="button">Editar configuração da agenda</button>
   </div>
+  <form id="scheduleShiftConfig" class="schedule-shift-config hidden">
+    <strong>Configuração da agenda — intervalos de 20 minutos</strong>
+    <div class="schedule-shift-grid">
+      <label>Manhã — entrada<input id="shiftMorningStart" type="time" value="07:00"></label>
+      <label>Manhã — saída<input id="shiftMorningEnd" type="time" value="11:00"></label>
+      <label>Tarde — entrada<input id="shiftAfternoonStart" type="time" value="13:00"></label>
+      <label>Tarde — saída<input id="shiftAfternoonEnd" type="time" value="17:00"></label>
+      <label>Noite — entrada<input id="shiftNightStart" type="time"></label>
+      <label>Noite — saída<input id="shiftNightEnd" type="time"></label>
+    </div>
+    <button class="schedule-btn primary" type="submit">Salvar configuração</button>
+  </form>
   <div class="schedule-calendar-layout">
     <aside class="schedule-calendar-sidebar">
       <div class="schedule-month-nav"><button id="schedulePrevMonth" type="button" aria-label="Mês anterior">‹</button><strong id="scheduleMonthLabel">Calendário</strong><button id="scheduleNextMonth" type="button" aria-label="Próximo mês">›</button></div>
@@ -2208,6 +2229,29 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       if(scheduleState.role==="CLINIC_ADMIN"){await loadScheduleRules();await loadScheduleBlocks();}
     }catch(error){$("scheduleRows").innerHTML="<tr><td colspan='7' class='schedule-empty'>"+escapeHtml(error.message)+"</td></tr>";scheduleMessage(error.message);}
   };
+  const shiftConfigKey="markys-schedule-shifts-v1";
+  const defaultShifts=[["07:00","11:00"],["13:00","17:00"],["",""]];
+  const shiftIds=[["shiftMorningStart","shiftMorningEnd"],["shiftAfternoonStart","shiftAfternoonEnd"],["shiftNightStart","shiftNightEnd"]];
+  let scheduleShifts=defaultShifts.map(pair=>[...pair]);
+  try{
+    const stored=JSON.parse(localStorage.getItem(shiftConfigKey)||"null");
+    if(Array.isArray(stored)&&stored.length===3&&stored.every(pair=>Array.isArray(pair)&&pair.length===2))scheduleShifts=stored;
+  }catch(_error){}
+  shiftIds.forEach((pair,index)=>pair.forEach((id,j)=>$(id).value=scheduleShifts[index][j]));
+  $("scheduleConfigToggle").addEventListener("click",()=>$("scheduleShiftConfig").classList.toggle("hidden"));
+  $("scheduleShiftConfig").addEventListener("submit",event=>{
+    event.preventDefault();
+    const next=shiftIds.map(pair=>pair.map(id=>$(id).value));
+    const minutes=value=>{const [h,m]=value.split(":").map(Number);return h*60+m;};
+    if(next.some(([start,end])=>(!!start!==!!end)||(start&&minutes(end)<=minutes(start)))){
+      scheduleMessage("Informe entrada e saída válidas para cada turno.");return;
+    }
+    scheduleShifts=next;
+    localStorage.setItem(shiftConfigKey,JSON.stringify(next));
+    $("scheduleShiftConfig").classList.add("hidden");
+    scheduleMessage("Configuração salva neste navegador.",false);
+    renderScheduleDay();
+  });
   let scheduleCalendarMonth="";
   const renderScheduleMonth=()=>{
     const selected=$("scheduleDayPicker").value||localDateString();
@@ -2266,18 +2310,39 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("scheduleDayCount").textContent=items.length+" agendamento(s)";
     const timeline=$("scheduleDayTimeline");timeline.replaceChildren();
     const format=new Intl.DateTimeFormat("pt-BR",{timeZone:scheduleState.timezone,hour:"2-digit",minute:"2-digit",hour12:false});
-    for(let hour=7;hour<=20;hour++){
-      const slot=document.createElement("div");slot.className="schedule-hour-slot";
-      const label=document.createElement("time");label.textContent=String(hour).padStart(2,"0")+":00";slot.append(label);
-      const events=document.createElement("div");events.className="schedule-hour-events";
-      items.filter(item=>Number(format.format(new Date(item.starts_at)).slice(0,2))===hour).forEach(item=>{
-        const event=document.createElement("div");event.className="schedule-day-event";
-        const time=document.createElement("strong");time.textContent=format.format(new Date(item.starts_at))+" – "+format.format(new Date(item.ends_at));
-        const detail=document.createElement("span");detail.textContent=(item.patient_name||"Paciente")+" • "+(item.professional_name||"Profissional")+" • "+(item.reason||"Consulta");
-        event.append(time,detail);events.append(event);
-      });
-      slot.append(events);timeline.append(slot);
-    }
+    const minutes=value=>{const [h,m]=value.split(":").map(Number);return h*60+m;};
+    const hhmm=value=>String(Math.floor(value/60)).padStart(2,"0")+":"+String(value%60).padStart(2,"0");
+    const groups=[["MANHÃ",scheduleShifts[0]],["TARDE",scheduleShifts[1]],["NOITE",scheduleShifts[2]]];
+    groups.forEach(([name,range])=>{
+      const [start,end]=range;
+      if(!start||!end)return;
+      const heading=document.createElement("div");heading.className="schedule-shift-heading";heading.textContent=name;timeline.append(heading);
+      for(let minute=minutes(start);minute+20<=minutes(end);minute+=20){
+        const slot=document.createElement("div");slot.className="schedule-hour-slot";
+        const label=document.createElement("time");label.textContent=hhmm(minute);slot.append(label);
+        const events=document.createElement("div");events.className="schedule-hour-events";
+        const matching=items.filter(item=>format.format(new Date(item.starts_at))===hhmm(minute));
+        matching.forEach(item=>{
+          const event=document.createElement("div");event.className="schedule-day-event";
+          const time=document.createElement("strong");time.textContent=format.format(new Date(item.starts_at))+" – "+format.format(new Date(item.ends_at));
+          const detail=document.createElement("span");detail.textContent=(item.patient_name||"Paciente")+" • "+(item.professional_name||"Profissional")+" • "+(item.reason||"Consulta");
+          event.append(time,detail);events.append(event);
+        });
+        if(!matching.length){
+          const available=document.createElement("button");available.type="button";
+          available.className="schedule-slot-open";available.textContent="+ Cadastrar atendimento";
+          available.addEventListener("click",()=>{
+            openScheduleForm();
+            $("scheduleDate").value=date;
+            $("scheduleStart").value=hhmm(minute);
+            $("scheduleEnd").value=hhmm(minute+20);
+            if($("scheduleProfessionalFilter").value)$("scheduleProfessional").value=$("scheduleProfessionalFilter").value;
+          });
+          events.append(available);
+        }
+        slot.append(events);timeline.append(slot);
+      }
+    });
   };
   $("scheduleDayPicker").addEventListener("change",event=>{
     if(!event.target.value)return;
@@ -2364,7 +2429,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       closeScheduleForm();scheduleMessage(editing?"Agendamento atualizado.":"Agendamento criado com sucesso.",false);await loadSchedule();
     }catch(error){scheduleMessage(error.message);}finally{button.disabled=false;}
   });
-  $("scheduleNew").addEventListener("click",()=>openScheduleForm());
+
   $("scheduleCancelForm").addEventListener("click",closeScheduleForm);
   const setScheduleQuickRange=(daysAhead,spanDays=0)=>{
     const today=localDateString();
