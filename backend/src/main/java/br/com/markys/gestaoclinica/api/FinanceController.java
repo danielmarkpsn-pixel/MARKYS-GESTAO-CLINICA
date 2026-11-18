@@ -91,7 +91,7 @@ public class FinanceController {
                 WHERE e.clinic_id=c.id AND e.direction='EXPENSE'
                   AND (fp.paid_at AT TIME ZONE c.timezone)::date BETWEEN ? AND ?) AS expense_paid,
               (SELECT count(*) FROM finance_entries e WHERE e.clinic_id=c.id
-                AND e.status NOT IN ('PAID','CANCELLED') AND e.due_date < current_date
+                AND e.status NOT IN ('PAID','CANCELLED') AND e.due_date < (now() AT TIME ZONE c.timezone)::date
                 AND e.due_date BETWEEN ? AND ?) AS overdue_count,
               (SELECT count(*) FROM finance_entries e WHERE e.clinic_id=c.id
                 AND e.status NOT IN ('PAID','CANCELLED') AND e.due_date BETWEEN ? AND ?) AS open_count
@@ -140,7 +140,7 @@ public class FinanceController {
                 FROM finance_payments fp WHERE fp.clinic_id=e.clinic_id AND fp.entry_id=e.id) pay ON true
             WHERE e.clinic_id=? AND e.due_date BETWEEN ? AND ?
               AND (?='ALL' OR e.direction=?) AND (?='ALL' OR
-                CASE WHEN e.status IN ('OPEN','PARTIAL') AND e.due_date<current_date THEN 'OVERDUE' ELSE e.status END=?)
+                CASE WHEN e.status IN ('OPEN','PARTIAL') AND e.due_date<(SELECT (now() AT TIME ZONE cl.timezone)::date FROM clinics cl WHERE cl.id=e.clinic_id) THEN 'OVERDUE' ELSE e.status END=?)
               AND (?::uuid IS NULL OR e.category_id=?)
               AND (?='' OR e.description ILIKE ? OR COALESCE(p.full_name,'') ILIKE ? OR c.name ILIKE ?)
             """;
@@ -149,7 +149,7 @@ public class FinanceController {
         Integer total = jdbc.queryForObject("SELECT count(*) "+filter, Integer.class, args);
         List<Map<String,Object>> rows = jdbc.queryForList("""
             SELECT e.id,e.direction,e.description,e.amount,e.due_date,
-                   CASE WHEN e.status IN ('OPEN','PARTIAL') AND e.due_date<current_date THEN 'OVERDUE' ELSE e.status END AS status,
+                   CASE WHEN e.status IN ('OPEN','PARTIAL') AND e.due_date<(SELECT (now() AT TIME ZONE cl.timezone)::date FROM clinics cl WHERE cl.id=e.clinic_id) THEN 'OVERDUE' ELSE e.status END AS status,
                    e.notes,e.created_at,e.category_id,c.name AS category_name,
                    e.patient_id,p.full_name AS patient_name,e.appointment_id,a.starts_at AS appointment_at,
                    pay.paid AS amount_paid,(e.amount-pay.paid) AS amount_remaining
