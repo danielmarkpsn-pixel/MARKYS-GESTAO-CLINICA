@@ -552,6 +552,11 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .patient-list-meta,.professional-summary{padding:10px 2px}
     .schedule-toolbar{background:#f5f9fe;border:1px solid #e1eaf4;border-radius:11px;padding:13px;gap:10px}
     @media(max-width:760px){.patient-filters input,.professional-toolbar input{flex-basis:100%}.patient-filters button,.professional-toolbar button{flex:1 1 auto}.patient-directory,.patient-form,.patient-detail,.professional-panel{padding:12px}.schedule-toolbar{padding:10px}}
+    .schedule-shortcuts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+    .schedule-shortcuts .schedule-btn{min-height:36px;height:auto;padding:8px 14px;border-radius:9px;font-size:12px;background:#fff}
+    .schedule-shortcuts .schedule-btn:hover{background:#e9f3fd}
+    .schedule-shortcuts-hint{color:#6b7d90;font-size:12px;margin-left:auto}
+    @media(max-width:760px){.schedule-shortcuts-hint{flex-basis:100%;margin-left:0}}
   </style>
 </head>
 <body>
@@ -759,6 +764,12 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <section id="professionalDetail" class="professional-panel hidden"><div class="patient-form-heading"><h4 id="professionalDetailTitle">Ficha profissional</h4><button id="professionalDetailClose" class="professional-action" type="button">Voltar à lista</button></div><div id="professionalDetailData" class="patient-detail-grid"></div><div class="professional-history"><h5>Histórico de atuação</h5><div id="professionalHistory"></div></div></section>
 </section>
   <section id="scheduleWorkspace" class="schedule-workspace hidden" aria-label="Agenda clínica">
+  <div class="schedule-shortcuts" role="group" aria-label="Período da agenda">
+    <button type="button" class="schedule-btn" id="scheduleToday">Hoje</button>
+    <button type="button" class="schedule-btn" id="scheduleTomorrow">Amanhã</button>
+    <button type="button" class="schedule-btn" id="scheduleWeek">Próximos 7 dias</button>
+    <span class="schedule-shortcuts-hint">Selecione um período ou use os filtros abaixo.</span>
+  </div>
   <div class="schedule-toolbar">
     <div class="schedule-field"><label for="scheduleFrom">DE</label><input id="scheduleFrom" type="date"></div>
     <div class="schedule-field"><label for="scheduleTo">ATÉ</label><input id="scheduleTo" type="date"></div>
@@ -2156,6 +2167,19 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   });
   $("scheduleNew").addEventListener("click",()=>openScheduleForm());
   $("scheduleCancelForm").addEventListener("click",closeScheduleForm);
+  const setScheduleQuickRange=(daysAhead,spanDays=0)=>{
+    const today=localDateString();
+    const [year,month,day]=today.split("-").map(Number);
+    const start=new Date(Date.UTC(year,month-1,day+daysAhead));
+    const end=new Date(Date.UTC(year,month-1,day+daysAhead+spanDays));
+    const iso=date=>date.toISOString().slice(0,10);
+    $("scheduleFrom").value=iso(start);
+    $("scheduleTo").value=iso(end);
+    loadSchedule();
+  };
+  $("scheduleToday").addEventListener("click",()=>setScheduleQuickRange(0));
+  $("scheduleTomorrow").addEventListener("click",()=>setScheduleQuickRange(1));
+  $("scheduleWeek").addEventListener("click",()=>setScheduleQuickRange(0,6));
   $("scheduleSearch").addEventListener("click",loadSchedule);
   $("scheduleSearchTerm").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadSchedule();}});
   $("scheduleStatusFilter").addEventListener("change",loadSchedule);
