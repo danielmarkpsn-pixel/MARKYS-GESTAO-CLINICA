@@ -337,6 +337,149 @@ public class FinanceController {
             """,clinic,id));
     }
 
+    @GetMapping("/insurance-exam-prices/resources")
+    public ResponseEntity<?> insuranceExamPriceResources(Authentication auth) {
+        Access a=access(auth);
+        if(a==null || !"CLINIC_ADMIN".equals(a.role()))return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        return ResponseEntity.ok(Map.of(
+            "insurances",jdbc.queryForList("SELECT id,name FROM clinic_insurances WHERE clinic_id=? AND status='ACTIVE' ORDER BY lower(name)",clinic),
+            "exams",jdbc.queryForList("SELECT id,name,category FROM exam_catalog WHERE clinic_id=? AND active=true ORDER BY category,lower(name)",clinic)
+        ));
+    }
+
+    @GetMapping("/insurance-exam-prices")
+    public ResponseEntity<?> insuranceExamPrices(Authentication auth,@RequestParam UUID insuranceId) {
+        Access a=access(auth);
+        if(a==null || !"CLINIC_ADMIN".equals(a.role()))return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        if(scalar("SELECT count(*) FROM clinic_insurances WHERE clinic_id=? AND id=?",clinic,insuranceId)==0)
+            return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(jdbc.queryForList("""
+            SELECT p.id,p.exam_id,e.name AS exam_name,e.category,p.amount,p.active,p.updated_at
+              FROM insurance_exam_prices p JOIN exam_catalog e
+                ON e.clinic_id=p.clinic_id AND e.id=p.exam_id
+             WHERE p.clinic_id=? AND p.insurance_id=?
+             ORDER BY e.category,lower(e.name)
+        """,clinic,insuranceId));
+    }
+
+    @PutMapping("/insurance-exam-prices")
+    @Transactional
+    public ResponseEntity<?> saveInsuranceExamPrice(Authentication auth,@Valid @RequestBody InsuranceExamPriceRequest body) {
+        Access a=access(auth);
+        if(a==null || !"CLINIC_ADMIN".equals(a.role()))return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        if(scalar("SELECT count(*) FROM clinic_insurances WHERE clinic_id=? AND id=? AND status='ACTIVE'",clinic,body.insuranceId())==0)
+            return badRequest("Selecione um convênio ativo.");
+        if(scalar("SELECT count(*) FROM exam_catalog WHERE clinic_id=? AND id=?",clinic,body.examId())==0)
+            return badRequest("Exame não encontrado nesta clínica.");
+        jdbc.update("""
+            INSERT INTO insurance_exam_prices(id,clinic_id,insurance_id,exam_id,amount,active,created_by_membership_id,updated_by_membership_id)
+            VALUES(?,?,?,?,?,?,?,?)
+            ON CONFLICT (clinic_id,insurance_id,exam_id)
+            DO UPDATE SET amount=EXCLUDED.amount,active=EXCLUDED.active,updated_by_membership_id=EXCLUDED.updated_by_membership_id,updated_at=now()
+        """,UUID.randomUUID(),clinic,body.insuranceId(),body.examId(),body.amount().setScale(2,RoundingMode.HALF_UP),
+            body.active()==null?true:body.active(),a.membershipId(),a.membershipId());
+        return ResponseEntity.ok(Map.of("message","Valor do exame salvo para o convênio selecionado."));
+    }
+
+    @GetMapping("/service-notes")
+    public ResponseEntity<?> serviceNotes(Authentication auth) {
+        if(access(auth)==null)return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        return ResponseEntity.ok(jdbc.queryForList("""
+            SELECT n.id,n.note_number,n.service_date,n.total_amount,n.status,n.created_at,
+                   p.full_name AS patient_name,i.name AS insurance_name
+              FROM service_notes n
+              JOIN patients p ON p.clinic_id=n.clinic_id AND p.id=n.patient_id
+              JOIN clinic_insurances i ON i.clinic_id=n.clinic_id AND i.id=n.insurance_id
+             WHERE n.clinic_id=? ORDER BY n.created_at DESC LIMIT 100
+        """,clinic));
+    }
+
+    @PostMapping("/service-notes")
+    @Transactional
+    public ResponseEntity<?> createServiceNote(Authentication auth,@Valid @RequestBody ServiceNoteRequest body) {
+        Access a=access(auth);
+        if(a==null)return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        if(scalar("SELECT count(*) FROM patients WHERE clinic_id=? AND id=? AND status='ACTIVE'",clinic,body.patientId())==0)
+            return badRequest("Paciente não encontrado ou inativo.");
+        if(scalar("SELECT count(*) FROM clinic_insurances WHERE clinic_id=? AND id=? AND status='ACTIVE'",clinic,body.insuranceId())==0)
+            return badRequest("Convênio não encontrado ou inativo.");
+        if(body.items()==null||body.items().isEmpty()||body.items().size()>50)
+            return badRequest("Adicione ao menos um exame à nota de serviço.");
+        UUID noteId=UUID.randomUUID();
+        String number="NS-"+body.serviceDate().getYear()+"-"+UUID.randomUUID().toString().substring(0,8).toUpperCase(Locale.ROOT);
+        BigDecimal total=BigDecimal.ZERO;
+        List<Map<String,Object>> selected=new java.util.ArrayList<>();
+        for(ServiceNoteItemRequest item:body.items()){
+            if(item.quantity()==null||item.quantity()<1||item.quantity()>100)
+                return badRequest("A quantidade de cada exame deve ficar entre 1 e 100.");
+            List<Map<String,Object>> price=jdbc.queryForList("""
+                SELECT e.name,p.amount FROM insurance_exam_prices p
+                  JOIN exam_catalog e ON e.clinic_id=p.clinic_id AND e.id=p.exam_id
+                 WHERE p.clinic_id=? AND p.insurance_id=? AND p.exam_id=? AND p.active=true
+            """,clinic,body.insuranceId(),item.examId());
+            if(price.isEmpty())return badRequest("Um dos exames não possui preço cadastrado para o convênio selecionado.");
+            BigDecimal unit=(BigDecimal)price.getFirst().get("amount");
+            BigDecimal line=unit.multiply(BigDecimal.valueOf(item.quantity())).setScale(2,RoundingMode.HALF_UP);
+            total=total.add(line);
+            selected.add(Map.of("examId",item.examId(),"name",price.getFirst().get("name"),"quantity",item.quantity(),"unit",unit,"line",line));
+        }
+        jdbc.update("""
+            INSERT INTO service_notes(id,clinic_id,note_number,patient_id,insurance_id,service_date,total_amount,notes,created_by_membership_id)
+            VALUES(?,?,?,?,?,?,?,?,?)
+        """,noteId,clinic,number,body.patientId(),body.insuranceId(),body.serviceDate(),total.setScale(2,RoundingMode.HALF_UP),
+            clean(body.notes()),a.membershipId());
+        for(Map<String,Object> item:selected){
+            jdbc.update("""
+                INSERT INTO service_note_items(clinic_id,service_note_id,exam_id,exam_name_snapshot,quantity,unit_price,total_amount)
+                VALUES(?,?,?,?,?,?,?)
+            """,clinic,noteId,item.get("examId"),item.get("name"),item.get("quantity"),item.get("unit"),item.get("line"));
+        }
+        jdbc.update("INSERT INTO service_note_events(clinic_id,service_note_id,event_type,detail,actor_membership_id) VALUES(?,?,'CREATED','Nota de serviço criada',?)",
+            clinic,noteId,a.membershipId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",noteId,"noteNumber",number,"total",total,"status","DRAFT"));
+    }
+
+    @GetMapping("/service-notes/{id}")
+    public ResponseEntity<?> serviceNoteDetail(Authentication auth,@PathVariable UUID id) {
+        if(access(auth)==null)return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        List<Map<String,Object>> notes=jdbc.queryForList("""
+            SELECT n.*,p.full_name AS patient_name,i.name AS insurance_name
+              FROM service_notes n JOIN patients p ON p.clinic_id=n.clinic_id AND p.id=n.patient_id
+              JOIN clinic_insurances i ON i.clinic_id=n.clinic_id AND i.id=n.insurance_id
+             WHERE n.clinic_id=? AND n.id=?
+        """,clinic,id);
+        if(notes.isEmpty())return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("note",notes.getFirst(),"items",jdbc.queryForList("""
+            SELECT exam_name_snapshot,quantity,unit_price,total_amount FROM service_note_items
+             WHERE clinic_id=? AND service_note_id=? ORDER BY created_at
+        """,clinic,id)));
+    }
+
+    @PostMapping("/service-notes/{id}/sign")
+    @Transactional
+    public ResponseEntity<?> signServiceNote(Authentication auth,@PathVariable UUID id,@Valid @RequestBody ServiceNoteSignRequest body) {
+        Access a=access(auth);
+        if(a==null)return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        List<Map<String,Object>> rows=jdbc.queryForList("SELECT status FROM service_notes WHERE clinic_id=? AND id=? FOR UPDATE",clinic,id);
+        if(rows.isEmpty())return ResponseEntity.notFound().build();
+        if(!"DRAFT".equals(String.valueOf(rows.getFirst().get("status"))))
+            return badRequest("Somente notas ainda não assinadas podem receber assinatura.");
+        jdbc.update("""
+            UPDATE service_notes SET status='SIGNED',signer_name=?,signature_text=?,signed_at=now(),updated_at=now()
+             WHERE clinic_id=? AND id=? AND status='DRAFT'
+        """,body.signerName().trim(),body.signatureText().trim(),clinic,id);
+        jdbc.update("INSERT INTO service_note_events(clinic_id,service_note_id,event_type,detail,actor_membership_id) VALUES(?,?,'SIGNED','Nota de serviço assinada',?)",
+            clinic,id,a.membershipId());
+        return ResponseEntity.ok(Map.of("id",id,"status","SIGNED","message","Nota de serviço assinada."));
+    }
+
     private boolean validReferences(UUID clinic,UUID category,String direction,UUID patient,UUID appointment) {
         Integer categoryCount=jdbc.queryForObject("""
             SELECT count(*) FROM finance_categories WHERE clinic_id=? AND id=? AND active=true
@@ -391,6 +534,13 @@ public class FinanceController {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error",message));
     }
 
+    public record InsuranceExamPriceRequest(@NotNull UUID insuranceId,@NotNull UUID examId,
+        @NotNull @DecimalMin("0.01") @Digits(integer=10,fraction=2) BigDecimal amount,Boolean active) {}
+    public record ServiceNoteItemRequest(@NotNull UUID examId,@NotNull Integer quantity) {}
+    public record ServiceNoteRequest(@NotNull UUID patientId,@NotNull UUID insuranceId,@NotNull LocalDate serviceDate,
+        @Size(max=500) String notes,@NotNull List<ServiceNoteItemRequest> items) {}
+    public record ServiceNoteSignRequest(@NotBlank @Size(max=180) String signerName,
+        @NotBlank @Size(max=240) String signatureText) {}
     public record CategoryRequest(@NotBlank @Size(max=100) String name,@NotBlank @Size(max=12) String direction) {}
     public record ActiveRequest(@NotNull Boolean active) {}
     public record EntryRequest(
