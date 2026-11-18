@@ -58,16 +58,16 @@ class DatabaseMigrationIntegrationTest {
         Integer clinicalTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema()
-               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events')
+               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events')
             """, Integer.class);
         Integer masterTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(11);
+        assertThat(migrationCount).isEqualTo(12);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(17);
+        assertThat(clinicalTables).isEqualTo(19);
         assertThat(masterTables).isEqualTo(1);
     }
 
@@ -125,7 +125,7 @@ class DatabaseMigrationIntegrationTest {
         // Test cleanup is intentionally explicit: TRUNCATE is not filtered by RLS,
         // unlike DELETE, and CASCADE clears tenant-owned rows before parent clinics.
         jdbc.execute("""
-            TRUNCATE TABLE finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
+            TRUNCATE TABLE exam_order_events, exam_orders, finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
                 exam_catalog, service_types, clinic_rooms, professionals, patients, platform_admins,
                 clinic_memberships, app_users, clinics CASCADE
             """);
@@ -399,6 +399,42 @@ class DatabaseMigrationIntegrationTest {
                 .session(clinicAdminSession))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.incomeReceived").value(250.00));
+
+        String examOrderPayload = """
+            {"patientId":"%s","examId":"%s","appointmentId":"%s","professionalId":"%s",
+             "priority":"URGENT","notes":"Solicitação clínica de integração"}
+            """.formatted(patientId,examId,appointmentId,professionalId);
+        MvcResult examOrderResult = mockMvc.perform(post("/api/v1/clinic/exams")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content(examOrderPayload))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("REQUESTED")).andReturn();
+        UUID examOrderId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            examOrderResult.getResponse().getContentAsString(),"$.id"));
+        assertThat(jdbc.queryForObject("SELECT notes_ciphertext IS NOT NULL FROM exam_orders WHERE id=?",
+            Boolean.class,examOrderId)).isTrue();
+        mockMvc.perform(patch("/api/v1/clinic/exams/{id}/status",examOrderId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"IN_PROGRESS\"}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/clinic/exams/{id}/status",examOrderId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"COMPLETED\",\"result\":\"Exame sem alterações relevantes.\"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("COMPLETED"));
+        assertThat(jdbc.queryForObject("SELECT status FROM exam_orders WHERE id=?",String.class,examOrderId))
+            .isEqualTo("COMPLETED");
+        assertThat(jdbc.queryForObject("SELECT result_ciphertext IS NOT NULL FROM exam_orders WHERE id=?",
+            Boolean.class,examOrderId)).isTrue();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM exam_order_events WHERE exam_order_id=?",
+            Integer.class,examOrderId)).isEqualTo(3);
+        mockMvc.perform(get("/api/v1/clinic/exams/{id}",examOrderId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.result").value("Exame sem alterações relevantes."));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            jdbc.update("UPDATE exam_order_events SET detail='alterado' WHERE exam_order_id=?",examOrderId))
+            .isInstanceOf(DataAccessException.class);
+        mockMvc.perform(get("/api/v1/clinic/exams").param("status","COMPLETED")
+                .session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1))
+            .andExpect(jsonPath("$.items[0].exam_name").value("Tórax PA"));
 
         jdbc.update("""
             UPDATE clinic_memberships SET role='RECEPTION'
