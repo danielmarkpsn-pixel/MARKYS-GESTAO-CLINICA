@@ -59,6 +59,10 @@ public class ClinicCatalogController {
     ) {
         if (!canManageCatalog(authentication)) return forbidden();
         UUID clinicId = TenantContext.requireClinicId();
+        if (jdbc.queryForObject("SELECT count(*) FROM clinic_rooms WHERE clinic_id=? AND lower(name)=lower(?)",
+                Integer.class, clinicId, body.name().trim()) > 0) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Já existe uma sala com esse nome."));
+        }
         UUID id = UUID.randomUUID();
         try {
             jdbc.update("INSERT INTO clinic_rooms (id, clinic_id, name) VALUES (?, ?, ?)",
@@ -67,6 +71,10 @@ public class ClinicCatalogController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("error", "Já existe uma sala com esse nome."));
         }
+        jdbc.update("""
+            INSERT INTO clinic_room_events(clinic_id,room_id,event_type,detail,actor_membership_id)
+            VALUES(?,?,'CREATED','Consultório cadastrado pela configuração da recepção',?)
+        """, clinicId, id, currentMembershipId(authentication, clinicId));
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id, "name", body.name().trim()));
     }
 
@@ -126,10 +134,30 @@ public class ClinicCatalogController {
         if (!canManageCatalog(authentication)) return forbidden();
         String status = normalizedStatus(body.status());
         if (status == null) return badStatus();
-        int count = jdbc.update("UPDATE clinic_rooms SET status = ? WHERE clinic_id = ? AND id = ?",
-            status, TenantContext.requireClinicId(), id);
-        return count == 0 ? ResponseEntity.notFound().build()
-            : ResponseEntity.ok(Map.of("id", id, "status", status));
+        UUID clinicId = TenantContext.requireClinicId();
+        List<Map<String,Object>> current = jdbc.queryForList(
+            "SELECT status FROM clinic_rooms WHERE clinic_id=? AND id=? FOR UPDATE", clinicId, id);
+        if (current.isEmpty()) return ResponseEntity.notFound().build();
+        String previous = String.valueOf(current.getFirst().get("status"));
+        if ("INACTIVE".equals(status)) {
+            if (jdbc.queryForObject("SELECT count(*) FROM exam_catalog WHERE clinic_id=? AND room_id=? AND active=true", Integer.class, clinicId, id) > 0)
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Desative primeiro os exames do catálogo vinculados a esta sala."));
+            if (jdbc.queryForObject("SELECT count(*) FROM queue_entries WHERE clinic_id=? AND room_id=? AND status IN ('WAITING','CALLED','IN_SERVICE')", Integer.class, clinicId, id) > 0)
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Há atendimentos ativos nesta sala."));
+            if (jdbc.queryForObject("SELECT count(*) FROM appointments WHERE clinic_id=? AND room_id=? AND status IN ('SCHEDULED','CONFIRMED','CHECKED_IN') AND ends_at>now()", Integer.class, clinicId, id) > 0)
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Há agendamentos futuros ou em andamento nesta sala."));
+            if (jdbc.queryForObject("SELECT count(*) FROM exam_orders WHERE clinic_id=? AND room_id=? AND status IN ('REQUESTED','SCHEDULED','IN_PROGRESS')", Integer.class, clinicId, id) > 0)
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Há exames pendentes, agendados ou em execução nesta sala."));
+        }
+        if (!previous.equals(status)) {
+            jdbc.update("UPDATE clinic_rooms SET status=?,updated_at=now() WHERE clinic_id=? AND id=?", status, clinicId, id);
+            jdbc.update("""
+                INSERT INTO clinic_room_events(clinic_id,room_id,event_type,detail,actor_membership_id)
+                VALUES(?,?,?,?,?)
+            """, clinicId, id, "ACTIVE".equals(status) ? "ACTIVATED" : "DEACTIVATED",
+                "Situação alterada pela configuração da recepção", currentMembershipId(authentication, clinicId));
+        }
+        return ResponseEntity.ok(Map.of("id", id, "status", status));
     }
 
     @PatchMapping("/service-types/{id}/status")
@@ -158,6 +186,13 @@ public class ClinicCatalogController {
             """, body.active(), TenantContext.requireClinicId(), id);
         return count == 0 ? ResponseEntity.notFound().build()
             : ResponseEntity.ok(Map.of("id", id, "active", body.active()));
+    }
+
+    private UUID currentMembershipId(Authentication authentication, UUID clinicId) {
+        return jdbc.queryForObject("""
+            SELECT m.id FROM clinic_memberships m JOIN app_users u ON u.id=m.user_id
+             WHERE lower(u.email)=lower(?) AND m.clinic_id=? AND m.status='ACTIVE' AND u.status='ACTIVE'
+        """, UUID.class, authentication.getName(), clinicId);
     }
 
     private boolean canManageCatalog(Authentication authentication) {
