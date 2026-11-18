@@ -106,7 +106,7 @@ public class QueueController {
                AND (? = '' OR q.status=?)
                AND (? = '' OR p.full_name ILIKE ? OR COALESCE(q.service_label,'') ILIKE ?
                     OR COALESCE(pr.display_name,'') ILIKE ? OR COALESCE(r.name,'') ILIKE ?
-                    OR (CAST(? AS bytea) IS NOT NULL AND p.document_fingerprint=?))
+                    OR (CAST(? AS bytea) IS NOT NULL AND p.document_fingerprint=CAST(? AS bytea)))
                AND (
                     (? = '' AND ? = '' AND
                        ((? = TRUE AND q.arrived_at >= CURRENT_DATE AND q.arrived_at < CURRENT_DATE + INTERVAL '1 day')
