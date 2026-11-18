@@ -78,7 +78,7 @@ public class LaboratoryController {
             SELECT s.*,o.id AS exam_order_id,o.exam_name_snapshot AS exam_name,o.exam_category_snapshot AS category,
                    o.room_name_snapshot AS room_name,o.patient_id,p.full_name AS patient_name,
                    o.professional_id,pr.display_name AS professional_name,o.priority,o.status AS order_status,
-                   o.requested_at,o.scheduled_at
+                   o.requested_at,o.scheduled_at,o.notes_ciphertext
               FROM lab_specimens s
               JOIN exam_orders o ON o.clinic_id=s.clinic_id AND o.id=s.exam_order_id
               JOIN patients p ON p.clinic_id=o.clinic_id AND p.id=o.patient_id
@@ -88,12 +88,14 @@ public class LaboratoryController {
         if(rows.isEmpty())return ResponseEntity.notFound().build();
         Map<String,Object> row=new LinkedHashMap<>(rows.getFirst());
         byte[] notes=(byte[])row.remove("collection_notes_ciphertext");
+        byte[] examNotes=(byte[])row.remove("notes_ciphertext");
         byte[] rejection=(byte[])row.remove("rejection_reason_ciphertext");
         byte[] result=(byte[])row.remove("result_ciphertext");
         row.remove("result_entered_by_membership_id");
-        if((notes!=null||rejection!=null||result!=null)&&!protection.isConfigured())
+        if((notes!=null||examNotes!=null||rejection!=null||result!=null)&&!protection.isConfigured())
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error","Proteção de dados indisponível no servidor."));
         row.put("collection_notes",notes==null?null:protection.decrypt(notes));
+        row.put("exam_notes",examNotes==null?null:protection.decrypt(examNotes));
         row.put("rejection_reason",rejection==null?null:protection.decrypt(rejection));
         row.put("result",result==null?null:protection.decrypt(result));
         return ResponseEntity.ok(row);
