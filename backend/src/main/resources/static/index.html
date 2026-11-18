@@ -643,12 +643,12 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="attendance-search-row">
       <div class="attendance-search"><label for="attendanceSearch">PESQUISAR PACIENTE</label><div class="attendance-search-control"><input id="attendanceSearch" type="search" maxlength="120" placeholder="Digite o nome ou CPF do paciente" aria-label="Pesquisar por nome ou CPF"><button id="attendanceSearchButton" class="attendance-button primary" type="button">Pesquisar</button></div></div>
       <button id="attendanceMine" class="attendance-mine-button" type="button" aria-pressed="false">◉&nbsp; Ver somente meus atendimentos</button>
-      <button id="attendanceRefresh" class="attendance-button refresh" type="button" title="Atualizar lista">↻ Atualizar</button>
+      <button id="attendanceToday" class="attendance-button" type="button">Hoje</button><button id="attendanceClear" class="attendance-button" type="button">Limpar filtros</button><button id="attendanceRefresh" class="attendance-button refresh" type="button" title="Atualizar lista">↻ Atualizar</button>
     </div>
     <div class="attendance-filters">
       <label>DATA INICIAL<input id="attendanceFrom" type="date"></label>
       <label>DATA FINAL<input id="attendanceTo" type="date"></label>
-      <label>STATUS<select id="attendancePriority"><option value="">Todos</option><option value="NORMAL">Normal</option><option value="PRIORITY">Prioritário</option><option value="URGENT">Urgente</option></select></label>
+      <label>PRIORIDADE<select id="attendancePriority"><option value="">Todos</option><option value="NORMAL">Normal</option><option value="PRIORITY">Prioritário</option><option value="URGENT">Urgente</option></select></label>
       <label>PROFISSIONAL<select id="attendanceProfessional"><option value="">Todos os profissionais</option></select></label>
       <label>STATUS DO ATENDIMENTO<select id="attendanceStatus"><option value="">Todos os status</option><option value="WAITING">Aguardando atendimento</option><option value="CALLED">Chamado</option><option value="IN_SERVICE">Em atendimento</option><option value="COMPLETED">Finalizado</option><option value="RELEASED">Liberado</option><option value="CANCELLED">Cancelado</option></select></label>
     </div>
@@ -1792,6 +1792,19 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   $("attendanceMine").addEventListener("click",()=>{
     const button=$("attendanceMine"),active=button.getAttribute("aria-pressed")!=="true";
     button.setAttribute("aria-pressed",String(active));loadAttendance();
+  });
+  $("attendanceToday").addEventListener("click",()=>{
+    const today=localDateString();
+    $("attendanceFrom").value=today;$("attendanceTo").value=today;
+    loadAttendance();
+  });
+  $("attendanceClear").addEventListener("click",()=>{
+    $("attendanceSearch").value="";
+    $("attendanceFrom").value="";$("attendanceTo").value="";
+    $("attendanceStatus").value="";$("attendancePriority").value="";
+    $("attendanceProfessional").value="";
+    $("attendanceMine").setAttribute("aria-pressed","false");
+    loadAttendance();
   });
   $("attendanceRefresh").addEventListener("click",loadAttendance);
 
