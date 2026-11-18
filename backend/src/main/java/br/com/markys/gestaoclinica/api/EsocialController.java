@@ -225,7 +225,7 @@ public class EsocialController {
         JsonNode payload;
         try{payload=mapper.readTree(protection.decrypt((byte[])row.get("payload_ciphertext")));}
         catch(Exception ex){return conflict("O conteúdo protegido do evento está ilegível.");}
-        List<String> errors=validatePayload(String.valueOf(row.get("event_type")),payload,(LocalDate)row.get("event_date"));
+        List<String> errors=validatePayload(String.valueOf(row.get("event_type")),payload,asLocalDate(row.get("event_date")) );
         jdbc.update("UPDATE esocial_events SET validation_errors=?::jsonb,updated_at=now(),updated_by_membership_id=? WHERE clinic_id=? AND id=?",
             json(mapper.valueToTree(errors)),a.membershipId(),clinic,id);
         audit(clinic,id,"VALIDATED",errors.isEmpty()?"Validação local aprovada":"Validação local encontrou "+errors.size()+" pendência(s)",a.membershipId());
@@ -287,6 +287,7 @@ public class EsocialController {
             catch(Exception ex){errors.add("Data de início da condição ambiental inválida.");}
         return errors;
     }
+    private LocalDate asLocalDate(Object value){if(value instanceof java.sql.Date d)return d.toLocalDate();if(value instanceof LocalDate d)return d;throw new IllegalStateException("Data do evento inválida.");}
     private String json(JsonNode value){try{return mapper.writeValueAsString(value);}catch(Exception ex){throw new IllegalArgumentException("Conteúdo estruturado inválido.",ex);}}
     private boolean workerExists(UUID clinic,UUID worker){
         return jdbc.queryForObject("SELECT count(*) FROM esocial_workers WHERE clinic_id=? AND id=? AND status='ACTIVE'",
