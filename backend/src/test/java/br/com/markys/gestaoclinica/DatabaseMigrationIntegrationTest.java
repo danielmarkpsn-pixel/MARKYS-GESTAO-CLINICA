@@ -436,6 +436,45 @@ class DatabaseMigrationIntegrationTest {
             .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1))
             .andExpect(jsonPath("$.items[0].exam_name").value("Tórax PA"));
 
+        MvcResult roomResult=mockMvc.perform(post("/api/v1/clinic/rooms")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"name":"Sala de Integração","roomType":"CONSULTORIO","floorLabel":"1º andar",
+                     "capacity":2,"description":"Sala de teste"}
+                    """))
+            .andExpect(status().isCreated()).andReturn();
+        UUID managedRoomId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            roomResult.getResponse().getContentAsString(),"$.id"));
+        mockMvc.perform(get("/api/v1/clinic/rooms").param("search","Sala de Integração")
+                .session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
+        mockMvc.perform(get("/api/v1/clinic/rooms/{id}",managedRoomId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.room.name").value("Sala de Integração"));
+        mockMvc.perform(put("/api/v1/clinic/rooms/{id}",managedRoomId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"name":"Sala de Integração Atualizada","roomType":"MULTIUSO","floorLabel":"2º andar",
+                     "capacity":3,"description":"Sala revisada"}
+                    """))
+            .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/clinic/rooms/{id}/status",managedRoomId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/clinic/rooms/{id}/status",managedRoomId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"active\":true}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/clinic/rooms/{id}/history",managedRoomId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(4));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM clinic_room_events WHERE room_id=?",
+            Integer.class,managedRoomId)).isEqualTo(4);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            jdbc.update("UPDATE clinic_room_events SET detail='alterado' WHERE room_id=?",managedRoomId))
+            .isInstanceOf(DataAccessException.class);
+
         jdbc.update("""
             UPDATE clinic_memberships SET role='RECEPTION'
              WHERE clinic_id=? AND user_id=(SELECT id FROM app_users WHERE lower(email)=lower(?))
