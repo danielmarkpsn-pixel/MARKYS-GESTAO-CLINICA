@@ -40,13 +40,13 @@ public class SubscriptionController {
         Map<String,Object> current=subscriptions.isEmpty()?Map.of():subscriptions.getFirst();
         return ResponseEntity.ok(Map.of("subscription",current,"payments",payments,"plans",plans,
             "paymentMethods",List.of(
-                Map.of("code","CREDIT_CARD","label","Cartão de crédito","recurrence","Recorrência automática, mediante habilitação PicPay"),
-                Map.of("code","PIX","label","PIX","recurrence","Cobrança mensal individual"),
-                Map.of("code","BOLETO","label","Boleto bancário","recurrence","Emissão recorrente, mediante habilitação da API PicPay")
-            ),"gatewayConfigured",gatewayConfigured()));
+                Map.of("code","CREDIT_CARD","label","Cartão de crédito","recurrence","Recorrência automática; integração pendente","enabled",false),
+                Map.of("code","PIX","label","PIX","recurrence","Cobrança mensal individual; integração pendente","enabled",false),
+                Map.of("code","BOLETO","label","Boleto bancário","recurrence","Emissão recorrente via API; integração pendente","enabled",false)
+            ),"gatewayCredentialsConfigured",gatewayCredentialsConfigured(),"integrationReady",false));
     }
 
-    private boolean gatewayConfigured() {
+    private boolean gatewayCredentialsConfigured() {
         return System.getenv("PICPAY_CLIENT_ID")!=null && !System.getenv("PICPAY_CLIENT_ID").isBlank()
             && System.getenv("PICPAY_CLIENT_SECRET")!=null && !System.getenv("PICPAY_CLIENT_SECRET").isBlank();
     }
