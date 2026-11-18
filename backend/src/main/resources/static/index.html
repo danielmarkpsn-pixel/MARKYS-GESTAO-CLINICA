@@ -2314,7 +2314,8 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     items.forEach(item=>select.add(new Option(item.name||item.full_name,item.id)));
   };
   const loadFinanceBillingResources=async()=>{
-    if(!financeCanAdmin()){$("financeExamPricesPanel").classList.add("hidden");return;}
+    if(!["CLINIC_ADMIN","RECEPTION"].includes(financeState.role)){$("financeExamPricesPanel").classList.add("hidden");return;}
+    $("financeExamPricesPanel").classList.toggle("hidden",!financeCanAdmin());
     try{
       const data=await financeRequest("/api/v1/clinic/finance/insurance-exam-prices/resources");
       financeBillingState.resources=data;

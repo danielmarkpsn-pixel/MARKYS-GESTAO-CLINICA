@@ -340,7 +340,7 @@ public class FinanceController {
     @GetMapping("/insurance-exam-prices/resources")
     public ResponseEntity<?> insuranceExamPriceResources(Authentication auth) {
         Access a=access(auth);
-        if(a==null || !"CLINIC_ADMIN".equals(a.role()))return forbidden();
+        if(a==null || !List.of("CLINIC_ADMIN","RECEPTION").contains(a.role()))return forbidden();
         UUID clinic=TenantContext.requireClinicId();
         return ResponseEntity.ok(Map.of(
             "insurances",jdbc.queryForList("SELECT id,name FROM clinic_insurances WHERE clinic_id=? AND status='ACTIVE' ORDER BY lower(name)",clinic),
@@ -351,7 +351,7 @@ public class FinanceController {
     @GetMapping("/insurance-exam-prices")
     public ResponseEntity<?> insuranceExamPrices(Authentication auth,@RequestParam UUID insuranceId) {
         Access a=access(auth);
-        if(a==null || !"CLINIC_ADMIN".equals(a.role()))return forbidden();
+        if(a==null || !List.of("CLINIC_ADMIN","RECEPTION").contains(a.role()))return forbidden();
         UUID clinic=TenantContext.requireClinicId();
         if(scalar("SELECT count(*) FROM clinic_insurances WHERE clinic_id=? AND id=?",clinic,insuranceId)==0)
             return ResponseEntity.notFound().build();
@@ -480,6 +480,10 @@ public class FinanceController {
         return ResponseEntity.ok(Map.of("id",id,"status","SIGNED","message","Nota de serviço assinada."));
     }
 
+    private int scalar(String sql,Object...args) {
+        Integer value=jdbc.queryForObject(sql,Integer.class,args);
+        return value==null?0:value;
+    }
     private boolean validReferences(UUID clinic,UUID category,String direction,UUID patient,UUID appointment) {
         Integer categoryCount=jdbc.queryForObject("""
             SELECT count(*) FROM finance_categories WHERE clinic_id=? AND id=? AND active=true
