@@ -1240,6 +1240,199 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     }catch(error){scheduleMessage(error.message);}finally{button.disabled=false;}
   });
 
+  const financeState={resources:null,role:"",items:[],page:1,pages:1,total:0,editingId:null,paymentEntry:null};
+  const financeMessage=(message,error=true)=>{$("financeMessage").textContent=message||"";$("financeMessage").style.color=error?"#a12c26":"#287747";};
+  const financeRequest=async(path,options={})=>{
+    const headers={...(options.headers||{})};
+    if(options.method&&options.method!=="GET")headers["X-XSRF-TOKEN"]=await csrf();
+    const response=await fetch(path,{credentials:"same-origin",...options,headers});
+    const data=response.status===204?null:await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data?.error||"Não foi possível concluir a operação financeira.");
+    return data;
+  };
+  const financeMoney=value=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(value||0));
+  const financeDate=value=>value?new Intl.DateTimeFormat("pt-BR",{timeZone:"UTC"}).format(new Date(String(value).slice(0,10)+"T12:00:00Z")):"—";
+  const financeCanAdmin=()=>financeState.role==="CLINIC_ADMIN";
+  const financeCanManageIncome=()=>["CLINIC_ADMIN","RECEPTION"].includes(financeState.role);
+  const financeCategoryOptions=(direction,selected="")=>{
+    const list=(financeState.resources?.categories||[]).filter(c=>c.direction===direction||c.direction==="BOTH");
+    $("financeEntryCategory").replaceChildren();
+    const empty=document.createElement("option");empty.value="";empty.textContent="Selecione uma categoria";$("financeEntryCategory").append(empty);
+    list.forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=c.name;o.selected=c.id===selected;$("financeEntryCategory").append(o);});
+  };
+  const loadFinanceResources=async()=>{
+    financeState.resources=await financeRequest("/api/v1/clinic/finance/resources");
+    financeState.role=financeState.resources.role;
+    const fill=(id,items,label,selected="")=>{
+      const select=$(id),first=document.createElement("option");first.value="";first.textContent=label;select.replaceChildren(first);
+      items.forEach(item=>{const option=document.createElement("option");option.value=item.id;option.textContent=item.full_name||item.name||item.patient_name+" • "+item.professional_name;option.selected=item.id===selected;select.append(option);});
+    };
+    fill("financeEntryPatient",financeState.resources.patients||[],"Não vincular paciente");
+    fill("financeEntryAppointment",financeState.resources.appointments||[],"Não vincular agendamento");
+    const categories=financeState.resources.categories||[];
+    const filter=$("financeCategoryFilter"),current=filter.value;filter.replaceChildren();
+    const all=document.createElement("option");all.value="";all.textContent="Todas as categorias";filter.append(all);
+    categories.forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=c.name;o.selected=c.id===current;filter.append(o);});
+    $("financeNew").classList.toggle("hidden",!financeCanManageIncome());
+    $("financeCategoriesToggle").classList.toggle("hidden",!financeCanAdmin());
+    $("financeEntryDirection").querySelector('option[value="EXPENSE"]').hidden=!financeCanAdmin();
+  };
+  const loadFinance=async()=>{
+    financeMessage("");
+    const from=$("financeFrom").value,to=$("financeTo").value;
+    const params=new URLSearchParams({from,to,direction:$("financeDirectionFilter").value,status:$("financeStatusFilter").value,
+      search:$("financeSearchTerm").value.trim(),page:String(financeState.page),size:"30"});
+    if($("financeCategoryFilter").value)params.set("categoryId",$("financeCategoryFilter").value);
+    try{
+      const [summary,result]=await Promise.all([
+        financeRequest("/api/v1/clinic/finance/summary?"+new URLSearchParams({from,to})),
+        financeRequest("/api/v1/clinic/finance/entries?"+params)
+      ]);
+      $("financeIncomeDue").textContent=financeMoney(summary.incomeDue);
+      $("financeIncomeReceived").textContent=financeMoney(summary.incomeReceived);
+      $("financeExpenseDue").textContent=financeMoney(summary.expenseDue);
+      $("financeExpensePaid").textContent=financeMoney(summary.expensePaid);
+      $("financeBalance").textContent=financeMoney(summary.balanceRealized);
+      $("financeOverdue").textContent=String(summary.overdueCount||0);
+      financeState.items=result.items||[];financeState.pages=result.pages||1;financeState.total=result.total||0;
+      renderFinanceRows();
+    }catch(error){financeMessage(error.message);}
+  };
+  const renderFinanceRows=()=>{
+    const body=$("financeRows");body.replaceChildren();
+    if(!financeState.items.length){const row=document.createElement("tr"),cell=document.createElement("td");cell.colSpan=9;cell.className="schedule-empty";cell.textContent="Nenhum lançamento encontrado neste período.";row.append(cell);body.append(row);}
+    const labels={OPEN:"Em aberto",PARTIAL:"Parcial",OVERDUE:"Vencido",PAID:"Quitado",CANCELLED:"Cancelado"};
+    const action=(label,callback)=>{const button=document.createElement("button");button.type="button";button.textContent=label;button.addEventListener("click",callback);return button;};
+    financeState.items.forEach(item=>{
+      const row=document.createElement("tr");
+      const type=item.direction==="INCOME"?"Receita":"Despesa";
+      const status=String(item.status||"").toLowerCase();
+      const actions=document.createElement("div");actions.className="schedule-actions";
+      const canTouch=item.direction==="INCOME"?financeCanManageIncome():financeCanAdmin();
+      if(canTouch&&!["PAID","CANCELLED"].includes(item.status))actions.append(action(item.direction==="INCOME"?"Receber":"Pagar",()=>openFinancePayment(item)));
+      if(canTouch&&item.status==="OPEN"&&Number(item.amount_paid||0)===0)actions.append(action("Editar",()=>openFinanceEntry(item)));
+      if(canTouch&&item.status==="OPEN"&&Number(item.amount_paid||0)===0)actions.append(action("Cancelar",()=>cancelFinanceEntry(item)));
+      actions.append(action("Histórico",()=>showFinanceHistory(item)));
+      const cells=[
+        financeDate(item.due_date),
+        '<strong>'+escapeHtml(item.description)+'</strong><br><span style="color:#718297">'+escapeHtml(item.patient_name||"Sem paciente vinculado")+'</span>',
+        escapeHtml(item.category_name),
+        '<span class="finance-direction '+(item.direction==="EXPENSE"?"expense":"")+'">'+type+'</span>',
+        financeMoney(item.amount),financeMoney(item.amount_paid),financeMoney(item.amount_remaining),
+        '<span class="finance-state '+status+'">'+(labels[item.status]||escapeHtml(item.status))+'</span>'
+      ];
+      cells.forEach((value,index)=>{const td=document.createElement("td");td.innerHTML=value;row.append(td);});
+      const actionCell=document.createElement("td");actionCell.append(actions);row.append(actionCell);body.append(row);
+    });
+    $("financePageInfo").textContent="Página "+financeState.page+" de "+financeState.pages+" • "+financeState.total+" lançamento(s)";
+    $("financePrev").disabled=financeState.page<=1;$("financeNext").disabled=financeState.page>=financeState.pages;
+  };
+  const openFinanceEntry=(item=null)=>{
+    if(!financeState.resources)return;
+    financeState.editingId=item?.id||null;
+    $("financeEntryTitle").textContent=item?"Editar lançamento":"Novo lançamento";
+    $("financeEntryDirection").disabled=!!item;
+    $("financeEntryDirection").value=item?.direction||"INCOME";
+    financeCategoryOptions($("financeEntryDirection").value,item?.category_id||"");
+    $("financeEntryDescription").value=item?.description||"";
+    $("financeEntryAmount").value=item?.amount||"";
+    $("financeEntryDue").value=item?.due_date?String(item.due_date).slice(0,10):localDateString();
+    $("financeEntryPatient").value=item?.patient_id||"";
+    $("financeEntryAppointment").value=item?.appointment_id||"";
+    $("financeEntryNotes").value=item?.notes||"";
+    $("financeEntryPanel").classList.remove("hidden");$("financePaymentPanel").classList.add("hidden");
+    $("financeHistoryPanel").classList.add("hidden");$("financeEntryPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  const openFinancePayment=async item=>{
+    financeState.paymentEntry=item;
+    $("financePaymentTitle").textContent=(item.direction==="INCOME"?"Receber • ":"Pagar • ")+item.description;
+    $("financePaymentBalance").textContent="Valor original: "+financeMoney(item.amount)+" • Já movimentado: "+financeMoney(item.amount_paid)+" • Saldo: "+financeMoney(item.amount_remaining);
+    $("financePaymentAmount").max=Number(item.amount_remaining||0).toFixed(2);
+    $("financePaymentAmount").value=Number(item.amount_remaining||0).toFixed(2);
+    const now=new Date(Date.now()-new Date().getTimezoneOffset()*60000);$("financePaymentDate").value=now.toISOString().slice(0,16);
+    $("financePaymentReference").value="";$("financePaymentNotes").value="";
+    $("financePaymentPanel").classList.remove("hidden");$("financeEntryPanel").classList.add("hidden");$("financeHistoryPanel").classList.add("hidden");
+    try{
+      const payments=await financeRequest("/api/v1/clinic/finance/entries/"+item.id+"/payments");
+      const target=$("financePaymentHistory");target.replaceChildren();
+      payments.forEach(p=>{const line=document.createElement("div");line.className="schedule-rule";line.textContent=financeDate(p.paid_at)+" • "+financeMoney(p.amount)+" • "+p.payment_method+" • "+(p.recorded_by||"");target.append(line);});
+      if(!payments.length)target.textContent="Nenhuma movimentação registrada.";
+    }catch(error){financeMessage(error.message);}
+    $("financePaymentPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  const showFinanceHistory=async item=>{
+    try{
+      const events=await financeRequest("/api/v1/clinic/finance/entries/"+item.id+"/history");
+      const target=$("financeHistoryRows");target.replaceChildren();
+      events.forEach(ev=>{const line=document.createElement("div");line.className="schedule-rule";line.textContent=new Date(ev.created_at).toLocaleString("pt-BR")+" • "+ev.event_type+" • "+(ev.actor_name||"Usuário")+" • "+ev.detail;target.append(line);});
+      if(!events.length)target.textContent="Nenhum evento registrado.";
+      $("financeHistoryPanel").classList.remove("hidden");$("financeEntryPanel").classList.add("hidden");$("financePaymentPanel").classList.add("hidden");
+      $("financeHistoryPanel").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){financeMessage(error.message);}
+  };
+  const cancelFinanceEntry=async item=>{
+    const reason=prompt("Informe o motivo do cancelamento do lançamento:");
+    if(!reason||!reason.trim())return;
+    try{await financeRequest("/api/v1/clinic/finance/entries/"+item.id+"/cancel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reason:reason.trim()})});financeMessage("Lançamento cancelado.",false);await loadFinance();}
+    catch(error){financeMessage(error.message);}
+  };
+  const loadFinanceCategories=async()=>{
+    try{
+      const categories=await financeRequest("/api/v1/clinic/finance/categories?all=true");
+      const target=$("financeCategoryList");target.replaceChildren();
+      categories.forEach(category=>{
+        const line=document.createElement("div");line.className="finance-category-item";
+        const label=document.createElement("span");label.textContent=category.name+" • "+(category.direction==="INCOME"?"Receita":category.direction==="EXPENSE"?"Despesa":"Ambos")+(category.active?"":" • Inativa");
+        const button=document.createElement("button");button.type="button";button.className="schedule-btn";button.textContent=category.active?"Inativar":"Reativar";
+        button.addEventListener("click",async()=>{try{await financeRequest("/api/v1/clinic/finance/categories/"+category.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({active:!category.active})});await loadFinanceResources();await loadFinanceCategories();}catch(error){financeMessage(error.message);}});
+        line.append(label,button);target.append(line);
+      });
+    }catch(error){financeMessage(error.message);}
+  };
+  $("financeSearch").addEventListener("click",()=>{financeState.page=1;loadFinance();});
+  $("financeSearchTerm").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();financeState.page=1;loadFinance();}});
+  $("financeDirectionFilter").addEventListener("change",()=>{financeState.page=1;loadFinance();});
+  $("financeStatusFilter").addEventListener("change",()=>{financeState.page=1;loadFinance();});
+  $("financeCategoryFilter").addEventListener("change",()=>{financeState.page=1;loadFinance();});
+  $("financePrev").addEventListener("click",()=>{if(financeState.page>1){financeState.page--;loadFinance();}});
+  $("financeNext").addEventListener("click",()=>{if(financeState.page<financeState.pages){financeState.page++;loadFinance();}});
+  $("financeNew").addEventListener("click",()=>openFinanceEntry());
+  $("financeEntryClose").addEventListener("click",()=>$("financeEntryPanel").classList.add("hidden"));
+  $("financePaymentClose").addEventListener("click",()=>$("financePaymentPanel").classList.add("hidden"));
+  $("financeHistoryClose").addEventListener("click",()=>$("financeHistoryPanel").classList.add("hidden"));
+  $("financeCategoriesToggle").addEventListener("click",async()=>{$("financeCategoriesPanel").classList.toggle("hidden");await loadFinanceCategories();});
+  $("financeCategoriesClose").addEventListener("click",()=>$("financeCategoriesPanel").classList.add("hidden"));
+  $("financeEntryDirection").addEventListener("change",()=>financeCategoryOptions($("financeEntryDirection").value));
+  $("financeEntryForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=$("financeEntrySave");button.disabled=true;
+    const payload={direction:$("financeEntryDirection").value,description:$("financeEntryDescription").value.trim(),
+      categoryId:$("financeEntryCategory").value,amount:Number($("financeEntryAmount").value),dueDate:$("financeEntryDue").value,
+      patientId:$("financeEntryPatient").value||null,appointmentId:$("financeEntryAppointment").value||null,notes:$("financeEntryNotes").value.trim()||null};
+    try{
+      if(financeState.editingId)await financeRequest("/api/v1/clinic/finance/entries/"+financeState.editingId,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      else await financeRequest("/api/v1/clinic/finance/entries",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      $("financeEntryPanel").classList.add("hidden");financeMessage("Lançamento salvo com sucesso.",false);await loadFinance();
+    }catch(error){financeMessage(error.message);}finally{button.disabled=false;}
+  });
+  $("financePaymentForm").addEventListener("submit",async event=>{
+    event.preventDefault();if(!financeState.paymentEntry)return;const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+    const dateValue=$("financePaymentDate").value;
+    const payload={amount:Number($("financePaymentAmount").value),paymentMethod:$("financePaymentMethod").value,
+      paidAt:dateValue?new Date(dateValue).toISOString():null,reference:$("financePaymentReference").value.trim()||null,
+      notes:$("financePaymentNotes").value.trim()||null};
+    try{
+      await financeRequest("/api/v1/clinic/finance/entries/"+financeState.paymentEntry.id+"/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      $("financePaymentPanel").classList.add("hidden");financeMessage("Movimentação registrada.",false);await loadFinance();
+    }catch(error){financeMessage(error.message);}finally{button.disabled=false;}
+  });
+  $("financeCategoryForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+    try{
+      await financeRequest("/api/v1/clinic/finance/categories",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:$("financeCategoryName").value.trim(),direction:$("financeCategoryDirection").value})});
+      event.currentTarget.reset();await loadFinanceResources();await loadFinanceCategories();financeMessage("Categoria cadastrada.",false);
+    }catch(error){financeMessage(error.message);}finally{button.disabled=false;}
+  });
+
   const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
