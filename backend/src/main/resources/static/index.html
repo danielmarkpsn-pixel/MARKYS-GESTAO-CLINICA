@@ -1708,6 +1708,12 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     } catch(error) { attendanceMessage(error.message); }
   };
   const loadAttendance = async () => {
+    const from=$("attendanceFrom").value,to=$("attendanceTo").value;
+    if(from&&to&&to<from){
+      attendanceMessage("A data final não pode ser anterior à data inicial.");
+      $("attendanceRows").innerHTML="<tr><td colspan='6' class='attendance-empty'>Corrija o período para consultar os atendimentos.</td></tr>";
+      return;
+    }
     const rows = $("attendanceRows");
     rows.replaceChildren();
     const loading = document.createElement("tr");
