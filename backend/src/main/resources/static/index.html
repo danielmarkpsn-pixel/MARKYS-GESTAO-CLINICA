@@ -259,6 +259,18 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     @media(max-width:760px){.finance-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-form-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:480px){.finance-summary,.finance-form-grid,.finance-category-list{grid-template-columns:1fr}.finance-form-grid .wide{grid-column:auto}}
   
+.exam-catalog-form{display:grid;grid-template-columns:1.1fr 1.5fr 1fr auto;gap:10px;align-items:end;margin:0 0 15px}
+.exam-catalog-form label,.exam-catalog-filters label{display:grid;gap:6px;font-size:9px;font-weight:850;letter-spacing:.45px;color:#5b7085}
+.exam-catalog-form input,.exam-catalog-form select,.exam-catalog-filters input,.exam-catalog-filters select{height:40px;width:100%;min-width:0;border:1px solid #d1deea;border-radius:8px;padding:0 11px;background:#fff;color:#29445f;font:12px system-ui}
+.exam-catalog-form button{height:40px;border:1px solid #0867b2;border-radius:8px;background:linear-gradient(110deg,#07549a,#1478bb);color:#fff;padding:0 15px;font-size:10px;font-weight:850;white-space:nowrap;cursor:pointer}
+.exam-catalog-divider{height:1px;background:#e7edf3;margin:16px 0}
+.exam-catalog-filters{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;max-width:700px}
+.exam-catalog-hint{margin:10px 0;color:#718297;font-size:10px}
+#examList .catalog-item{background:#f7fafd;border:1px solid #e5edf4;border-radius:8px;padding:9px 11px}
+#examList .catalog-item span{font-size:11px;font-weight:800;color:#244766}
+#examList .catalog-item button{border-radius:7px;font-weight:800}
+@media(max-width:800px){.exam-catalog-form{grid-template-columns:1fr 1fr}.exam-catalog-form button{grid-column:1/-1}}
+@media(max-width:520px){.exam-catalog-form,.exam-catalog-filters{grid-template-columns:1fr}}
 /* Módulo Exames — catálogo, solicitações, execução e resultados protegidos */
 .exam-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
 .exam-toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px;margin-bottom:12px}
@@ -1122,7 +1134,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="exam-panel-heading"><div><h4>Catálogo de exames da clínica</h4><span class="exam-muted">Cadastre os exames disponíveis e associe cada um à sala responsável.</span></div></div>
     <div id="examCatalogMessage" class="catalog-message" role="status" aria-live="polite"></div>
     <div class="catalog-grid">
-      <div class="catalog-card" style="grid-column:1/-1"><h4>Exame e sala vinculada</h4><form id="examForm" style="flex-wrap:wrap"><select id="examCategory" required><option value="RAIO_X">Raio-X</option><option value="LABORATORIO">Coleta / Laboratório</option><option value="AUDIOMETRIA">Audiometria</option><option value="COMPLEMENTAR">Exames complementares</option><option value="OUTROS">Outros</option></select><input id="examName" maxlength="140" placeholder="Nome do exame" required><select id="examRoom" required><option value="">Selecione a sala</option></select><button type="submit">Adicionar exame</button></form><div id="examList" class="catalog-list"></div></div>
+      <div class="catalog-card exam-catalog-card" style="grid-column:1/-1"><h4>Adicionar exame ao catálogo</h4><form id="examForm" class="exam-catalog-form"><label>CATEGORIA<select id="examCategory" required><option value="RAIO_X">Raio-X</option><option value="LABORATORIO">Laboratório</option><option value="AUDIOMETRIA">Audiometria</option><option value="COMPLEMENTAR">Complementares</option><option value="OUTROS">Outros</option></select></label><label>NOME DO EXAME<input id="examName" maxlength="140" placeholder="Ex.: Hemograma completo" required></label><label>SALA RESPONSÁVEL<select id="examRoom" required><option value="">Selecione a sala</option></select></label><button type="submit">+ ADICIONAR EXAME</button></form><div class="exam-catalog-divider"></div><h4>Consultar catálogo</h4><div class="exam-catalog-filters"><label>FILTRO POR CATEGORIA<select id="examCatalogCategoryFilter"><option value="">Selecione uma categoria</option><option value="RAIO_X">Raio-X</option><option value="LABORATORIO">Laboratório</option><option value="AUDIOMETRIA">Audiometria</option><option value="COMPLEMENTAR">Complementares</option><option value="OUTROS">Outros</option></select></label><label>FILTRAR POR NOME<input id="examCatalogNameFilter" type="search" placeholder="Digite o nome do exame" disabled></label></div><p id="examCatalogHint" class="exam-catalog-hint">Selecione uma categoria para visualizar os exames cadastrados.</p><div id="examList" class="catalog-list"></div></div>
     </div>
   </section>
 </section>
@@ -1254,6 +1266,22 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     if (!items.length) list.textContent = "Nenhum cadastro realizado.";
   };
   let currentCatalog = { rooms: [], serviceTypes: [], exams: [] };
+  const renderExamCatalogItems = (items=currentCatalog.exams||[]) => {
+    const category=$("examCatalogCategoryFilter").value, term=$("examCatalogNameFilter").value.trim().toLocaleLowerCase("pt-BR");
+    const list=$("examList");list.replaceChildren();
+    $("examCatalogNameFilter").disabled=!category;
+    if(!category){$("examCatalogHint").textContent="Selecione uma categoria para visualizar os exames cadastrados.";return;}
+    const filtered=items.filter(item=>item.category===category&&(!term||String(item.name||"").toLocaleLowerCase("pt-BR").includes(term)));
+    $("examCatalogHint").textContent=filtered.length+" exame(s) nesta categoria. O catálogo apresenta somente os nomes.";
+    filtered.forEach(item=>{
+      const row=document.createElement("div");row.className="catalog-item";
+      const name=document.createElement("span");name.textContent=item.name;
+      const action=document.createElement("button");action.type="button";action.textContent=item.active===false?"Reativar":"Desativar";
+      action.addEventListener("click",async()=>{action.disabled=true;try{await catalogRequest("/api/v1/clinic/catalog/exams/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({active:!(item.active===false)})});await loadCatalog();}catch(error){catalogMessage(error.message);action.disabled=false;}});
+      row.append(name,action);list.append(row);
+    });
+    if(!filtered.length)list.textContent="Nenhum exame encontrado para a categoria e nome selecionados.";
+  };
   let canManagePatientRecords = false;
   const loadCatalog = async () => {
     try {
@@ -1261,8 +1289,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       currentCatalog = data;
       renderCatalogItems("serviceTypeList", data.serviceTypes, item => item.name + (item.active ? "" : " • Inativo"), item =>
         catalogRequest("/api/v1/clinic/catalog/service-types/" + item.id + "/status", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active: !item.active }) }));
-      renderCatalogItems("examList", data.exams, item => item.name + " — " + item.room_name + (item.active ? "" : " • Inativo"), item =>
-        catalogRequest("/api/v1/clinic/catalog/exams/" + item.id + "/status", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active: !item.active }) }));
+      renderExamCatalogItems(data.exams);
       const roomSelect = $("examRoom");
       const selected = roomSelect.value;
       roomSelect.replaceChildren();
@@ -1281,6 +1308,8 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     try { await catalogRequest("/api/v1/clinic/catalog/service-types", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: $("serviceTypeName").value }) }); event.currentTarget.reset(); await loadCatalog(); }
     catch (error) { catalogMessage(error.message); } finally { button.disabled = false; }
   });
+  $("examCatalogCategoryFilter").addEventListener("change",()=>renderExamCatalogItems());
+  $("examCatalogNameFilter").addEventListener("input",()=>renderExamCatalogItems());
   $("examForm").addEventListener("submit", async event => {
     event.preventDefault();
     const button = event.currentTarget.querySelector("button"); button.disabled = true;
