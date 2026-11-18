@@ -687,6 +687,50 @@ class DatabaseMigrationIntegrationTest {
             jdbc.update("UPDATE clinic_membership_events SET detail='alterado' WHERE membership_id=?",membershipId))
             .isInstanceOf(DataAccessException.class);
 
+        mockMvc.perform(put("/api/v1/clinic/esocial/employer")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"registrationType":"CNPJ","registrationNumber":"11222333000181","legalName":"Empresa Teste Ltda",
+                     "classificationCode":"8610101","environment":"PRODUCTION_RESTRICTED","contactName":"Responsável",
+                     "contactEmail":"sst@empresa.test","contactPhone":"92999990000"}
+                    """))
+            .andExpect(status().isOk());
+        UUID workerId;
+        MvcResult workerResult=mockMvc.perform(post("/api/v1/clinic/esocial/workers")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"patientId":"%s","cpf":"52998224725","fullName":"Trabalhador Teste","birthDate":"1990-01-15",
+                     "sex":"M","registrationCode":"MAT-0001","admissionDate":"2020-02-01","categoryCode":"101",
+                     "cboCode":"225125","jobTitle":"Médico","department":"Clínica","workLocation":"Unidade Central"}
+                    """.formatted(patientId)))
+            .andExpect(status().isCreated()).andReturn();
+        workerId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(workerResult.getResponse().getContentAsString(),"$.id"));
+        MvcResult esocialEvent=mockMvc.perform(post("/api/v1/clinic/esocial/events")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"workerId":"%s","eventType":"S-2220","eventDate":"%s","eventSequence":1,
+                     "sourceExamOrderId":"%s","payload":{"examDate":"%s","examType":"ASO_ADMISSIONAL",
+                     "doctorName":"Dra. Teste","doctorCouncil":"CRM","doctorNumber":"12345","result":"APTO"}}
+                    """.formatted(workerId,appointmentDay,labOrderId,appointmentDay)))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("DRAFT")).andReturn();
+        UUID esocialEventId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(esocialEvent.getResponse().getContentAsString(),"$.id"));
+        mockMvc.perform(get("/api/v1/clinic/esocial/events/{id}",esocialEventId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.payload.doctorName").value("Dra. Teste"));
+        mockMvc.perform(post("/api/v1/clinic/esocial/events/{id}/validate",esocialEventId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("READY"));
+        assertThat(jdbc.queryForObject("SELECT status FROM esocial_events WHERE id=?",String.class,esocialEventId)).isEqualTo("READY");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM esocial_event_audit WHERE event_id=?",Integer.class,esocialEventId))
+            .isEqualTo(3);
+        assertThat(jdbc.queryForObject("SELECT payload_ciphertext IS NOT NULL FROM esocial_events WHERE id=?",Boolean.class,esocialEventId))
+            .isTrue();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            jdbc.update("UPDATE esocial_event_audit SET detail='alterado' WHERE event_id=?",esocialEventId))
+            .isInstanceOf(DataAccessException.class);
+
         jdbc.update("""
             UPDATE clinic_memberships SET role='RECEPTION'
              WHERE clinic_id=? AND user_id=(SELECT id FROM app_users WHERE lower(email)=lower(?))
