@@ -117,7 +117,7 @@ public class QueueController {
                )
                AND (? = '' OR q.priority=?)
                AND (? = '' OR q.assigned_professional_id::text=?)
-               AND (? = FALSE OR (? IS NOT NULL AND q.assigned_professional_id=?))
+               AND (? = FALSE OR (CAST(? AS uuid) IS NOT NULL AND q.assigned_professional_id=CAST(? AS uuid)))
                AND (? <> 'PROFESSIONAL' OR q.assigned_professional_id=?)
              ORDER BY CASE q.status
                  WHEN 'IN_SERVICE' THEN 0 WHEN 'CALLED' THEN 1 WHEN 'WAITING' THEN 2
