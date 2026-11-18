@@ -714,7 +714,7 @@ class DatabaseMigrationIntegrationTest {
                     {"workerId":"%s","eventType":"S-2220","eventDate":"%s","eventSequence":1,
                      "sourceExamOrderId":"%s","payload":{"examDate":"%s","examType":"ASO_ADMISSIONAL",
                      "doctorName":"Dra. Teste","doctorCouncil":"CRM","doctorNumber":"12345","result":"APTO"}}
-                    """.formatted(workerId,appointmentDay,labOrderId,appointmentDay)))
+                    """.formatted(workerId,java.time.LocalDate.now(java.time.ZoneId.of("America/Manaus")),labOrderId,java.time.LocalDate.now(java.time.ZoneId.of("America/Manaus")))))
             .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("DRAFT")).andReturn();
         UUID esocialEventId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(esocialEvent.getResponse().getContentAsString(),"$.id"));
         mockMvc.perform(get("/api/v1/clinic/esocial/events/{id}",esocialEventId).session(clinicAdminSession))
