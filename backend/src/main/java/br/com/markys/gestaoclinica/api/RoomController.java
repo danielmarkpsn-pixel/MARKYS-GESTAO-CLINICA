@@ -147,20 +147,23 @@ public class RoomController {
               FROM queue_entries q JOIN patients p ON p.clinic_id=q.clinic_id AND p.id=q.patient_id
               LEFT JOIN professionals pr ON pr.clinic_id=q.clinic_id AND pr.id=q.assigned_professional_id
              WHERE q.clinic_id=? AND q.room_id=? AND q.status IN ('WAITING','CALLED','IN_SERVICE')
+               AND (?::uuid IS NULL OR q.assigned_professional_id=?)
              ORDER BY q.arrived_at LIMIT 100
-        """,clinic,id));
+        """,clinic,id,a.professionalId(),a.professionalId()));
         result.put("upcomingAppointments",jdbc.queryForList("""
             SELECT a.id,a.starts_at,a.ends_at,a.status,p.full_name AS patient_name,pr.display_name AS professional_name
               FROM appointments a JOIN patients p ON p.clinic_id=a.clinic_id AND p.id=a.patient_id
               JOIN professionals pr ON pr.clinic_id=a.clinic_id AND pr.id=a.professional_id
              WHERE a.clinic_id=? AND a.room_id=? AND a.status IN ('SCHEDULED','CONFIRMED','CHECKED_IN')
-               AND a.ends_at>now() ORDER BY a.starts_at LIMIT 50
-        """,clinic,id));
+               AND a.ends_at>now() AND (?::uuid IS NULL OR a.professional_id=?)
+             ORDER BY a.starts_at LIMIT 50
+        """,clinic,id,a.professionalId(),a.professionalId()));
         result.put("upcomingExams",jdbc.queryForList("""
             SELECT id,exam_name_snapshot AS exam_name,patient_id,professional_id,status,scheduled_at
               FROM exam_orders WHERE clinic_id=? AND room_id=? AND status IN ('SCHEDULED','IN_PROGRESS')
+               AND (?::uuid IS NULL OR professional_id=?)
              ORDER BY scheduled_at NULLS LAST LIMIT 50
-        """,clinic,id));
+        """,clinic,id,a.professionalId(),a.professionalId()));
         return ResponseEntity.ok(result);
     }
 
@@ -182,13 +185,16 @@ public class RoomController {
     private Access access(Authentication auth){
         if(auth==null||!auth.isAuthenticated())return null;
         List<Map<String,Object>> rows=jdbc.queryForList("""
-            SELECT m.id,m.role FROM clinic_memberships m JOIN app_users u ON u.id=m.user_id
+            SELECT m.id,m.role,p.id AS professional_id FROM clinic_memberships m JOIN app_users u ON u.id=m.user_id
+              LEFT JOIN professionals p ON p.clinic_id=m.clinic_id AND p.membership_id=m.id AND p.status='ACTIVE'
              WHERE lower(u.email)=lower(?) AND m.clinic_id=? AND m.status='ACTIVE' AND u.status='ACTIVE'
         """,auth.getName(),TenantContext.requireClinicId());
         if(rows.isEmpty())return null;
         String role=String.valueOf(rows.getFirst().get("role"));
         if(!List.of("CLINIC_ADMIN","RECEPTION","PROFESSIONAL").contains(role))return null;
-        return new Access((UUID)rows.getFirst().get("id"),role);
+        UUID professional=(UUID)rows.getFirst().get("professional_id");
+        if("PROFESSIONAL".equals(role)&&professional==null)return null;
+        return new Access((UUID)rows.getFirst().get("id"),role,professional);
     }
     private boolean canManage(Access a){return List.of("CLINIC_ADMIN","RECEPTION").contains(a.role());}
     private int scalar(String sql,Object... args){Integer n=jdbc.queryForObject(sql,Integer.class,args);return n==null?0:n;}
@@ -201,7 +207,7 @@ public class RoomController {
     private ResponseEntity<Map<String,String>> forbidden(){return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","Seu perfil não possui permissão para esta operação."));}
     private ResponseEntity<Map<String,String>> badRequest(String message){return ResponseEntity.badRequest().body(Map.of("error",message));}
     private ResponseEntity<Map<String,String>> conflict(String message){return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error",message));}
-    private record Access(UUID membershipId,String role){}
+    private record Access(UUID membershipId,String role,UUID professionalId){}
     public record RoomRequest(@NotBlank @Size(max=100) String name,
         @NotBlank @Size(max=30) String roomType,@Size(max=80) String floorLabel,
         @NotNull @Min(1) @Max(100) Integer capacity,@Size(max=500) String description){}
