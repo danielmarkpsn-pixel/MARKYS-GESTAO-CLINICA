@@ -131,6 +131,8 @@ public class ExamController {
     public ResponseEntity<?> create(Authentication auth,@Valid @RequestBody CreateRequest body) {
         Access a=access(auth);
         if(a==null||"PROFESSIONAL".equals(a.role()))return forbidden();
+        String priority=body.priority().trim().toUpperCase(Locale.ROOT);
+        if(!List.of("NORMAL","URGENT").contains(priority))return badRequest("Prioridade de exame inválida.");
         UUID clinic=TenantContext.requireClinicId();
         List<Map<String,Object>> exam=jdbc.queryForList("""
             SELECT e.id,e.name,e.category,e.room_id,r.name AS room_name
@@ -175,7 +177,7 @@ public class ExamController {
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?, 'REQUESTED',?,?,?,?)
         """,id,clinic,body.patientId(),body.examId(),e.get("name"),e.get("category"),e.get("room_id"),
             e.get("room_name"),body.appointmentId(),body.queueEntryId(),professional,
-            body.priority().trim().toUpperCase(Locale.ROOT),body.scheduledAt(),
+            priority,body.scheduledAt(),
             encryptOptional(body.notes()),a.membershipId(),a.membershipId());
         record(clinic,id,"CREATED",null,"REQUESTED","Solicitação de exame criada",a.membershipId());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"status","REQUESTED","message","Exame solicitado."));
@@ -226,6 +228,7 @@ public class ExamController {
         boolean professional="PROFESSIONAL".equals(a.role());
         if(professional&&(!Objects.equals(assigned,a.professionalId())
             ||!List.of("IN_PROGRESS","COMPLETED").contains(next)))return forbidden();
+        if("RECEPTION".equals(a.role())&&!List.of("SCHEDULED","CANCELLED").contains(next))return forbidden();
         if(!professional&&!List.of("CLINIC_ADMIN","RECEPTION").contains(a.role()))return forbidden();
         boolean allowed=switch(previous){
             case "REQUESTED"->List.of("SCHEDULED","IN_PROGRESS","CANCELLED").contains(next);
