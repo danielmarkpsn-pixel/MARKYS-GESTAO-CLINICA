@@ -1,7 +1,9 @@
 -- Electronic signature workflow with tenant isolation and immutable evidence.
+ALTER TABLE patient_documents ADD CONSTRAINT uq_patient_documents_clinic_id_id UNIQUE (clinic_id,id);
 CREATE TABLE document_signature_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE RESTRICT,
+    CONSTRAINT uq_signature_requests_clinic_id_id UNIQUE (clinic_id,id),
     patient_id UUID NOT NULL,
     patient_document_id UUID NOT NULL,
     document_name_snapshot VARCHAR(180) NOT NULL,
