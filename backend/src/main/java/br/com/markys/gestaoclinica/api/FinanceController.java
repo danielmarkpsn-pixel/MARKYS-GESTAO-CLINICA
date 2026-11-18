@@ -76,20 +76,26 @@ public class FinanceController {
         UUID clinic = TenantContext.requireClinicId();
         Map<String,Object> totals = jdbc.queryForMap("""
             SELECT
-              COALESCE(sum(e.amount) FILTER (WHERE e.direction='INCOME' AND e.status<>'CANCELLED'),0) AS income_due,
-              COALESCE(sum(e.amount) FILTER (WHERE e.direction='EXPENSE' AND e.status<>'CANCELLED'),0) AS expense_due,
-              COALESCE(sum(CASE WHEN e.direction='INCOME' THEN p.total ELSE 0 END),0) AS income_received,
-              COALESCE(sum(CASE WHEN e.direction='EXPENSE' THEN p.total ELSE 0 END),0) AS expense_paid,
-              count(*) FILTER (WHERE e.status NOT IN ('PAID','CANCELLED') AND e.due_date < current_date) AS overdue_count,
-              count(*) FILTER (WHERE e.status NOT IN ('PAID','CANCELLED')) AS open_count
-            FROM finance_entries e
-            LEFT JOIN LATERAL (
-                SELECT COALESCE(sum(fp.amount),0) AS total
-                  FROM finance_payments fp
-                 WHERE fp.clinic_id=e.clinic_id AND fp.entry_id=e.id
-            ) p ON true
-            WHERE e.clinic_id=? AND e.due_date BETWEEN ? AND ?
-            """, clinic, start, end);
+              (SELECT COALESCE(sum(e.amount),0) FROM finance_entries e
+                WHERE e.clinic_id=c.id AND e.direction='INCOME' AND e.status<>'CANCELLED'
+                  AND e.due_date BETWEEN ? AND ?) AS income_due,
+              (SELECT COALESCE(sum(e.amount),0) FROM finance_entries e
+                WHERE e.clinic_id=c.id AND e.direction='EXPENSE' AND e.status<>'CANCELLED'
+                  AND e.due_date BETWEEN ? AND ?) AS expense_due,
+              (SELECT COALESCE(sum(fp.amount),0) FROM finance_payments fp
+                JOIN finance_entries e ON e.clinic_id=fp.clinic_id AND e.id=fp.entry_id
+                WHERE e.clinic_id=c.id AND e.direction='INCOME'
+                  AND (fp.paid_at AT TIME ZONE c.timezone)::date BETWEEN ? AND ?) AS income_received,
+              (SELECT COALESCE(sum(fp.amount),0) FROM finance_payments fp
+                JOIN finance_entries e ON e.clinic_id=fp.clinic_id AND e.id=fp.entry_id
+                WHERE e.clinic_id=c.id AND e.direction='EXPENSE'
+                  AND (fp.paid_at AT TIME ZONE c.timezone)::date BETWEEN ? AND ?) AS expense_paid,
+              (SELECT count(*) FROM finance_entries e WHERE e.clinic_id=c.id
+                AND e.status NOT IN ('PAID','CANCELLED') AND e.due_date < current_date) AS overdue_count,
+              (SELECT count(*) FROM finance_entries e WHERE e.clinic_id=c.id
+                AND e.status NOT IN ('PAID','CANCELLED')) AS open_count
+            FROM clinics c WHERE c.id=?
+            """, start,end,start,end,start,end,start,end,clinic);
         return ResponseEntity.ok(Map.of(
             "from", start, "to", end,
             "incomeDue", money(totals.get("income_due")),
@@ -250,6 +256,8 @@ public class FinanceController {
         if(access==null)return forbidden();
         String method=body.paymentMethod().trim().toUpperCase(Locale.ROOT);
         if(!PAYMENT_METHODS.contains(method))return badRequest("Forma de pagamento inválida.");
+        if(body.paidAt()!=null && body.paidAt().isAfter(OffsetDateTime.now().plusMinutes(5)))
+            return badRequest("A data da movimentação não pode estar no futuro.");
         UUID clinic=TenantContext.requireClinicId();
         List<Map<String,Object>> rows=jdbc.queryForList("""
             SELECT direction,amount,status FROM finance_entries
