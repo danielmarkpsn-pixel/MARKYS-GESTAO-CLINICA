@@ -15,7 +15,7 @@ import br.com.markys.gestaoclinica.security.TenantContext;
 @RestController
 @RequestMapping("/api/v1/clinic/access")
 public class AccessController {
-    private static final List<String> ROLES=List.of("CLINIC_ADMIN","RECEPTION","PROFESSIONAL","TRIAGE","AUDITOR");
+    private static final List<String> ROLES=List.of("CLINIC_ADMIN","RECEPTION","PROFESSIONAL","TRIAGE","AUDITOR","LAB_TECHNICIAN");
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
     public AccessController(JdbcTemplate jdbc,PasswordEncoder passwordEncoder){
