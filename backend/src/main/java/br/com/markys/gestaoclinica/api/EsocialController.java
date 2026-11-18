@@ -61,6 +61,7 @@ public class EsocialController {
         if(!protection.isConfigured())return badRequest("Proteção de dados pessoais indisponível no servidor.");
         String type=body.registrationType().trim().toUpperCase(Locale.ROOT);
         if(!List.of("CNPJ","CPF","CAEPF","CNO").contains(type))return badRequest("Tipo de inscrição inválido.");
+        if(!List.of("PRODUCTION_RESTRICTED","PRODUCTION","RESTRICTED").contains(body.environment()))return badRequest("Ambiente de preparação inválido.");
         String number=body.registrationNumber().replaceAll("\\D","");
         int expected=switch(type){case "CNPJ"->14;case "CPF"->11;case "CAEPF"->14;default->12;};
         if(number.length()!=expected)return badRequest("Número de inscrição incompatível com o tipo selecionado.");
@@ -188,14 +189,14 @@ public class EsocialController {
         }
         if(!workerExists(clinic,body.workerId()))return badRequest("Trabalhador não encontrado ou inativo nesta clínica.");
         List<String> errors=validatePayload(type,body.payload(),body.eventDate());
-        String payload=mapper.writeValueAsString(body.payload());
+        String payload=json(body.payload());
         UUID id=UUID.randomUUID();
         jdbc.update("""
             INSERT INTO esocial_events(id,clinic_id,worker_id,event_type,event_date,event_sequence,payload_ciphertext,
                 validation_errors,source_exam_order_id,created_by_membership_id,updated_by_membership_id)
             VALUES(?,?,?,?,?,?,?,?::jsonb,?,?,?)
             """,id,clinic,body.workerId(),type,body.eventDate(),body.eventSequence(),protection.encrypt(payload),
-            mapper.writeValueAsString(errors),body.sourceExamOrderId(),a.membershipId(),a.membershipId());
+            json(mapper.valueToTree(errors)),body.sourceExamOrderId(),a.membershipId(),a.membershipId());
         audit(clinic,id,"CREATED","Rascunho "+type+" criado",a.membershipId());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"status","DRAFT","validationErrors",errors));
     }
@@ -277,6 +278,7 @@ public class EsocialController {
             catch(Exception ex){errors.add("Data de início da condição ambiental inválida.");}
         return errors;
     }
+    private String json(JsonNode value){try{return mapper.writeValueAsString(value);}catch(Exception ex){throw new IllegalArgumentException("Conteúdo estruturado inválido.",ex);}}
     private boolean workerExists(UUID clinic,UUID worker){
         return jdbc.queryForObject("SELECT count(*) FROM esocial_workers WHERE clinic_id=? AND id=? AND status='ACTIVE'",
             Integer.class,clinic,worker)>0;
