@@ -155,9 +155,42 @@ public class LaboratoryController {
         if(reference!=null&&!reference.isBlank()&&scalar("""
             SELECT count(*) FROM lab_specimens WHERE clinic_id=? AND upper(lab_reference)=upper(?) AND id<>?
         """,clinic,reference,id)>0)return conflict("Já existe uma amostra com esse número de protocolo.");
+        boolean hasSensitiveInput=(body.collectionNotes()!=null&&!body.collectionNotes().isBlank())
+            ||(body.rejectionReason()!=null&&!body.rejectionReason().isBlank())
+            ||"RESULT_READY".equals(next);
+        if(hasSensitiveInput&&!protection.isConfigured())return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(Map.of("error","Proteção de dados indisponível. Configure as chaves no servidor."));
         byte[] notes=body.collectionNotes()==null||body.collectionNotes().isBlank()?null:protection.encrypt(body.collectionNotes().trim());
         byte[] rejection=body.rejectionReason()==null||body.rejectionReason().isBlank()?null:protection.encrypt(body.rejectionReason().trim());
         byte[] result="RESULT_READY".equals(next)?protection.encrypt(body.result().trim()):null;
+        byte[] storedResult=(byte[])current.get("result_ciphertext");
+        if("RELEASED".equals(next)&&storedResult==null)return conflict("Registre o resultado antes de liberar a amostra.");
+        if("PROCESSING".equals(next)&&("REQUESTED".equals(orderStatus)||"SCHEDULED".equals(orderStatus))){
+            int changed=jdbc.update("""
+                UPDATE exam_orders SET status='IN_PROGRESS',started_at=COALESCE(started_at,now()),
+                    updated_by_membership_id=?,updated_at=now() WHERE clinic_id=? AND id=?
+            """,a.membershipId(),clinic,orderId);
+            if(changed!=1)return conflict("A solicitação não está disponível para processamento.");
+            recordOrder(clinic,orderId,"STARTED",orderStatus,"IN_PROGRESS","Processamento laboratorial iniciado",a.membershipId());
+        }
+        if("RELEASED".equals(next)){
+            int changed=jdbc.update("""
+                UPDATE exam_orders SET status='COMPLETED',completed_at=now(),result_ciphertext=?,
+                    result_recorded_by_membership_id=?,updated_by_membership_id=?,updated_at=now()
+                 WHERE clinic_id=? AND id=? AND status IN ('REQUESTED','SCHEDULED','IN_PROGRESS')
+            """,storedResult,a.membershipId(),a.membershipId(),clinic,orderId);
+            if(changed!=1)return conflict("A solicitação foi alterada. Atualize o laboratório.");
+            recordOrder(clinic,orderId,"COMPLETED",orderStatus,"COMPLETED","Resultado laboratorial liberado",a.membershipId());
+        }
+        if("CANCELLED".equals(next)){
+            int changed=jdbc.update("""
+                UPDATE exam_orders SET status='CANCELLED',cancelled_at=now(),
+                    updated_by_membership_id=?,updated_at=now()
+                 WHERE clinic_id=? AND id=? AND status IN ('REQUESTED','SCHEDULED','IN_PROGRESS')
+            """,a.membershipId(),clinic,orderId);
+            if(changed!=1)return conflict("A solicitação não está disponível para cancelamento.");
+            recordOrder(clinic,orderId,"CANCELLED",orderStatus,"CANCELLED","Solicitação laboratorial cancelada",a.membershipId());
+        }
 
         jdbc.update("""
             UPDATE lab_specimens SET collection_status=?,lab_reference=COALESCE(?,lab_reference),
@@ -171,19 +204,10 @@ public class LaboratoryController {
         if("RECEIVED".equals(next))jdbc.update("""
             UPDATE lab_specimens SET received_at=now(),received_by_membership_id=? WHERE clinic_id=? AND id=?
         """,a.membershipId(),clinic,id);
-        if("PROCESSING".equals(next)){
-            jdbc.update("""
-                UPDATE lab_specimens SET processing_started_at=now(),processing_by_membership_id=?
-                 WHERE clinic_id=? AND id=?
-            """,a.membershipId(),clinic,id);
-            if("REQUESTED".equals(orderStatus)||"SCHEDULED".equals(orderStatus)){
-                jdbc.update("""
-                    UPDATE exam_orders SET status='IN_PROGRESS',started_at=COALESCE(started_at,now()),
-                        updated_by_membership_id=?,updated_at=now() WHERE clinic_id=? AND id=?
-                """,a.membershipId(),clinic,orderId);
-                recordOrder(clinic,orderId,"STARTED",orderStatus,"IN_PROGRESS","Processamento laboratorial iniciado",a.membershipId());
-            }
-        }
+        if("PROCESSING".equals(next))jdbc.update("""
+            UPDATE lab_specimens SET processing_started_at=now(),processing_by_membership_id=?
+             WHERE clinic_id=? AND id=?
+        """,a.membershipId(),clinic,id);
         if("RESULT_READY".equals(next))jdbc.update("""
             UPDATE lab_specimens SET result_ciphertext=?,result_entered_by_membership_id=?,result_ready_at=now()
              WHERE clinic_id=? AND id=?
@@ -198,29 +222,10 @@ public class LaboratoryController {
                 received_by_membership_id=NULL,processing_by_membership_id=NULL
              WHERE clinic_id=? AND id=?
         """,clinic,id);
-        if("RELEASED".equals(next)){
-            byte[] stored=(byte[])current.get("result_ciphertext");
-            if(stored==null)return conflict("Registre o resultado antes de liberar a amostra.");
-            int updated=jdbc.update("""
-                UPDATE exam_orders SET status='COMPLETED',completed_at=now(),result_ciphertext=?,
-                    result_recorded_by_membership_id=?,updated_by_membership_id=?,updated_at=now()
-                 WHERE clinic_id=? AND id=? AND status IN ('REQUESTED','SCHEDULED','IN_PROGRESS')
-            """,stored,a.membershipId(),a.membershipId(),clinic,orderId);
-            if(updated!=1)return conflict("A solicitação foi alterada. Atualize o laboratório.");
-            recordOrder(clinic,orderId,"COMPLETED",orderStatus,"COMPLETED","Resultado laboratorial liberado",a.membershipId());
-            jdbc.update("""
-                UPDATE lab_specimens SET released_at=now(),released_by_membership_id=? WHERE clinic_id=? AND id=?
-            """,a.membershipId(),clinic,id);
-        }
-        if("CANCELLED".equals(next)){
-            jdbc.update("""
-                UPDATE exam_orders SET status='CANCELLED',cancelled_at=now(),
-                    updated_by_membership_id=?,updated_at=now()
-                 WHERE clinic_id=? AND id=? AND status IN ('REQUESTED','SCHEDULED','IN_PROGRESS')
-            """,a.membershipId(),clinic,orderId);
-            recordOrder(clinic,orderId,"CANCELLED",orderStatus,"CANCELLED","Solicitação laboratorial cancelada",a.membershipId());
-            jdbc.update("UPDATE lab_specimens SET cancelled_at=now() WHERE clinic_id=? AND id=?",clinic,id);
-        }
+        if("RELEASED".equals(next))jdbc.update("""
+            UPDATE lab_specimens SET released_at=now(),released_by_membership_id=? WHERE clinic_id=? AND id=?
+        """,a.membershipId(),clinic,id);
+        if("CANCELLED".equals(next))jdbc.update("UPDATE lab_specimens SET cancelled_at=now() WHERE clinic_id=? AND id=?",clinic,id);
         String event=switch(next){
             case "COLLECTED"->"COLLECTED";case "RECEIVED"->"RECEIVED";case "PROCESSING"->"PROCESSING_STARTED";
             case "RESULT_READY"->"RESULT_READY";case "RELEASED"->"RELEASED";case "REJECTED"->"REJECTED";
