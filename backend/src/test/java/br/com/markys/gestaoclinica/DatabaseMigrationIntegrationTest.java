@@ -719,12 +719,22 @@ class DatabaseMigrationIntegrationTest {
         UUID esocialEventId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(esocialEvent.getResponse().getContentAsString(),"$.id"));
         mockMvc.perform(get("/api/v1/clinic/esocial/events/{id}",esocialEventId).session(clinicAdminSession))
             .andExpect(status().isOk()).andExpect(jsonPath("$.payload.doctorName").value("Dra. Teste"));
+        mockMvc.perform(put("/api/v1/clinic/esocial/events/{id}",esocialEventId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"workerId":"%s","eventType":"S-2220","eventDate":"%s","eventSequence":1,
+                     "sourceExamOrderId":"%s","payload":{"examDate":"%s","examType":"ASO_ADMISSIONAL",
+                     "doctorName":"Dra. Atualizada","doctorCouncil":"CRM","doctorNumber":"12345","result":"APTO"}}
+                    """.formatted(workerId,java.time.LocalDate.now(java.time.ZoneId.of("America/Manaus")),labOrderId,
+                        java.time.LocalDate.now(java.time.ZoneId.of("America/Manaus")))))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("DRAFT"));
         mockMvc.perform(post("/api/v1/clinic/esocial/events/{id}/validate",esocialEventId)
                 .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token))
             .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("READY"));
         assertThat(jdbc.queryForObject("SELECT status FROM esocial_events WHERE id=?",String.class,esocialEventId)).isEqualTo("READY");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM esocial_event_audit WHERE event_id=?",Integer.class,esocialEventId))
-            .isEqualTo(3);
+            .isEqualTo(4);
         assertThat(jdbc.queryForObject("SELECT payload_ciphertext IS NOT NULL FROM esocial_events WHERE id=?",Boolean.class,esocialEventId))
             .isTrue();
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
