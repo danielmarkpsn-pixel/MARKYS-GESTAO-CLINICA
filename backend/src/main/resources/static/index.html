@@ -2167,7 +2167,10 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     if(!singleDay)return;
     const items=scheduleState.items.filter(item=>{
       const start=new Date(item.starts_at);
-      return !Number.isNaN(start.getTime())&&new Intl.DateTimeFormat("en-CA",{timeZone:scheduleState.timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(start)===date;
+      if(Number.isNaN(start.getTime()))return false;
+      const parts=new Intl.DateTimeFormat("en-US",{timeZone:scheduleState.timezone,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(start);
+      const part=type=>parts.find(value=>value.type===type)?.value||"";
+      return part("year")+"-"+part("month")+"-"+part("day")===date;
     });
     $("scheduleDayTitle").textContent="Agenda diária • "+date.split("-").reverse().join("/");
     $("scheduleDayCount").textContent=items.length+" agendamento(s)";
