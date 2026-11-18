@@ -332,6 +332,41 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 @media(max-width:800px){.insurance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.insurance-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.insurance-form-grid,.insurance-detail-grid{grid-template-columns:1fr}.insurance-form-grid .wide{grid-column:auto}.insurance-field.search{min-width:100%}}
 
+
+/* Módulo Acessos — administração de contas e permissões por clínica */
+.access-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
+.access-toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px;margin-bottom:12px}
+.access-field{display:grid;gap:5px;min-width:135px;flex:1}.access-field.search{min-width:220px;flex:2}
+.access-field label{font-size:10px;color:#52677d;margin:0}
+.access-field input,.access-field select,.access-form-grid input,.access-form-grid select,.access-form-grid textarea,.access-detail-controls select,.access-password-grid input{height:35px;width:100%;min-width:0;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;color:#29445f;background:#fff}
+.access-btn{height:35px;border:1px solid #c5d5e4;background:#fff;color:#145a91;border-radius:4px;padding:0 12px;font-size:11px;font-weight:750;cursor:pointer}
+.access-btn.primary{background:#0867b2;border-color:#0867b2;color:white}.access-btn.danger{border-color:#e8caca;background:#fff7f7;color:#a12626}
+.access-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.access-kpi{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:11px 13px}.access-kpi small{display:block;color:#718297;font-size:9px;margin-bottom:5px}.access-kpi strong{font-size:21px;color:#17436c}
+.access-message{min-height:19px;font-size:11px;margin:5px 0;color:#a12c26}
+.access-table-wrap{overflow:auto;background:#fff;border:1px solid #dce4ed;border-radius:6px}
+.access-table{width:100%;min-width:930px;border-collapse:collapse;font-size:11px}
+.access-table th{padding:10px;text-align:left;background:#f1f5f9;color:#63768a;font-size:9px;border-bottom:1px solid #dce4ec}
+.access-table td{padding:10px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.access-name{font-weight:800;color:#1c3d5d}.access-muted{display:block;color:#8391a0;font-size:9px;margin-top:3px}
+.access-status{display:inline-block;padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:9px;font-weight:800}.access-status.inactive{background:#f1f2f4;color:#718093}.access-status.locked{background:#fff1df;color:#9a5d12}
+.access-actions{display:flex;gap:4px;flex-wrap:wrap}.access-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:9px;cursor:pointer}
+.access-pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:11px;color:#718093;font-size:10px}
+.access-panel{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:14px;margin-top:12px}
+.access-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.access-panel-heading h4{margin:0;color:#21486b;font-size:14px}
+.access-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.access-form-grid>div{display:grid;gap:5px;min-width:0}.access-form-grid label{font-size:9px;font-weight:800;color:#526a80}.access-form-grid .wide{grid-column:1/-1}
+.access-form-note{font-size:10px;color:#7b8998;line-height:1.5}
+.access-form-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}
+.access-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.access-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.access-detail-cell small{display:block;color:#7b8998;font-size:9px}.access-detail-cell strong{font-size:11px;color:#244766;overflow-wrap:anywhere}
+.access-detail-controls{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:12px}
+.access-detail-controls>div{display:grid;gap:5px;min-width:190px}.access-detail-controls label,.access-password-grid label{font-size:9px;font-weight:800;color:#526a80}
+.access-password-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+.access-event{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}.access-event strong{display:block;color:#244766}
+.access-empty{text-align:center;padding:24px!important;color:#8492a1!important}
+@media(max-width:800px){.access-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.access-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.access-form-grid,.access-detail-grid,.access-password-grid{grid-template-columns:1fr}.access-form-grid .wide{grid-column:auto}.access-field.search{min-width:100%}}
+
 </style>
 </head>
 <body>
@@ -587,6 +622,54 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 
 
 
+
+
+<section id="accessWorkspace" class="access-workspace hidden" aria-label="Gestão de acessos da clínica">
+  <div class="access-toolbar">
+    <div class="access-field search"><label for="accessSearch">NOME / E-MAIL</label><input id="accessSearch" type="search" maxlength="120" placeholder="Pesquisar usuários"></div>
+    <div class="access-field"><label for="accessRoleFilter">PERFIL</label><select id="accessRoleFilter"><option value="ALL">Todos</option><option value="CLINIC_ADMIN">Administrador</option><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option></select></div>
+    <div class="access-field"><label for="accessStatusFilter">SITUAÇÃO</label><select id="accessStatusFilter"><option value="ALL">Todas</option><option value="ACTIVE">Ativos</option><option value="SUSPENDED">Suspensos</option><option value="REVOKED">Revogados</option></select></div>
+    <button id="accessSearchButton" class="access-btn primary" type="button">Filtrar</button>
+    <button id="accessNewButton" class="access-btn primary" type="button">+ Criar acesso</button>
+    <button id="accessRefreshButton" class="access-btn" type="button">Atualizar</button>
+  </div>
+  <div class="access-kpis">
+    <div class="access-kpi"><small>TOTAL DE ACESSOS</small><strong id="accessTotal">0</strong></div>
+    <div class="access-kpi"><small>ATIVOS</small><strong id="accessActive">0</strong></div>
+    <div class="access-kpi"><small>SUSPENSOS</small><strong id="accessSuspended">0</strong></div>
+    <div class="access-kpi"><small>CONTAS BLOQUEADAS</small><strong id="accessLocked">0</strong></div>
+  </div>
+  <div id="accessMessage" class="access-message" role="status" aria-live="polite"></div>
+  <div class="access-table-wrap"><table class="access-table"><thead><tr><th>USUÁRIO</th><th>PERFIL</th><th>ACESSO À CLÍNICA</th><th>CONTA GLOBAL</th><th>ÚLTIMO ACESSO</th><th>AÇÕES</th></tr></thead><tbody id="accessRows"><tr><td colspan="6" class="access-empty">Carregando acessos...</td></tr></tbody></table></div>
+  <div class="access-pager"><span id="accessPageInfo">0 acessos</span><div><button id="accessPrev" class="access-btn" type="button" disabled>Anterior</button> <span id="accessPage">Página 1 de 1</span> <button id="accessNext" class="access-btn" type="button" disabled>Próxima</button></div></div>
+  <form id="accessCreateForm" class="access-panel hidden">
+    <div class="access-panel-heading"><h4>Novo acesso à clínica</h4><button id="accessCreateClose" class="access-btn" type="button">Fechar</button></div>
+    <div class="access-form-grid">
+      <div><label for="accessFullName">NOME COMPLETO *</label><input id="accessFullName" maxlength="180" required></div>
+      <div><label for="accessEmail">E-MAIL DE LOGIN *</label><input id="accessEmail" type="email" maxlength="254" required></div>
+      <div><label for="accessRole">PERFIL *</label><select id="accessRole" required><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option><option value="CLINIC_ADMIN">Administrador da clínica</option></select></div>
+      <div><label for="accessInitialPassword">SENHA INICIAL</label><input id="accessInitialPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" placeholder="Mínimo de 12 caracteres"></div>
+      <div class="wide access-form-note">A senha inicial é obrigatória somente para um e-mail novo. Se a conta já existir na plataforma, ela será vinculada à clínica e a senha atual não será alterada. Para profissionais, o perfil também precisa ser associado a um cadastro no módulo Profissionais.</div>
+    </div>
+    <div class="access-form-actions"><button id="accessCreateCancel" class="access-btn" type="button">Cancelar</button><button id="accessCreateSave" class="access-btn primary" type="submit">Criar acesso</button></div>
+  </form>
+  <section id="accessDetailPanel" class="access-panel hidden">
+    <div class="access-panel-heading"><h4 id="accessDetailTitle">Detalhes do acesso</h4><button id="accessDetailClose" class="access-btn" type="button">Voltar à lista</button></div>
+    <div id="accessDetailData" class="access-detail-grid"></div>
+    <div class="access-detail-controls">
+      <div><label for="accessDetailRole">PERFIL DA CLÍNICA</label><select id="accessDetailRole"><option value="CLINIC_ADMIN">Administrador</option><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option></select></div>
+      <button id="accessSaveRole" class="access-btn primary" type="button">Salvar perfil</button>
+      <button id="accessToggleStatus" class="access-btn danger" type="button">Suspender acesso</button>
+      <button id="accessUnlock" class="access-btn" type="button">Desbloquear conta</button>
+    </div>
+    <form id="accessPasswordForm" class="access-panel">
+      <div class="access-panel-heading"><h4>Redefinir senha</h4></div>
+      <div class="access-password-grid"><div><label for="accessNewPassword">NOVA SENHA (MÍNIMO 12 CARACTERES)</label><input id="accessNewPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></div><button id="accessPasswordSave" class="access-btn primary" type="submit">Redefinir senha</button></div>
+      <p class="access-form-note">Contas compartilhadas com outras clínicas devem usar o fluxo de recuperação do próprio titular. A redefinição nesta tela só é permitida quando a conta pertence exclusivamente a esta clínica.</p>
+    </form>
+    <div class="access-panel"><div class="access-panel-heading"><h4>Histórico de segurança</h4></div><div id="accessHistoryRows"></div></div>
+  </section>
+</section>
 
 <section id="insuranceWorkspace" class="insurance-workspace hidden" aria-label="Gestão de convênios">
   <div class="insurance-toolbar">
