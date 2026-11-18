@@ -58,16 +58,16 @@ class DatabaseMigrationIntegrationTest {
         Integer clinicalTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema()
-               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events')
+               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events')
             """, Integer.class);
         Integer masterTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(10);
+        assertThat(migrationCount).isEqualTo(11);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(13);
+        assertThat(clinicalTables).isEqualTo(17);
         assertThat(masterTables).isEqualTo(1);
     }
 
@@ -125,7 +125,7 @@ class DatabaseMigrationIntegrationTest {
         // Test cleanup is intentionally explicit: TRUNCATE is not filtered by RLS,
         // unlike DELETE, and CASCADE clears tenant-owned rows before parent clinics.
         jdbc.execute("""
-            TRUNCATE TABLE appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
+            TRUNCATE TABLE finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
                 exam_catalog, service_types, clinic_rooms, professionals, patients, platform_admins,
                 clinic_memberships, app_users, clinics CASCADE
             """);
@@ -342,6 +342,85 @@ class DatabaseMigrationIntegrationTest {
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
             jdbc.update("UPDATE appointment_events SET detail='alterado' WHERE appointment_id=?", appointmentId))
             .isInstanceOf(DataAccessException.class);
+
+        UUID incomeCategoryId = jdbc.queryForObject("""
+            SELECT id FROM finance_categories WHERE clinic_id=? AND name='Consultas particulares' AND direction='INCOME'
+            """, UUID.class, clinicId);
+        String financeEntryPayload = """
+            {"direction":"INCOME","description":"Consulta de integração","categoryId":"%s",
+             "patientId":"%s","appointmentId":"%s","amount":250.00,"dueDate":"%s","notes":"Teste financeiro"}
+            """.formatted(incomeCategoryId, patientId, appointmentId, appointmentDay);
+        MvcResult financeEntryResult = mockMvc.perform(post("/api/v1/clinic/finance/entries")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON).content(financeEntryPayload))
+            .andExpect(status().isCreated()).andReturn();
+        UUID financeEntryId = UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            financeEntryResult.getResponse().getContentAsString(), "$.id"));
+        mockMvc.perform(post("/api/v1/clinic/finance/entries/{id}/payments", financeEntryId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\":300.00,\"paymentMethod\":\"PIX\"}"))
+            .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/v1/clinic/finance/entries/{id}/payments", financeEntryId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\":100.00,\"paymentMethod\":\"PIX\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("PARTIAL"))
+            .andExpect(jsonPath("$.amountRemaining").value(150.00));
+        mockMvc.perform(post("/api/v1/clinic/finance/entries/{id}/payments", financeEntryId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\":150.00,\"paymentMethod\":\"CREDIT_CARD\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("PAID"));
+        mockMvc.perform(post("/api/v1/clinic/finance/entries/{id}/payments", financeEntryId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amount\":1.00,\"paymentMethod\":\"PIX\"}"))
+            .andExpect(status().isConflict());
+        assertThat(jdbc.queryForObject("SELECT status FROM finance_entries WHERE id=?",String.class,financeEntryId))
+            .isEqualTo("PAID");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM finance_payments WHERE entry_id=?",Integer.class,financeEntryId))
+            .isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM finance_events WHERE entry_id=?",Integer.class,financeEntryId))
+            .isEqualTo(3);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            jdbc.update("DELETE FROM finance_payments WHERE entry_id=?",financeEntryId))
+            .isInstanceOf(DataAccessException.class);
+        mockMvc.perform(get("/api/v1/clinic/finance/entries")
+                .param("from",appointmentDay.toString()).param("to",appointmentDay.toString())
+                .session(clinicAdminSession))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(1))
+            .andExpect(jsonPath("$.items[0].status").value("PAID"));
+        mockMvc.perform(get("/api/v1/clinic/finance/summary")
+                .param("from",appointmentDay.toString()).param("to",appointmentDay.toString())
+                .session(clinicAdminSession))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.incomeReceived").value(250.00));
+
+        UUID receptionUserId=UUID.randomUUID(), receptionMembershipId=UUID.randomUUID();
+        jdbc.update("INSERT INTO app_users (id,full_name,email,password_hash,status) VALUES (?,?,?,?, 'ACTIVE')",
+            receptionUserId,"Recepção Financeiro","recepcao.financeiro@clinica.test","$2a$10$abcdefghijklmnopqrstuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+        jdbc.update("INSERT INTO clinic_memberships (id,clinic_id,user_id,role,status) VALUES (?,?,?,'RECEPTION','ACTIVE')",
+            receptionMembershipId,clinicId,receptionUserId);
+        MvcResult receptionLogin=mockMvc.perform(post("/api/v1/auth/login")
+                .cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"recepcao.financeiro@clinica.test\",\"password\":\"SenhaRecepcaoSegura123!\"}"))
+            .andExpect(status().isOk()).andReturn();
+        MockHttpSession receptionSession=(MockHttpSession)receptionLogin.getRequest().getSession(false);
+        UUID expenseCategoryId=jdbc.queryForObject("""
+            SELECT id FROM finance_categories WHERE clinic_id=? AND name='Aluguel e condomínio' AND direction='EXPENSE'
+            """,UUID.class,clinicId);
+        mockMvc.perform(post("/api/v1/clinic/finance/entries")
+                .session(receptionSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"direction":"EXPENSE","description":"Aluguel","categoryId":"%s","amount":1000.00,"dueDate":"%s"}
+                    """.formatted(expenseCategoryId,appointmentDay)))
+            .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/v1/auth/master-bootstrap")
                 .cookie(csrfCookie).header("X-XSRF-TOKEN", token)
