@@ -1438,7 +1438,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       if(canManagePatientRecords){
         add("EDITAR",()=>editPatient(item.id),"patient-edit");
         add("EXCLUIR",()=>deletePatient(item.id,item.full_name),"patient-delete");
-        add(item.status==="ACTIVE"?"INATIVAR":"REATIVAR",async()=>{if(item.status==="ACTIVE"&&!confirm("Inativar este paciente? O histórico será preservado."))return;try{await catalogRequest("/api/v1/clinic/patients/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:item.status==="ACTIVE"?"INACTIVE":"ACTIVE"})});patientMessage("Situação atualizada.",true);await loadPatients();}}catch(err){patientMessage(err.message);}},item.status==="ACTIVE"?"patient-toggle":"patient-toggle inactive");
+        add(item.status==="ACTIVE"?"INATIVAR":"REATIVAR",async()=>{if(item.status==="ACTIVE"&&!confirm("Inativar este paciente? O histórico será preservado."))return;try{await catalogRequest("/api/v1/clinic/patients/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:item.status==="ACTIVE"?"INACTIVE":"ACTIVE"})});patientMessage("Situação atualizada.",true);await loadPatients();}catch(err){patientMessage(err.message);}},item.status==="ACTIVE"?"patient-toggle":"patient-toggle inactive");
       }
       td.append(actions);tr.append(td);list.append(tr);
     });
