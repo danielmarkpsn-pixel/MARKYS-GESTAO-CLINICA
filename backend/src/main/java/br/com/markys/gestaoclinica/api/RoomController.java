@@ -74,6 +74,8 @@ public class RoomController {
         String type=body.roomType().trim().toUpperCase(Locale.ROOT);
         if(!TYPES.contains(type))return badRequest("Tipo de consultório inválido.");
         UUID clinic=TenantContext.requireClinicId(),id=UUID.randomUUID();
+        if(scalar("SELECT count(*) FROM clinic_rooms WHERE clinic_id=? AND lower(name)=lower(?)",clinic,body.name().trim())>0)
+            return conflict("Já existe um consultório com esse nome nesta clínica.");
         try{
             jdbc.update("""
                 INSERT INTO clinic_rooms(id,clinic_id,name,room_type,floor_label,capacity,description)
@@ -94,6 +96,8 @@ public class RoomController {
         List<Map<String,Object>> current=jdbc.queryForList(
             "SELECT status FROM clinic_rooms WHERE clinic_id=? AND id=? FOR UPDATE",clinic,id);
         if(current.isEmpty())return ResponseEntity.notFound().build();
+        if(scalar("SELECT count(*) FROM clinic_rooms WHERE clinic_id=? AND lower(name)=lower(?) AND id<>?",clinic,body.name().trim(),id)>0)
+            return conflict("Já existe outro consultório com esse nome nesta clínica.");
         try{
             jdbc.update("""
                 UPDATE clinic_rooms SET name=?,room_type=?,floor_label=?,capacity=?,description=?,updated_at=now()
@@ -119,7 +123,7 @@ public class RoomController {
             int activeCatalog=scalar("SELECT count(*) FROM exam_catalog WHERE clinic_id=? AND room_id=? AND active=true",clinic,id);
             int activeQueue=scalar("SELECT count(*) FROM queue_entries WHERE clinic_id=? AND room_id=? AND status IN ('WAITING','CALLED','IN_SERVICE')",clinic,id);
             int futureAppointments=scalar("SELECT count(*) FROM appointments WHERE clinic_id=? AND room_id=? AND status IN ('SCHEDULED','CONFIRMED','CHECKED_IN') AND ends_at>now()",clinic,id);
-            int activeOrders=scalar("SELECT count(*) FROM exam_orders WHERE clinic_id=? AND room_id=? AND status IN ('SCHEDULED','IN_PROGRESS')",clinic,id);
+            int activeOrders=scalar("SELECT count(*) FROM exam_orders WHERE clinic_id=? AND room_id=? AND status IN ('REQUESTED','SCHEDULED','IN_PROGRESS')",clinic,id);
             if(activeCatalog>0)return conflict("Desative primeiro os exames do catálogo vinculados a este consultório.");
             if(activeQueue>0)return conflict("Não é possível inativar: há atendimentos ativos nesta sala.");
             if(futureAppointments>0)return conflict("Não é possível inativar: há agendamentos futuros ou em andamento nesta sala.");
