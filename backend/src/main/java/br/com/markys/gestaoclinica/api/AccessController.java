@@ -172,6 +172,8 @@ public class AccessController {
         if(!"ACTIVE".equals(String.valueOf(rows.getFirst().get("status"))))
             return conflict("A conta está inativa globalmente. Solicite a reativação ao administrador da plataforma.");
         UUID userId=(UUID)rows.getFirst().get("id");
+        if(scalar("SELECT count(*) FROM clinic_memberships WHERE user_id=? AND clinic_id<>?",userId,clinic)>0)
+            return conflict("Esta conta é compartilhada com outra clínica. A redefinição global de senha deve ser feita pelo próprio titular.");
         jdbc.update("""
             UPDATE app_users SET password_hash=?,failed_login_attempts=0,locked_until=NULL,
                 password_changed_at=now(),updated_at=now() WHERE id=?
@@ -195,6 +197,8 @@ public class AccessController {
         if(!"ACTIVE".equals(String.valueOf(rows.getFirst().get("status"))))
             return conflict("A conta está inativa globalmente. Solicite a reativação ao administrador da plataforma.");
         UUID userId=(UUID)rows.getFirst().get("id");
+        if(scalar("SELECT count(*) FROM clinic_memberships WHERE user_id=? AND clinic_id<>?",userId,clinic)>0)
+            return conflict("Esta conta é compartilhada com outra clínica. O desbloqueio global deve ser feito pelo próprio titular.");
         jdbc.update("UPDATE app_users SET failed_login_attempts=0,locked_until=NULL,updated_at=now() WHERE id=?",userId);
         record(clinic,membershipId,"ACCOUNT_UNLOCKED","Bloqueio temporário removido",actor.membershipId());
         return ResponseEntity.ok(Map.of("membershipId",membershipId,"message","Bloqueio temporário removido."));
