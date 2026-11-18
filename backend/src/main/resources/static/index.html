@@ -215,7 +215,56 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .finance-category-item{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f5f8fb;border:1px solid #e2e9f0;border-radius:4px;padding:9px;font-size:11px;color:#40566d}
     @media(max-width:760px){.finance-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-form-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:480px){.finance-summary,.finance-form-grid,.finance-category-list{grid-template-columns:1fr}.finance-form-grid .wide{grid-column:auto}}
-  </style>
+  
+/* Módulo Exames — catálogo, solicitações, execução e resultados protegidos */
+.exam-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
+.exam-toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px;margin-bottom:12px}
+.exam-field{display:grid;gap:5px;min-width:125px;flex:1}
+.exam-field label{font-size:10px;color:#52677d;margin:0}
+.exam-field input,.exam-field select,.exam-form-grid input,.exam-form-grid select,.exam-form-grid textarea,.exam-action-grid input,.exam-action-grid textarea{height:35px;width:100%;min-width:0;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;color:#29445f;background:#fff}
+.exam-field.search{min-width:220px;flex:2}
+.exam-btn{height:35px;border:1px solid #c5d5e4;background:#fff;color:#145a91;border-radius:4px;padding:0 12px;font-size:11px;font-weight:750;cursor:pointer}
+.exam-btn.primary{background:#0867b2;border-color:#0867b2;color:white}
+.exam-btn.danger{border-color:#e8caca;background:#fff7f7;color:#a12626}
+.exam-btn:disabled{opacity:.55;cursor:wait}
+.exam-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.exam-kpi{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:11px 13px}
+.exam-kpi small{display:block;color:#718297;font-size:9px;margin-bottom:5px}
+.exam-kpi strong{font-size:21px;color:#17436c}
+.exam-message{min-height:19px;font-size:11px;margin:5px 0;color:#a12c26}
+.exam-table-wrap{overflow:auto;background:#fff;border:1px solid #dce4ed;border-radius:6px}
+.exam-table{width:100%;min-width:950px;border-collapse:collapse;font-size:11px}
+.exam-table th{padding:10px;text-align:left;background:#f1f5f9;color:#63768a;font-size:9px;border-bottom:1px solid #dce4ec}
+.exam-table td{padding:10px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.exam-patient{font-weight:800;color:#1c3d5d}
+.exam-muted{display:block;color:#8391a0;font-size:9px;margin-top:3px}
+.exam-status{display:inline-block;padding:4px 7px;border-radius:3px;background:#edf2f7;color:#52677d;font-size:9px;font-weight:800;white-space:nowrap}
+.exam-status.REQUESTED{background:#fff4df;color:#96610c}.exam-status.SCHEDULED{background:#edf4ff;color:#2864a8}.exam-status.IN_PROGRESS{background:#f5eafa;color:#823d9b}.exam-status.COMPLETED{background:#e9f7ee;color:#287747}.exam-status.CANCELLED{background:#f1f2f4;color:#718093}
+.exam-row-actions{display:flex;gap:4px;flex-wrap:wrap}.exam-row-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:9px;cursor:pointer}
+.exam-pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:11px;color:#718093;font-size:10px}
+.exam-panel{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:14px;margin-top:12px}
+.exam-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.exam-panel-heading h4{margin:0;color:#21486b;font-size:14px}
+.exam-form-grid,.exam-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.exam-form-grid>div,.exam-action-grid>div{display:grid;gap:5px;min-width:0}
+.exam-form-grid label,.exam-action-grid label{font-size:9px;font-weight:800;color:#526a80}
+.exam-form-grid .wide,.exam-action-grid .wide{grid-column:1/-1}
+.exam-form-grid textarea,.exam-action-grid textarea{height:auto;min-height:82px;padding:8px;resize:vertical}
+.exam-form-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}
+.exam-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.exam-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}
+.exam-detail-cell small{display:block;color:#7b8998;font-size:9px}
+.exam-detail-cell strong{font-size:11px;color:#244766;overflow-wrap:anywhere}
+.exam-result{white-space:pre-wrap;background:#f7fafc;border:1px solid #e4ebf1;border-radius:4px;padding:12px;color:#29445f;font-size:11px;line-height:1.6}
+.exam-event{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}
+.exam-event strong{display:block;color:#244766}
+.exam-catalog{margin-top:14px}
+.exam-catalog .catalog-grid{margin-top:10px}
+.exam-empty{text-align:center;padding:24px!important;color:#8492a1!important}
+@media(max-width:850px){.exam-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.exam-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.exam-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.exam-form-grid,.exam-action-grid,.exam-detail-grid{grid-template-columns:1fr}.exam-form-grid .wide,.exam-action-grid .wide{grid-column:auto}.exam-field.search{min-width:100%}}
+
+</style>
 </head>
 <body>
   <main class="shell">
@@ -318,7 +367,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
           <div class="catalog-grid">
             <div class="catalog-card"><h4>Salas e consultórios</h4><form id="roomForm"><input id="roomName" maxlength="100" placeholder="Nome da sala" required><button type="submit">Adicionar</button></form><div id="roomList" class="catalog-list"></div></div>
             <div class="catalog-card"><h4>Tipos de atendimento</h4><form id="serviceTypeForm"><input id="serviceTypeName" maxlength="120" placeholder="Novo tipo de atendimento" required><button type="submit">Adicionar</button></form><div id="serviceTypeList" class="catalog-list"></div></div>
-            <div class="catalog-card" style="grid-column:1/-1"><h4>Catálogo de exames e sala vinculada</h4><form id="examForm" style="flex-wrap:wrap"><select id="examCategory" required><option value="RAIO_X">Raio-X</option><option value="LABORATORIO">Coleta / Laboratório</option><option value="AUDIOMETRIA">Audiometria</option><option value="COMPLEMENTAR">Exames complementares</option><option value="OUTROS">Outros</option></select><input id="examName" maxlength="140" placeholder="Nome do exame" required><select id="examRoom" required><option value="">Selecione a sala</option></select><button type="submit">Adicionar exame</button></form><div id="examList" class="catalog-list"></div></div>
+            
           </div>
         </section>
         
@@ -465,6 +514,69 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="finance-panel-heading"><h4>Plano de categorias</h4><button id="financeCategoriesClose" class="schedule-btn" type="button">Fechar</button></div>
     <form id="financeCategoryForm" class="finance-form-grid"><div><label for="financeCategoryName">NOME *</label><input id="financeCategoryName" maxlength="100" required></div><div><label for="financeCategoryDirection">APLICAÇÃO *</label><select id="financeCategoryDirection"><option value="INCOME">Receitas</option><option value="EXPENSE">Despesas</option><option value="BOTH">Ambos</option></select></div><div style="display:flex;align-items:end"><button class="schedule-btn primary" type="submit">Adicionar categoria</button></div></form>
     <div id="financeCategoryList" class="finance-category-list"></div>
+  </section>
+</section>
+
+
+<section id="examWorkspace" class="exam-workspace hidden" aria-label="Gestão de exames">
+  <div class="exam-toolbar">
+    <div class="exam-field search"><label for="examSearch">PACIENTE / EXAME / PROFISSIONAL</label><input id="examSearch" type="search" maxlength="120" placeholder="Pesquisar solicitações"></div>
+    <div class="exam-field"><label for="examStatusFilter">SITUAÇÃO</label><select id="examStatusFilter"><option value="ALL">Todas</option><option value="REQUESTED">Solicitado</option><option value="SCHEDULED">Agendado</option><option value="IN_PROGRESS">Em execução</option><option value="COMPLETED">Concluído</option><option value="CANCELLED">Cancelado</option></select></div>
+    <div class="exam-field"><label for="examCategoryFilter">CATEGORIA</label><select id="examCategoryFilter"><option value="">Todas</option><option value="RAIO_X">Raio-X</option><option value="LABORATORIO">Laboratório</option><option value="AUDIOMETRIA">Audiometria</option><option value="COMPLEMENTAR">Complementares</option><option value="OUTROS">Outros</option></select></div>
+    <div class="exam-field"><label for="examFrom">SOLICITADO DE</label><input id="examFrom" type="date"></div>
+    <div class="exam-field"><label for="examTo">ATÉ</label><input id="examTo" type="date"></div>
+    <button id="examSearchButton" class="exam-btn primary" type="button">Filtrar</button>
+    <button id="examNewButton" class="exam-btn primary" type="button">+ Solicitar exame</button>
+    <button id="examRefreshButton" class="exam-btn" type="button">Atualizar</button>
+  </div>
+  <div class="exam-kpis">
+    <div class="exam-kpi"><small>TOTAL EXIBIDO</small><strong id="examTotal">0</strong></div>
+    <div class="exam-kpi"><small>SOLICITADOS</small><strong id="examRequested">0</strong></div>
+    <div class="exam-kpi"><small>AGENDADOS</small><strong id="examScheduled">0</strong></div>
+    <div class="exam-kpi"><small>EM EXECUÇÃO</small><strong id="examInProgress">0</strong></div>
+    <div class="exam-kpi"><small>CONCLUÍDOS</small><strong id="examCompleted">0</strong></div>
+  </div>
+  <div id="examMessage" class="exam-message" role="status" aria-live="polite"></div>
+  <div class="exam-table-wrap"><table class="exam-table"><thead><tr><th>SOLICITAÇÃO / DATA</th><th>PACIENTE</th><th>EXAME / CATEGORIA</th><th>SALA</th><th>PROFISSIONAL</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="examRows"><tr><td colspan="7" class="exam-empty">Carregando solicitações...</td></tr></tbody></table></div>
+  <div class="exam-pager"><span id="examPageInfo">0 solicitações</span><div><button id="examPrev" class="exam-btn" type="button" disabled>Anterior</button> <span id="examPage">Página 1 de 1</span> <button id="examNext" class="exam-btn" type="button" disabled>Próxima</button></div></div>
+
+  <form id="examCreatePanel" class="exam-panel hidden">
+    <div class="exam-panel-heading"><h4>Nova solicitação de exame</h4><button id="examCreateClose" class="exam-btn" type="button">Fechar</button></div>
+    <div class="exam-form-grid">
+      <div><label for="examPatient">PACIENTE *</label><select id="examPatient" required><option value="">Selecione o paciente</option></select></div>
+      <div><label for="examCatalogSelect">EXAME *</label><select id="examCatalogSelect" required><option value="">Selecione o exame</option></select></div>
+      <div><label for="examAppointment">AGENDAMENTO (OPCIONAL)</label><select id="examAppointment"><option value="">Sem vínculo com agenda</option></select></div>
+      <div><label for="examProfessional">PROFISSIONAL RESPONSÁVEL</label><select id="examProfessional"><option value="">A definir</option></select></div>
+      <div><label for="examPriority">PRIORIDADE</label><select id="examPriority"><option value="NORMAL">Normal</option><option value="URGENT">Urgente</option></select></div>
+      <div><label for="examScheduledAt">DATA / HORA PREVISTA</label><input id="examScheduledAt" type="datetime-local"></div>
+      <div class="wide"><label for="examNotes">OBSERVAÇÕES CLÍNICAS (PROTEGIDAS)</label><textarea id="examNotes" maxlength="3000" placeholder="Informações necessárias para a realização do exame"></textarea></div>
+    </div>
+    <div class="exam-form-actions"><button id="examCreateSave" class="exam-btn primary" type="submit">Registrar solicitação</button></div>
+  </form>
+
+  <section id="examActionPanel" class="exam-panel hidden">
+    <div class="exam-panel-heading"><h4 id="examActionTitle">Atualizar exame</h4><button id="examActionClose" class="exam-btn" type="button">Fechar</button></div>
+    <div class="exam-action-grid">
+      <div class="wide"><label for="examActionSchedule">DATA / HORA AGENDADA</label><input id="examActionSchedule" type="datetime-local"></div>
+      <div class="wide"><label for="examResultText">RESULTADO / LAUDO (ACESSO RESTRITO E CRIPTOGRAFADO)</label><textarea id="examResultText" maxlength="12000" placeholder="Digite o resultado do exame antes de concluir"></textarea></div>
+    </div>
+    <div class="exam-form-actions" id="examActionButtons"></div>
+  </section>
+
+  <section id="examDetailPanel" class="exam-panel hidden">
+    <div class="exam-panel-heading"><h4 id="examDetailTitle">Detalhes do exame</h4><button id="examDetailClose" class="exam-btn" type="button">Fechar</button></div>
+    <div id="examDetailData" class="exam-detail-grid"></div>
+    <div id="examDetailNotesWrap" class="exam-panel hidden"><h4>Observações clínicas</h4><div id="examDetailNotes" class="exam-result"></div></div>
+    <div id="examDetailResultWrap" class="exam-panel hidden"><h4>Resultado / laudo</h4><div id="examDetailResult" class="exam-result"></div></div>
+    <div class="exam-panel"><div class="exam-panel-heading"><h4>Histórico de movimentações</h4></div><div id="examHistoryRows"></div></div>
+  </section>
+
+  <section id="examCatalogPanel" class="exam-panel exam-catalog hidden">
+    <div class="exam-panel-heading"><div><h4>Catálogo de exames da clínica</h4><span class="exam-muted">Cadastre os exames disponíveis e associe cada um à sala responsável.</span></div></div>
+    <div id="catalogMessage" class="catalog-message" role="status" aria-live="polite"></div>
+    <div class="catalog-grid">
+      <div class="catalog-card" style="grid-column:1/-1"><h4>Exame e sala vinculada</h4><form id="examForm" style="flex-wrap:wrap"><select id="examCategory" required><option value="RAIO_X">Raio-X</option><option value="LABORATORIO">Coleta / Laboratório</option><option value="AUDIOMETRIA">Audiometria</option><option value="COMPLEMENTAR">Exames complementares</option><option value="OUTROS">Outros</option></select><input id="examName" maxlength="140" placeholder="Nome do exame" required><select id="examRoom" required><option value="">Selecione a sala</option></select><button type="submit">Adicionar exame</button></form><div id="examList" class="catalog-list"></div></div>
+    </div>
   </section>
 </section>
 
@@ -1433,6 +1545,156 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     }catch(error){financeMessage(error.message);}finally{button.disabled=false;}
   });
 
+
+  const examState={items:[],resources:null,role:"",page:1,pages:1,total:0,selected:null};
+  const examMessage=(message,error=true)=>{$("examMessage").textContent=message||"";$("examMessage").style.color=error?"#a12c26":"#287747";};
+  const examRequest=async(path,options={})=>{
+    const headers={...(options.headers||{})};
+    if(options.method&&options.method!=="GET")headers["X-XSRF-TOKEN"]=await csrf();
+    const response=await fetch(path,{credentials:"same-origin",...options,headers});
+    const data=response.status===204?null:await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data?.error||"Não foi possível concluir a operação de exames.");
+    return data;
+  };
+  const examStatusLabel={REQUESTED:"SOLICITADO",SCHEDULED:"AGENDADO",IN_PROGRESS:"EM EXECUÇÃO",COMPLETED:"CONCLUÍDO",CANCELLED:"CANCELADO"};
+  const examCategoryLabel={RAIO_X:"RAIO-X",LABORATORIO:"LABORATÓRIO",AUDIOMETRIA:"AUDIOMETRIA",COMPLEMENTAR:"COMPLEMENTAR",OUTROS:"OUTROS"};
+  const loadExamResources=async()=>{
+    examState.resources=await examRequest("/api/v1/clinic/exams/resources");
+    examState.role=examState.resources.role||examState.role;
+    const fill=(id,items,label)=>{const s=$(id);if(!s)return;const old=s.value;s.replaceChildren();const first=document.createElement("option");first.value="";first.textContent=label;s.append(first);items.forEach(item=>{const o=document.createElement("option");o.value=item.id;o.textContent=item.display_name||item.full_name||item.name;s.append(o);});if(old)s.value=old;};
+    fill("examPatient",examState.resources.patients||[],"Selecione o paciente");
+    fill("examCatalogSelect",examState.resources.exams||[],"Selecione o exame");
+    fill("examProfessional",examState.resources.professionals||[],"A definir");
+    fill("examAppointment",examState.resources.appointments||[],"Sem vínculo com agenda");
+    const appointment=$( "examAppointment" );
+    (examState.resources.appointments||[]).forEach((item,i)=>{const opt=appointment.options[i+1];if(opt)opt.textContent=item.patient_name+" • "+clinicDateTime(item.starts_at)+" • "+item.professional_name;});
+  };
+  const loadExams=async()=>{
+    try{
+      const params=new URLSearchParams({search:$("examSearch").value.trim(),status:$("examStatusFilter").value,
+        category:$("examCategoryFilter").value,page:String(examState.page),size:"20"});
+      if($("examFrom").value)params.set("from",$("examFrom").value);
+      if($("examTo").value)params.set("to",$("examTo").value);
+      const data=await examRequest("/api/v1/clinic/exams?"+params);
+      examState.items=data.items||[];examState.pages=data.pages||1;examState.total=data.total||0;
+      renderExams();
+    }catch(error){$("examRows").innerHTML="<tr><td colspan='7' class='exam-empty'>"+escapeHtml(error.message)+"</td></tr>";examMessage(error.message);}
+  };
+  const renderExams=()=>{
+    const items=examState.items,body=$("examRows");body.replaceChildren();
+    $("examTotal").textContent=examState.total;
+    $("examRequested").textContent=items.filter(x=>x.status==="REQUESTED").length;
+    $("examScheduled").textContent=items.filter(x=>x.status==="SCHEDULED").length;
+    $("examInProgress").textContent=items.filter(x=>x.status==="IN_PROGRESS").length;
+    $("examCompleted").textContent=items.filter(x=>x.status==="COMPLETED").length;
+    $("examPageInfo").textContent=examState.total+" solicitações";
+    $("examPage").textContent="Página "+examState.page+" de "+examState.pages;
+    $("examPrev").disabled=examState.page<=1;$("examNext").disabled=examState.page>=examState.pages;
+    if(!items.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=7;td.className="exam-empty";td.textContent="Nenhuma solicitação de exame encontrada.";tr.append(td);body.append(tr);return;}
+    items.forEach(item=>{
+      const tr=document.createElement("tr");
+      const cell=value=>{const td=document.createElement("td");td.textContent=value||"—";return td;};
+      const requested=cell(clinicDateTime(item.requested_at));requested.classList.add("exam-muted");
+      const patient=cell(item.patient_name);patient.className="exam-patient";
+      const exam=cell(item.exam_name);const category=document.createElement("span");category.className="exam-muted";category.textContent=examCategoryLabel[item.category]||item.category;exam.append(category);
+      const room=cell(item.room_name);
+      const professional=cell(item.professional_name||"A definir");
+      const status=cell("");const tag=document.createElement("span");tag.className="exam-status "+item.status;tag.textContent=examStatusLabel[item.status]||item.status;status.append(tag);
+      const actions=cell("");actions.className="exam-row-actions";
+      const add=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);actions.append(b);};
+      add("Detalhes",()=>showExamDetail(item));
+      if(["CLINIC_ADMIN","RECEPTION"].includes(examState.role)&&["REQUESTED","SCHEDULED"].includes(item.status))add("Atualizar",()=>openExamActions(item));
+      if(examState.role==="CLINIC_ADMIN"&&item.status==="IN_PROGRESS")add("Concluir",()=>openExamActions(item));
+      if(examState.role==="PROFESSIONAL"&&["REQUESTED","SCHEDULED","IN_PROGRESS"].includes(item.status))add(item.status==="IN_PROGRESS"?"Registrar laudo":"Iniciar",()=>openExamActions(item));
+      tr.append(requested,patient,exam,room,professional,status,actions);body.append(tr);
+    });
+  };
+  const openExamCreate=async()=>{
+    try{
+      if(!examState.resources)await loadExamResources();
+      $("examCreatePanel").classList.remove("hidden");$("examActionPanel").classList.add("hidden");$("examDetailPanel").classList.add("hidden");
+      $("examCreatePanel").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){examMessage(error.message);}
+  };
+  const showExamDetail=async item=>{
+    try{
+      const data=await examRequest("/api/v1/clinic/exams/"+item.id);
+      $("examDetailTitle").textContent=data.exam_name_snapshot+" • "+data.patient_name;
+      const fields=[["Paciente",data.patient_name],["Categoria",examCategoryLabel[data.exam_category_snapshot]||data.exam_category_snapshot],
+        ["Sala",data.room_name_snapshot],["Profissional",data.professional_name||"A definir"],
+        ["Solicitado por",data.requester_name],["Solicitado em",clinicDateTime(data.requested_at)],
+        ["Situação",examStatusLabel[data.status]||data.status],["Agendado para",data.scheduled_at?clinicDateTime(data.scheduled_at):"Não agendado"]];
+      const grid=$("examDetailData");grid.replaceChildren();
+      fields.forEach(([label,value])=>{const box=document.createElement("div");box.className="exam-detail-cell";const small=document.createElement("small");small.textContent=label;const strong=document.createElement("strong");strong.textContent=value||"—";box.append(small,strong);grid.append(box);});
+      $("examDetailNotesWrap").classList.toggle("hidden",!data.notes);$("examDetailNotes").textContent=data.notes||"";
+      $("examDetailResultWrap").classList.toggle("hidden",!data.result);$("examDetailResult").textContent=data.result||"";
+      const events=await examRequest("/api/v1/clinic/exams/"+item.id+"/history");
+      const target=$("examHistoryRows");target.replaceChildren();
+      if(!events.length)target.textContent="Nenhuma movimentação registrada.";
+      events.forEach(ev=>{const line=document.createElement("div");line.className="exam-event";const strong=document.createElement("strong");strong.textContent=examStatusLabel[ev.new_status]||ev.event_type;const detail=document.createElement("span");detail.textContent=clinicDateTime(ev.created_at)+" • "+(ev.actor_name||"Usuário")+" • "+(ev.detail||"");line.append(strong,detail);target.append(line);});
+      $("examDetailPanel").classList.remove("hidden");$("examCreatePanel").classList.add("hidden");$("examActionPanel").classList.add("hidden");
+      $("examDetailPanel").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){examMessage(error.message);}
+  };
+  const openExamActions=item=>{
+    examState.selected=item;
+    $("examActionTitle").textContent=item.exam_name+" • "+item.patient_name;
+    $("examActionSchedule").value=item.scheduled_at?clinicDateParts(item.scheduled_at).date+"T"+clinicDateParts(item.scheduled_at).time:"";
+    $("examResultText").value="";
+    $("examResultText").closest("div").classList.toggle("hidden",!["CLINIC_ADMIN","PROFESSIONAL"].includes(examState.role)||item.status==="CANCELLED");
+    const target=$("examActionButtons");target.replaceChildren();
+    const add=(label,status,extra={})=>{const b=document.createElement("button");b.type="button";b.className="exam-btn "+(status==="CANCELLED"?"danger":"primary");b.textContent=label;b.addEventListener("click",()=>changeExamStatus(item,status,extra));target.append(b);};
+    if(["CLINIC_ADMIN","RECEPTION"].includes(examState.role)&&item.status==="REQUESTED")add("Agendar","SCHEDULED");
+    if(["CLINIC_ADMIN","RECEPTION"].includes(examState.role)&&["REQUESTED","SCHEDULED"].includes(item.status))add("Cancelar","CANCELLED");
+    if(["CLINIC_ADMIN","PROFESSIONAL"].includes(examState.role)&&["REQUESTED","SCHEDULED"].includes(item.status))add("Iniciar execução","IN_PROGRESS");
+    if(["CLINIC_ADMIN","PROFESSIONAL"].includes(examState.role)&&item.status==="IN_PROGRESS")add("Concluir e salvar resultado","COMPLETED");
+    $("examActionPanel").classList.remove("hidden");$("examCreatePanel").classList.add("hidden");$("examDetailPanel").classList.add("hidden");
+    $("examActionPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  const changeExamStatus=async(item,status)=>{
+    try{
+      if(status==="CANCELLED"&&!confirm("Deseja cancelar esta solicitação de exame?"))return;
+      const scheduled=$("examActionSchedule").value;
+      const payload={status,scheduledAt:scheduled?new Date(scheduled).toISOString():null,
+        result:status==="COMPLETED"?$("examResultText").value.trim():null};
+      await examRequest("/api/v1/clinic/exams/"+item.id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      $("examActionPanel").classList.add("hidden");examMessage("Solicitação atualizada com sucesso.",false);await loadExams();
+    }catch(error){examMessage(error.message);}
+  };
+  $("examSearchButton").addEventListener("click",()=>{examState.page=1;loadExams();});
+  $("examRefreshButton").addEventListener("click",()=>loadExams());
+  $("examSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();examState.page=1;loadExams();}});
+  $("examStatusFilter").addEventListener("change",()=>{examState.page=1;loadExams();});
+  $("examCategoryFilter").addEventListener("change",()=>{examState.page=1;loadExams();});
+  $("examPrev").addEventListener("click",()=>{if(examState.page>1){examState.page--;loadExams();}});
+  $("examNext").addEventListener("click",()=>{if(examState.page<examState.pages){examState.page++;loadExams();}});
+  $("examNewButton").addEventListener("click",openExamCreate);
+  $("examCreateClose").addEventListener("click",()=>$("examCreatePanel").classList.add("hidden"));
+  $("examActionClose").addEventListener("click",()=>$("examActionPanel").classList.add("hidden"));
+  $("examDetailClose").addEventListener("click",()=>$("examDetailPanel").classList.add("hidden"));
+  $("examPatient").addEventListener("change",()=>{
+    const patient=$("examPatient").value,select=$("examAppointment"),old=select.value;
+    const options=(examState.resources?.appointments||[]).filter(x=>!patient||x.patient_id===patient);
+    select.replaceChildren();const first=document.createElement("option");first.value="";first.textContent="Sem vínculo com agenda";select.append(first);
+    options.forEach(x=>{const o=document.createElement("option");o.value=x.id;o.textContent=x.patient_name+" • "+clinicDateTime(x.starts_at)+" • "+x.professional_name;select.append(o);});
+    if(options.some(x=>x.id===old))select.value=old;
+  });
+  $("examAppointment").addEventListener("change",()=>{
+    const ap=(examState.resources?.appointments||[]).find(x=>x.id===$("examAppointment").value);
+    if(ap){$("examPatient").value=ap.patient_id;$("examProfessional").value=ap.professional_id;}
+  });
+  $("examCreatePanel").addEventListener("submit",async event=>{
+    event.preventDefault();const button=$("examCreateSave");button.disabled=true;
+    try{
+      const payload={patientId:$("examPatient").value,examId:$("examCatalogSelect").value,
+        appointmentId:$("examAppointment").value||null,professionalId:$("examProfessional").value||null,
+        priority:$("examPriority").value,scheduledAt:$("examScheduledAt").value?new Date($("examScheduledAt").value).toISOString():null,
+        notes:$("examNotes").value.trim()||null};
+      await examRequest("/api/v1/clinic/exams",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      event.currentTarget.reset();$("examCreatePanel").classList.add("hidden");examMessage("Solicitação registrada.",false);examState.page=1;await loadExams();
+    }catch(error){examMessage(error.message);}finally{button.disabled=false;}
+  });
+
   const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
@@ -1440,8 +1702,16 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
+    if (key === "exams" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
+      examState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
+      $("examWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
+      $("examNewButton").classList.toggle("hidden",examState.role==="PROFESSIONAL");
+      $("examCatalogPanel").classList.toggle("hidden",! ["CLINIC_ADMIN","RECEPTION"].includes(examState.role));
+      $("examCreatePanel").classList.add("hidden");$("examActionPanel").classList.add("hidden");$("examDetailPanel").classList.add("hidden");
+      loadExamResources().then(()=>{if(["CLINIC_ADMIN","RECEPTION"].includes(examState.role))loadCatalog();loadExams();}).catch(error=>examMessage(error.message));
+    }
     if (key === "finance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION"].includes(m.role))) {
       financeState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
       $("financeWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden");
