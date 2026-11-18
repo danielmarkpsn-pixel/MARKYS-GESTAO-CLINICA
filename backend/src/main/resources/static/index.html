@@ -2150,14 +2150,133 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     }catch(error){insuranceMessage(error.message);}finally{button.disabled=false;}
   });
 
-  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Usuários e permissões."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
+
+  const accessState={items:[],page:1,pages:1,total:0,summary:{},selected:null};
+  const accessMessage=(message,error=true)=>{$("accessMessage").textContent=message||"";$("accessMessage").style.color=error?"#a12c26":"#287747";};
+  const accessRequest=async(path,options={})=>{
+    const headers={...(options.headers||{})};if(options.method&&options.method!=="GET")headers["X-XSRF-TOKEN"]=await csrf();
+    const response=await fetch(path,{credentials:"same-origin",...options,headers});
+    const data=response.status===204?null:await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data?.error||"Não foi possível concluir a operação de acesso.");
+    return data;
+  };
+  const accessRoleLabel={CLINIC_ADMIN:"ADMINISTRADOR",RECEPTION:"RECEPÇÃO",PROFESSIONAL:"PROFISSIONAL",TRIAGE:"TRIAGEM",AUDITOR:"AUDITORIA"};
+  const accessStatusLabel={ACTIVE:"ATIVO",SUSPENDED:"SUSPENSO",REVOKED:"REVOGADO"};
+  const loadAccess=async()=>{
+    try{
+      const params=new URLSearchParams({search:$("accessSearch").value.trim(),role:$("accessRoleFilter").value,
+        status:$("accessStatusFilter").value,page:String(accessState.page),size:"20"});
+      const data=await accessRequest("/api/v1/clinic/access?"+params);
+      accessState.items=data.items||[];accessState.pages=data.pages||1;accessState.total=data.total||0;accessState.summary=data.summary||{};
+      renderAccess();
+    }catch(error){$("accessRows").innerHTML="<tr><td colspan='6' class='access-empty'>"+escapeHtml(error.message)+"</td></tr>";accessMessage(error.message);}
+  };
+  const renderAccess=()=>{
+    $("accessTotal").textContent=accessState.summary.total||0;$("accessActive").textContent=accessState.summary.active||0;
+    $("accessSuspended").textContent=accessState.summary.suspended||0;$("accessLocked").textContent=accessState.summary.locked_accounts||0;
+    $("accessPageInfo").textContent=accessState.total+" acessos";$("accessPage").textContent="Página "+accessState.page+" de "+accessState.pages;
+    $("accessPrev").disabled=accessState.page<=1;$("accessNext").disabled=accessState.page>=accessState.pages;
+    const body=$("accessRows");body.replaceChildren();
+    if(!accessState.items.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=6;td.className="access-empty";td.textContent="Nenhum acesso encontrado.";tr.append(td);body.append(tr);return;}
+    accessState.items.forEach(item=>{
+      const tr=document.createElement("tr"),cell=value=>{const td=document.createElement("td");td.textContent=value||"—";return td;};
+      const name=cell(item.full_name);name.className="access-name";const email=document.createElement("span");email.className="access-muted";email.textContent=item.email;name.append(email);
+      const role=cell(accessRoleLabel[item.role]||item.role);
+      const membership=cell("");const memberTag=document.createElement("span");memberTag.className="access-status"+(item.membership_status!=="ACTIVE"?" inactive":"");memberTag.textContent=accessStatusLabel[item.membership_status]||item.membership_status;membership.append(memberTag);
+      const account=cell("");const accountTag=document.createElement("span");accountTag.className="access-status"+(item.is_locked?" locked":item.account_status!=="ACTIVE"?" inactive":"");accountTag.textContent=item.is_locked?"BLOQUEADA":item.account_status==="ACTIVE"?"ATIVA":item.account_status;account.append(accountTag);
+      const last=cell(item.last_login_at?clinicDateTime(item.last_login_at):"Nunca acessou");
+      const actions=cell("");actions.className="access-actions";const b=document.createElement("button");b.type="button";b.textContent="Gerenciar";b.addEventListener("click",()=>showAccessDetail(item));actions.append(b);
+      tr.append(name,role,membership,account,last,actions);body.append(tr);
+    });
+  };
+  const openAccessCreate=()=>{
+    $("accessCreateForm").reset();$("accessCreateForm").classList.remove("hidden");$("accessDetailPanel").classList.add("hidden");
+    $("accessCreateForm").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  const showAccessDetail=async item=>{
+    try{
+      const data=await accessRequest("/api/v1/clinic/access/"+item.membership_id);
+      accessState.selected=data;$("accessDetailTitle").textContent=data.full_name+" • "+data.email;
+      const fields=[["Nome",data.full_name],["E-mail",data.email],["Perfil",accessRoleLabel[data.role]||data.role],
+        ["Acesso à clínica",accessStatusLabel[data.membership_status]||data.membership_status],
+        ["Situação da conta",data.account_status],["Último acesso",data.last_login_at?clinicDateTime(data.last_login_at):"Nunca acessou"],
+        ["Bloqueio temporário",data.locked_until?clinicDateTime(data.locked_until):"Não bloqueada"],
+        ["Tentativas falhas",String(data.failed_login_attempts||0)],
+        ["Cadastro profissional",data.professional_name|| (data.role==="PROFESSIONAL"?"Ainda não vinculado":"Não aplicável")]];
+      const grid=$("accessDetailData");grid.replaceChildren();
+      fields.forEach(([label,value])=>{const box=document.createElement("div");box.className="access-detail-cell";const small=document.createElement("small");small.textContent=label;const strong=document.createElement("strong");strong.textContent=value||"—";box.append(small,strong);grid.append(box);});
+      $("accessDetailRole").value=data.role;
+      $("accessToggleStatus").textContent=data.membership_status==="ACTIVE"?"Suspender acesso":"Reativar acesso";
+      $("accessToggleStatus").classList.toggle("danger",data.membership_status==="ACTIVE");
+      $("accessToggleStatus").disabled=data.membership_status==="REVOKED";
+      $("accessUnlock").classList.toggle("hidden",!(data.account_status==="ACTIVE"&&data.is_locked));
+      $("accessPasswordForm").classList.toggle("hidden",data.account_status!=="ACTIVE");
+      $("accessNewPassword").value="";
+      const events=await accessRequest("/api/v1/clinic/access/"+item.membership_id+"/history"),target=$("accessHistoryRows");target.replaceChildren();
+      if(!events.length)target.textContent="Nenhuma movimentação registrada.";
+      events.forEach(ev=>{const line=document.createElement("div");line.className="access-event";const strong=document.createElement("strong");strong.textContent=ev.event_type;const span=document.createElement("span");span.textContent=clinicDateTime(ev.created_at)+" • "+(ev.actor_name||"Administrador")+" • "+(ev.detail||"");line.append(strong,span);target.append(line);});
+      $("accessDetailPanel").classList.remove("hidden");$("accessCreateForm").classList.add("hidden");
+      $("accessDetailPanel").scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(error){accessMessage(error.message);}
+  };
+  const refreshAccessDetail=async()=>{if(accessState.selected){await loadAccess();await showAccessDetail({membership_id:accessState.selected.membership_id});}};
+  const saveAccessRole=async()=>{
+    if(!accessState.selected)return;
+    try{await accessRequest("/api/v1/clinic/access/"+accessState.selected.membership_id+"/role",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({role:$("accessDetailRole").value})});
+      accessMessage("Perfil atualizado.",false);await refreshAccessDetail();
+    }catch(error){accessMessage(error.message);}
+  };
+  const toggleAccessStatus=async()=>{
+    if(!accessState.selected)return;const active=accessState.selected.membership_status!=="ACTIVE";
+    if(!active&&!confirm("Suspender o acesso deste usuário à clínica? A conta global e os acessos a outras clínicas não serão desativados."))return;
+    try{await accessRequest("/api/v1/clinic/access/"+accessState.selected.membership_id+"/status",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({active})});
+      accessMessage(active?"Acesso reativado.":"Acesso suspenso.",false);await refreshAccessDetail();
+    }catch(error){accessMessage(error.message);}
+  };
+  const unlockAccess=async()=>{
+    if(!accessState.selected)return;
+    try{await accessRequest("/api/v1/clinic/access/"+accessState.selected.membership_id+"/unlock",{method:"POST"});
+      accessMessage("Bloqueio temporário removido.",false);await refreshAccessDetail();
+    }catch(error){accessMessage(error.message);}
+  };
+  $("accessSearchButton").addEventListener("click",()=>{accessState.page=1;loadAccess();});
+  $("accessRefreshButton").addEventListener("click",loadAccess);
+  $("accessSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();accessState.page=1;loadAccess();}});
+  $("accessRoleFilter").addEventListener("change",()=>{accessState.page=1;loadAccess();});
+  $("accessStatusFilter").addEventListener("change",()=>{accessState.page=1;loadAccess();});
+  $("accessPrev").addEventListener("click",()=>{if(accessState.page>1){accessState.page--;loadAccess();}});
+  $("accessNext").addEventListener("click",()=>{if(accessState.page<accessState.pages){accessState.page++;loadAccess();}});
+  $("accessNewButton").addEventListener("click",openAccessCreate);
+  $("accessCreateClose").addEventListener("click",()=>$("accessCreateForm").classList.add("hidden"));
+  $("accessCreateCancel").addEventListener("click",()=>$("accessCreateForm").classList.add("hidden"));
+  $("accessDetailClose").addEventListener("click",()=>$("accessDetailPanel").classList.add("hidden"));
+  $("accessSaveRole").addEventListener("click",saveAccessRole);
+  $("accessToggleStatus").addEventListener("click",toggleAccessStatus);
+  $("accessUnlock").addEventListener("click",unlockAccess);
+  $("accessCreateForm").addEventListener("submit",async event=>{
+    event.preventDefault();const button=$("accessCreateSave");button.disabled=true;
+    try{
+      const payload={fullName:$("accessFullName").value.trim(),email:$("accessEmail").value.trim(),
+        role:$("accessRole").value,initialPassword:$("accessInitialPassword").value||null};
+      const data=await accessRequest("/api/v1/clinic/access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      $("accessCreateForm").classList.add("hidden");accessMessage(data.message||"Acesso criado.",false);accessState.page=1;await loadAccess();
+    }catch(error){accessMessage(error.message);}finally{button.disabled=false;}
+  });
+  $("accessPasswordForm").addEventListener("submit",async event=>{
+    event.preventDefault();if(!accessState.selected)return;const button=$("accessPasswordSave");button.disabled=true;
+    try{await accessRequest("/api/v1/clinic/access/"+accessState.selected.membership_id+"/password",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("accessNewPassword").value})});
+      $("accessNewPassword").value="";accessMessage("Senha redefinida. O usuário deverá usar a nova senha no próximo login.",false);await refreshAccessDetail();
+    }catch(error){accessMessage(error.message);}finally{button.disabled=false;}
+  });
+
+  const moduleLabels = {attendance:["Lista de atendimentos","Acompanhe os atendimentos da clínica."],patients:["Pacientes","Cadastro e consulta de pacientes."],professionals:["Profissionais","Equipe vinculada à clínica."],schedule:["Agenda","Planejamento de horários, disponibilidade e agendamentos."],finance:["Financeiro","Receitas e movimentações."],exams:["Exames","Solicitações e resultados."],rooms:["Consultórios","Salas e consultórios da clínica."],insurance:["Convênios","Convênios aceitos pela clínica."],access:["Acessos","Contas, perfis, bloqueios e permissões da clínica."],laboratory:["Laboratório","Solicitações e resultados laboratoriais."],esocial:["eSocial","Eventos e informações do eSocial."],calls:["Tela de chamados","Solicitações de suporte."],subscription:["Assinatura","Plano e situação da assinatura."],about:["Sobre","Informações da plataforma MARKYS."]};
   let activeData = null;
   const activateModule = key => {
     const info = moduleLabels[key] || moduleLabels.attendance;
     $("moduleTitle").textContent = info[0]; $("moduleSubtitle").textContent = info[1];
     $("placeholderTitle").textContent = info[0]; $("placeholderText").textContent = "Este módulo será implementado com operações reais, respeitando as permissões e os dados da clínica ativa.";
     $("modulePlaceholder").classList.remove("hidden");
-    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
+    $("attendanceWorkspace").classList.add("hidden"); $("receptionWorkspace").classList.add("hidden"); $("patientWorkspace").classList.add("hidden"); $("professionalWorkspace").classList.add("hidden"); $("scheduleWorkspace").classList.add("hidden"); $("financeWorkspace").classList.add("hidden"); $("examWorkspace").classList.add("hidden"); $("roomWorkspace").classList.add("hidden"); $("insuranceWorkspace").classList.add("hidden"); $("accessWorkspace").classList.add("hidden"); $("masterTools").classList.add("hidden");
     if (key === "attendance" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) { $("attendanceWorkspace").classList.remove("hidden"); $("modulePlaceholder").classList.add("hidden"); loadAttendance(); }
     if (key === "exams" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && ["CLINIC_ADMIN","RECEPTION","PROFESSIONAL"].includes(m.role))) {
       examState.role=(activeData.memberships||[]).find(m=>m.clinic_id===activeData.activeClinicId)?.role||"";
@@ -2196,7 +2315,13 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       $("roomNewButton").classList.toggle("hidden",!["CLINIC_ADMIN","RECEPTION"].includes(roomState.role));
       $("roomForm").classList.add("hidden");$("roomDetailPanel").classList.add("hidden");roomState.page=1;loadRooms();
     }
-    if (key === "access" && activeData && activeData.globalRole === "MASTER") $("masterTools").classList.remove("hidden"), $("modulePlaceholder").classList.add("hidden");
+    if (key === "access" && activeData && activeData.globalRole === "MASTER") {
+      $("masterTools").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
+    }
+    if (key === "access" && activeData && (activeData.memberships || []).some(m => m.clinic_id === activeData.activeClinicId && m.role === "CLINIC_ADMIN")) {
+      $("accessWorkspace").classList.remove("hidden");$("modulePlaceholder").classList.add("hidden");
+      $("accessCreateForm").classList.add("hidden");$("accessDetailPanel").classList.add("hidden");accessState.page=1;loadAccess();
+    }
     document.querySelectorAll("#moduleNav button").forEach(b => b.classList.toggle("active", b.dataset.module === key));
   };
   $("moduleNav").addEventListener("click", e => { const b=e.target.closest("button[data-module]"); if(b) activateModule(b.dataset.module); });
