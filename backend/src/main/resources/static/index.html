@@ -401,6 +401,39 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 @media(max-width:900px){.lab-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.lab-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.lab-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.lab-form-grid,.lab-detail-grid{grid-template-columns:1fr}.lab-form-grid .wide{grid-column:auto}.lab-field.search{min-width:100%}}
 
+
+/* eSocial SST — gestão de empregador, trabalhadores e preparação de eventos */
+.esocial-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
+.esocial-banner{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid #d8e4ef;border-left:4px solid #246a9f;border-radius:5px;padding:12px 14px;margin-bottom:13px}
+.esocial-banner strong{display:block;color:#21486b;font-size:12px;margin-bottom:4px}.esocial-banner p{margin:0;color:#6e8093;font-size:10px;line-height:1.55}
+.esocial-toolbar{display:flex;align-items:end;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px;margin-bottom:12px}
+.esocial-field{display:grid;gap:5px;min-width:145px;flex:1}.esocial-field.search{min-width:220px;flex:2}
+.esocial-field label,.esocial-form-grid label{font-size:9px;font-weight:800;color:#5b7085}
+.esocial-field input,.esocial-field select,.esocial-form-grid input,.esocial-form-grid select,.esocial-form-grid textarea{height:35px;width:100%;min-width:0;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;color:#29445f;background:#fff}
+.esocial-btn{height:35px;border:1px solid #c5d5e4;background:#fff;color:#145a91;border-radius:4px;padding:0 12px;font-size:10px;font-weight:800;cursor:pointer}
+.esocial-btn.primary{background:#0867b2;border-color:#0867b2;color:white}.esocial-btn.danger{border-color:#e8caca;background:#fff7f7;color:#a12626}
+.esocial-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.esocial-kpi{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:11px 13px}.esocial-kpi small{display:block;color:#718297;font-size:9px;margin-bottom:5px}.esocial-kpi strong{font-size:21px;color:#17436c}
+.esocial-message{min-height:18px;color:#a12c26;font-size:10px;margin:4px 0}
+.esocial-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.esocial-tabs button{border:1px solid #d1dce6;background:#fff;color:#526b82;padding:8px 12px;border-radius:4px;font-size:10px;font-weight:800;cursor:pointer}.esocial-tabs button.active{background:#e8f2fb;border-color:#8db8db;color:#145a91}
+.esocial-panel{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:14px;margin-top:10px}
+.esocial-panel h4{font-size:13px;color:#21486b;margin:0 0 12px}
+.esocial-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.esocial-form-grid>div{display:grid;gap:5px;min-width:0}.esocial-form-grid .wide{grid-column:1/-1}
+.esocial-form-grid textarea{height:auto;min-height:130px;padding:9px;font:11px ui-monospace,monospace;resize:vertical}
+.esocial-form-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}
+.esocial-table-wrap{overflow:auto;background:#fff;border:1px solid #dce4ed;border-radius:6px}
+.esocial-table{width:100%;min-width:850px;border-collapse:collapse;font-size:10px}.esocial-table th{padding:10px;text-align:left;background:#f1f5f9;color:#63768a;font-size:9px;border-bottom:1px solid #dce4ec}.esocial-table td{padding:10px;border-bottom:1px solid #edf0f4;color:#40566d}
+.esocial-table td strong{display:block;color:#244766}.esocial-table td small{display:block;color:#8795a3;margin-top:3px}
+.esocial-tag{display:inline-block;padding:4px 7px;border-radius:3px;background:#fff3dc;color:#956315;font-size:9px;font-weight:800}.esocial-tag.ready{background:#eaf2ff;color:#245d9a}.esocial-tag.accepted{background:#eaf6ee;color:#287747}.esocial-tag.rejected{background:#fff0f0;color:#a12626}
+.esocial-table button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:9px;cursor:pointer}
+.esocial-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.esocial-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px;overflow-wrap:anywhere}.esocial-detail-cell small{display:block;color:#7b8998;font-size:9px}.esocial-detail-cell strong{font-size:11px;color:#244766}
+.esocial-note{font-size:10px;color:#7b8998;line-height:1.55;margin:10px 0}
+.esocial-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#64778a}.esocial-history-item strong{display:block;color:#244766}
+.esocial-pager{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:10px;color:#718093;font-size:10px}
+@media(max-width:850px){.esocial-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.esocial-form-grid,.esocial-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.esocial-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.esocial-form-grid,.esocial-detail-grid{grid-template-columns:1fr}.esocial-form-grid .wide{grid-column:auto}}
+
 </style>
 </head>
 <body>
@@ -692,6 +725,96 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       <div class="lab-form-actions"><button id="labActionSave" class="lab-btn primary" type="submit">Confirmar etapa</button></div>
     </form>
     <div class="lab-panel"><div class="lab-panel-heading"><h4>Histórico de rastreabilidade</h4></div><div id="labHistoryRows"></div></div>
+  </section>
+</section>
+
+
+<section id="esocialWorkspace" class="esocial-workspace hidden" aria-label="Preparação de eventos eSocial SST">
+  <div class="esocial-banner"><span aria-hidden="true">⚖</span><div><strong>eSocial — Saúde e Segurança do Trabalho (SST)</strong><p>Cadastre o empregador e os trabalhadores, organize eventos S-2210, S-2220 e S-2240 e valide os dados antes da transmissão. Esta versão prepara e audita os eventos; não transmite ao ambiente oficial do Governo.</p></div></div>
+  <div class="esocial-kpis">
+    <div class="esocial-kpi"><small>TOTAL DE EVENTOS</small><strong id="esocialTotal">0</strong></div>
+    <div class="esocial-kpi"><small>RASCUNHOS</small><strong id="esocialDrafts">0</strong></div>
+    <div class="esocial-kpi"><small>PRONTOS PARA TRANSMISSÃO</small><strong id="esocialReady">0</strong></div>
+    <div class="esocial-kpi"><small>TRANSMITIDOS</small><strong id="esocialTransmitted">0</strong></div>
+    <div class="esocial-kpi"><small>ACEITOS</small><strong id="esocialAccepted">0</strong></div>
+  </div>
+  <div id="esocialMessage" class="esocial-message" role="status" aria-live="polite"></div>
+  <div class="esocial-tabs">
+    <button type="button" data-esocial-tab="events" class="active">Eventos SST</button>
+    <button type="button" data-esocial-tab="workers">Trabalhadores</button>
+    <button type="button" data-esocial-tab="employer">Empregador / estabelecimento</button>
+  </div>
+  <section id="esocialEventsTab">
+    <div class="esocial-toolbar">
+      <div class="esocial-field"><label for="esocialTypeFilter">TIPO DE EVENTO</label><select id="esocialTypeFilter"><option value="ALL">Todos</option><option value="S-2210">S-2210 • CAT</option><option value="S-2220">S-2220 • ASO</option><option value="S-2240">S-2240 • Exposição</option></select></div>
+      <div class="esocial-field"><label for="esocialStatusFilter">SITUAÇÃO</label><select id="esocialStatusFilter"><option value="ALL">Todas</option><option value="DRAFT">Rascunho</option><option value="READY">Pronto</option><option value="TRANSMITTED">Transmitido</option><option value="ACCEPTED">Aceito</option><option value="REJECTED">Rejeitado</option><option value="CANCELLED">Cancelado</option></select></div>
+      <button id="esocialFilter" class="esocial-btn primary" type="button">Filtrar</button>
+      <button id="esocialNewEvent" class="esocial-btn primary" type="button">+ Novo evento</button>
+      <button id="esocialRefresh" class="esocial-btn" type="button">Atualizar</button>
+    </div>
+    <div class="esocial-table-wrap"><table class="esocial-table"><thead><tr><th>EVENTO / DATA</th><th>TRABALHADOR</th><th>SEQUÊNCIA</th><th>SITUAÇÃO</th><th>RECIBO / PROTOCOLO</th><th>AÇÕES</th></tr></thead><tbody id="esocialEventRows"><tr><td colspan="6">Carregando eventos...</td></tr></tbody></table></div>
+    <div class="esocial-pager"><span id="esocialEventCount">0 eventos</span><div><button id="esocialPrev" class="esocial-btn" type="button" disabled>Anterior</button> <span id="esocialPage">Página 1 de 1</span> <button id="esocialNext" class="esocial-btn" type="button" disabled>Próxima</button></div></div>
+    <form id="esocialEventForm" class="esocial-panel hidden">
+      <h4>Preparar evento de SST</h4>
+      <div class="esocial-form-grid">
+        <div><label for="esocialEventType">TIPO DE EVENTO *</label><select id="esocialEventType" required><option value="S-2210">S-2210 • Comunicação de acidente (CAT)</option><option value="S-2220">S-2220 • Monitoramento da saúde (ASO)</option><option value="S-2240">S-2240 • Condições ambientais / exposição</option></select></div>
+        <div><label for="esocialWorkerSelect">TRABALHADOR *</label><select id="esocialWorkerSelect" required><option value="">Selecione</option></select></div>
+        <div><label for="esocialEventDate">DATA DO EVENTO *</label><input id="esocialEventDate" type="date" required></div>
+        <div><label for="esocialSequence">SEQUÊNCIA *</label><input id="esocialSequence" type="number" min="1" max="999" value="1" required></div>
+        <div class="wide"><label for="esocialExamLink">EXAME CONCLUÍDO (S-2220, OPCIONAL)</label><select id="esocialExamLink"><option value="">Sem vínculo</option></select></div>
+        <div class="wide"><label for="esocialPayload">DADOS DO EVENTO EM JSON *</label><textarea id="esocialPayload" required spellcheck="false"></textarea><small id="esocialPayloadHelp" class="esocial-note">Preencha os campos obrigatórios do leiaute aplicável.</small></div>
+      </div>
+      <p class="esocial-note">Os dados do evento são armazenados criptografados. A validação desta tela verifica campos mínimos e consistência básica; não substitui a validação oficial do leiaute vigente do eSocial.</p>
+      <div class="esocial-form-actions"><button id="esocialCancelEventForm" class="esocial-btn" type="button">Cancelar</button><button class="esocial-btn primary" type="submit">Salvar rascunho</button></div>
+    </form>
+    <section id="esocialEventDetail" class="esocial-panel hidden">
+      <div class="esocial-panel-heading"><h4 id="esocialDetailTitle">Detalhes do evento</h4><button id="esocialDetailClose" class="esocial-btn" type="button">Fechar</button></div>
+      <div id="esocialDetailGrid" class="esocial-detail-grid"></div>
+      <div class="esocial-panel"><h4>Conteúdo protegido do evento</h4><pre id="esocialDetailPayload" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;color:#38536d"></pre></div>
+      <div id="esocialValidationErrors" class="esocial-note"></div>
+      <div class="esocial-form-actions"><button id="esocialValidate" class="esocial-btn primary" type="button">Validar e preparar</button><button id="esocialCancelEvent" class="esocial-btn danger" type="button">Cancelar evento</button></div>
+      <div class="esocial-panel"><h4>Auditoria do evento</h4><div id="esocialHistory"></div></div>
+    </section>
+  </section>
+  <section id="esocialWorkersTab" class="hidden">
+    <div class="esocial-toolbar"><div class="esocial-field search"><label for="esocialWorkerSearch">TRABALHADOR / MATRÍCULA</label><input id="esocialWorkerSearch" type="search" placeholder="Pesquisar trabalhadores"></div><button id="esocialWorkerFilter" class="esocial-btn primary" type="button">Pesquisar</button><button id="esocialNewWorker" class="esocial-btn primary" type="button">+ Cadastrar trabalhador</button></div>
+    <div class="esocial-table-wrap"><table class="esocial-table"><thead><tr><th>TRABALHADOR</th><th>MATRÍCULA</th><th>ADMISSÃO</th><th>CATEGORIA / CBO</th><th>CARGO / SETOR</th><th>SITUAÇÃO</th><th>AÇÃO</th></tr></thead><tbody id="esocialWorkerRows"></tbody></table></div>
+    <form id="esocialWorkerForm" class="esocial-panel hidden">
+      <h4>Cadastro do trabalhador</h4>
+      <div class="esocial-form-grid">
+        <div><label for="esocialWorkerName">NOME COMPLETO *</label><input id="esocialWorkerName" maxlength="180" required></div>
+        <div><label for="esocialWorkerCpf">CPF *</label><input id="esocialWorkerCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required></div>
+        <div><label for="esocialWorkerBirth">NASCIMENTO *</label><input id="esocialWorkerBirth" type="date" required></div>
+        <div><label for="esocialWorkerSex">SEXO *</label><select id="esocialWorkerSex"><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
+        <div><label for="esocialWorkerRegistration">MATRÍCULA *</label><input id="esocialWorkerRegistration" maxlength="60" required></div>
+        <div><label for="esocialWorkerAdmission">DATA DE ADMISSÃO *</label><input id="esocialWorkerAdmission" type="date" required></div>
+        <div><label for="esocialWorkerCategory">CATEGORIA eSOCIAL *</label><input id="esocialWorkerCategory" maxlength="8" placeholder="Ex.: 101" required></div>
+        <div><label for="esocialWorkerCbo">CBO</label><input id="esocialWorkerCbo" maxlength="8" placeholder="Ex.: 225125"></div>
+        <div><label for="esocialWorkerJob">CARGO / FUNÇÃO *</label><input id="esocialWorkerJob" maxlength="120" required></div>
+        <div><label for="esocialWorkerDepartment">SETOR</label><input id="esocialWorkerDepartment" maxlength="120"></div>
+        <div><label for="esocialWorkerLocation">LOCAL DE TRABALHO</label><input id="esocialWorkerLocation" maxlength="180"></div>
+        <div><label for="esocialWorkerPatient">VINCULAR PACIENTE (OPCIONAL)</label><select id="esocialWorkerPatient"><option value="">Sem vínculo</option></select></div>
+      </div>
+      <p class="esocial-note">O CPF é criptografado e indexado por impressão digital protegida. O cadastro do trabalhador é separado do cadastro clínico do paciente.</p>
+      <div class="esocial-form-actions"><button id="esocialCancelWorker" class="esocial-btn" type="button">Cancelar</button><button class="esocial-btn primary" type="submit">Salvar trabalhador</button></div>
+    </form>
+  </section>
+  <section id="esocialEmployerTab" class="hidden">
+    <form id="esocialEmployerForm" class="esocial-panel">
+      <h4>Identificação do empregador / estabelecimento</h4>
+      <div class="esocial-form-grid">
+        <div><label for="esocialEmployerName">RAZÃO SOCIAL *</label><input id="esocialEmployerName" maxlength="180" required></div>
+        <div><label for="esocialEmployerType">TIPO DE INSCRIÇÃO *</label><select id="esocialEmployerType"><option value="CNPJ">CNPJ</option><option value="CPF">CPF</option><option value="CAEPF">CAEPF</option><option value="CNO">CNO</option></select></div>
+        <div><label for="esocialEmployerNumber">NÚMERO DE INSCRIÇÃO *</label><input id="esocialEmployerNumber" maxlength="30" inputmode="numeric" required></div>
+        <div><label for="esocialEmployerClassification">CLASSIFICAÇÃO TRIBUTÁRIA</label><input id="esocialEmployerClassification" maxlength="12"></div>
+        <div><label for="esocialEmployerEnvironment">AMBIENTE-ALVO</label><select id="esocialEmployerEnvironment"><option value="PRODUCTION_RESTRICTED">Produção restrita (testes oficiais)</option><option value="PRODUCTION">Produção</option><option value="RESTRICTED">Restrito / homologação</option></select></div>
+        <div><label for="esocialEmployerContact">RESPONSÁVEL SST</label><input id="esocialEmployerContact" maxlength="160"></div>
+        <div><label for="esocialEmployerEmail">E-MAIL</label><input id="esocialEmployerEmail" type="email" maxlength="180"></div>
+        <div><label for="esocialEmployerPhone">TELEFONE</label><input id="esocialEmployerPhone" maxlength="30"></div>
+      </div>
+      <p class="esocial-note">A inscrição do empregador é armazenada criptografada. A configuração do ambiente não habilita transmissão: ainda são necessários certificado digital, procuração/autorização e integração homologada com os serviços oficiais.</p>
+      <div class="esocial-form-actions"><button class="esocial-btn primary" type="submit">Salvar dados do empregador</button></div>
+    </form>
   </section>
 </section>
 
