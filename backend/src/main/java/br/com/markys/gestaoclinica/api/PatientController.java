@@ -65,7 +65,7 @@ public class PatientController {
         if (term.length() > 120) term = term.substring(0, 120);
         String pattern = "%" + term + "%";
         return ResponseEntity.ok(jdbc.queryForList("""
-            SELECT p.id, p.full_name, p.birth_date, p.sex, p.insurance_name, p.job_title,
+            SELECT p.id, p.full_name, p.birth_date, p.sex, p.insurance_id, p.insurance_name, p.job_title,
                    p.status, p.created_at,
                    (SELECT count(*) FROM patient_documents d WHERE d.clinic_id=p.clinic_id AND d.patient_id=p.id) AS document_count,
                    (SELECT count(*) FROM queue_entries q WHERE q.clinic_id=p.clinic_id
@@ -88,7 +88,7 @@ public class PatientController {
         if (!canAccess(auth)) return forbidden();
         UUID clinic = TenantContext.requireClinicId();
         List<Map<String,Object>> rows = jdbc.queryForList("""
-            SELECT id, full_name, birth_date, sex, insurance_name, job_title, status, created_at,
+            SELECT id, full_name, birth_date, sex, insurance_id, insurance_name, job_title, status, created_at,
                    document_ciphertext, contact_ciphertext
               FROM patients WHERE clinic_id=? AND id=?
             """, clinic, id);
@@ -129,6 +129,7 @@ public class PatientController {
         }
         UUID clinic = TenantContext.requireClinicId();
         UUID membership = currentMembership(auth, clinic);
+        String insuranceName = resolveInsuranceName(clinic, body.insuranceId(), body.insuranceName(), null);
         UUID patientId = UUID.randomUUID();
         UUID queueId = body.serviceTypeId() == null ? null : UUID.randomUUID();
         if (queueId == null && body.examIds() != null && !body.examIds().isEmpty()) {
@@ -136,12 +137,12 @@ public class PatientController {
         }
         try {
             jdbc.update("""
-                INSERT INTO patients (id, clinic_id, full_name, birth_date, sex, insurance_name,
+                INSERT INTO patients (id, clinic_id, full_name, birth_date, sex, insurance_id, insurance_name,
                     job_title, document_type, document_fingerprint, document_ciphertext,
                     contact_ciphertext, created_by_membership_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'CPF', ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'CPF', ?, ?, ?, ?)
                 """, patientId, clinic, body.fullName().trim(), body.birthDate(), clean(body.sex()),
-                clean(body.insuranceName()), clean(body.jobTitle()), protection.fingerprint(cpf),
+                body.insuranceId(), insuranceName, clean(body.jobTitle()), protection.fingerprint(cpf),
                 protection.encrypt(cpf), encryptContact(body.phone(), body.email(), body.address(),
                     body.emergencyContact(), body.emergencyPhone(), body.administrativeNotes()), membership);
 
@@ -318,13 +319,14 @@ public class PatientController {
         if (body.birthDate() != null && body.birthDate().isAfter(LocalDate.now())) {
             return ResponseEntity.badRequest().body(Map.of("error", "A data de nascimento não pode estar no futuro."));
         }
+        String insuranceName = resolveInsuranceName(clinic, body.insuranceId(), body.insuranceName(), id);
         try {
             int changed = jdbc.update("""
-                UPDATE patients SET full_name=?, birth_date=?, sex=?, insurance_name=?, job_title=?,
+                UPDATE patients SET full_name=?, birth_date=?, sex=?, insurance_id=?, insurance_name=?, job_title=?,
                     document_type='CPF', document_fingerprint=?, document_ciphertext=?, contact_ciphertext=?,
                     updated_at=now()
                  WHERE clinic_id=? AND id=? AND status IN ('ACTIVE','INACTIVE')
-                """, body.fullName().trim(), body.birthDate(), clean(body.sex()), clean(body.insuranceName()),
+                """, body.fullName().trim(), body.birthDate(), clean(body.sex()), body.insuranceId(), insuranceName,
                 clean(body.jobTitle()), protection.fingerprint(cpf), protection.encrypt(cpf),
                 encryptContact(body.phone(), body.email(), body.address(), body.emergencyContact(),
                     body.emergencyPhone(), body.administrativeNotes()), clinic, id);
@@ -460,6 +462,22 @@ public class PatientController {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
+    private String resolveInsuranceName(UUID clinic, UUID insuranceId, String legacyName, UUID patientId) {
+        if (insuranceId == null) return clean(legacyName);
+        List<Map<String,Object>> rows = jdbc.queryForList(
+            "SELECT name,status FROM clinic_insurances WHERE clinic_id=? AND id=?", clinic, insuranceId);
+        if (rows.isEmpty()) throw new InvalidRequest("Convênio não encontrado nesta clínica.");
+        String status = String.valueOf(rows.getFirst().get("status"));
+        if ("INACTIVE".equals(status)) {
+            if (patientId == null) throw new InvalidRequest("Selecione um convênio ativo para novos pacientes.");
+            UUID current = jdbc.queryForObject(
+                "SELECT insurance_id FROM patients WHERE clinic_id=? AND id=?", UUID.class, clinic, patientId);
+            if (!insuranceId.equals(current))
+                throw new InvalidRequest("Este convênio está inativo. Selecione um convênio ativo.");
+        }
+        return String.valueOf(rows.getFirst().get("name"));
+    }
+
     private static String normalizeCpf(String value) {
         return value == null ? "" : value.replaceAll("\\D", "");
     }
@@ -482,6 +500,7 @@ public class PatientController {
         LocalDate birthDate,
         @Size(max=30) String sex,
         @Size(max=180) String insuranceName,
+        UUID insuranceId,
         @Size(max=160) String jobTitle,
         UUID serviceTypeId,
         List<UUID> examIds,
@@ -499,6 +518,7 @@ public class PatientController {
         LocalDate birthDate,
         @Size(max=30) String sex,
         @Size(max=180) String insuranceName,
+        UUID insuranceId,
         @Size(max=160) String jobTitle,
         UUID serviceTypeId,
         List<UUID> examIds,
