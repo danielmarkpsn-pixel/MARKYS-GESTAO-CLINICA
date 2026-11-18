@@ -49,6 +49,18 @@ class MarkysApplicationTests {
     }
 
     @Test
+    void queueListRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/clinic/queue"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void queueResourcesRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/clinic/queue/resources"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void currentUserRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/auth/me"))
             .andExpect(status().isUnauthorized());
