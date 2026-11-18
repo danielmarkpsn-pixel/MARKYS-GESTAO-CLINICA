@@ -300,6 +300,38 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 @media(max-width:800px){.room-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.room-usage{grid-template-columns:1fr}.room-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.room-form-grid,.room-detail-grid{grid-template-columns:1fr}.room-form-grid .wide{grid-column:auto}.room-field.search{min-width:100%}}
 
+
+/* Módulo Convênios — cadastro de operadoras e integração com pacientes */
+.insurance-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:7px;padding:16px}
+.insurance-toolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:12px;margin-bottom:12px}
+.insurance-field{display:grid;gap:5px;min-width:135px;flex:1}.insurance-field.search{min-width:220px;flex:2}
+.insurance-field label{font-size:10px;color:#52677d;margin:0}
+.insurance-field input,.insurance-field select,.insurance-form-grid input,.insurance-form-grid select,.insurance-form-grid textarea{height:35px;width:100%;min-width:0;border:1px solid #cbd6e1;border-radius:4px;padding:0 9px;font:12px system-ui;color:#29445f;background:#fff}
+.insurance-btn{height:35px;border:1px solid #c5d5e4;background:#fff;color:#145a91;border-radius:4px;padding:0 12px;font-size:11px;font-weight:750;cursor:pointer}
+.insurance-btn.primary{background:#0867b2;border-color:#0867b2;color:white}.insurance-btn.danger{border-color:#e8caca;background:#fff7f7;color:#a12626}
+.insurance-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.insurance-kpi{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:11px 13px}.insurance-kpi small{display:block;color:#718297;font-size:9px;margin-bottom:5px}.insurance-kpi strong{font-size:21px;color:#17436c}
+.insurance-message{min-height:19px;font-size:11px;margin:5px 0;color:#a12c26}
+.insurance-table-wrap{overflow:auto;background:#fff;border:1px solid #dce4ed;border-radius:6px}
+.insurance-table{width:100%;min-width:900px;border-collapse:collapse;font-size:11px}
+.insurance-table th{padding:10px;text-align:left;background:#f1f5f9;color:#63768a;font-size:9px;border-bottom:1px solid #dce4ec}
+.insurance-table td{padding:10px;border-bottom:1px solid #edf0f4;color:#40566d;vertical-align:middle}
+.insurance-name{font-weight:800;color:#1c3d5d}.insurance-muted{display:block;color:#8391a0;font-size:9px;margin-top:3px}
+.insurance-status{display:inline-block;padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:9px;font-weight:800}.insurance-status.inactive{background:#f1f2f4;color:#718093}
+.insurance-actions{display:flex;gap:4px;flex-wrap:wrap}.insurance-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:9px;cursor:pointer}
+.insurance-pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:11px;color:#718093;font-size:10px}
+.insurance-panel{background:#fff;border:1px solid #dce4ed;border-radius:6px;padding:14px;margin-top:12px}
+.insurance-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.insurance-panel-heading h4{margin:0;color:#21486b;font-size:14px}
+.insurance-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.insurance-form-grid>div{display:grid;gap:5px;min-width:0}.insurance-form-grid label{font-size:9px;font-weight:800;color:#526a80}.insurance-form-grid .wide{grid-column:1/-1}
+.insurance-form-grid textarea{height:auto;min-height:75px;padding:8px;resize:vertical}
+.insurance-form-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}
+.insurance-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.insurance-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.insurance-detail-cell small{display:block;color:#7b8998;font-size:9px}.insurance-detail-cell strong{font-size:11px;color:#244766;overflow-wrap:anywhere}
+.insurance-event{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px;color:#62768a}.insurance-event strong{display:block;color:#244766}
+.insurance-empty{text-align:center;padding:24px!important;color:#8492a1!important}
+@media(max-width:800px){.insurance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.insurance-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){.insurance-form-grid,.insurance-detail-grid{grid-template-columns:1fr}.insurance-form-grid .wide{grid-column:auto}.insurance-field.search{min-width:100%}}
+
 </style>
 </head>
 <body>
@@ -413,7 +445,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 <div id="patient-directory" class="patient-directory"><div class="patient-filters"><input id="patientSearch" type="search" maxlength="120" placeholder="Buscar por nome, convênio ou cargo"><select id="patientStatusFilter"><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option><option value="ALL">Todos</option></select><button id="patientSearchButton" class="patient-action" type="button">Pesquisar</button><button id="patientRefreshButton" class="patient-action" type="button">Atualizar</button></div><div class="patient-list-meta"><span id="patientCount">0 pacientes</span><span>Clínica ativa</span></div><div class="patient-table-wrap"><table class="patient-table"><thead><tr><th>PACIENTE</th><th>NASCIMENTO / IDADE</th><th>CONVÊNIO</th><th>ÚLTIMO ATENDIMENTO</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="patientList"><tr><td colspan="6" class="patient-empty">Carregando...</td></tr></tbody></table></div><nav class="patient-pagination" id="patientPagination" aria-label="Paginação de pacientes"><span id="patientPaginationInfo">0 pacientes</span><div><button id="patientPreviousPage" type="button" class="patient-action" disabled>Anterior</button><span id="patientCurrentPage">Página 1 de 1</span><button id="patientNextPage" type="button" class="patient-action" disabled>Próxima</button></div></nav></div>
 <form id="patientForm" class="catalog-grid patient-form hidden"><div class="patient-form-heading"><h4 id="patientFormTitle">Novo paciente</h4><button id="cancelPatientEdit" class="patient-action" type="button">Fechar</button></div>
 <div class="catalog-card"><div class="field"><label for="patientName">Nome completo *</label><input id="patientName" maxlength="180" autocomplete="name" required></div><div class="field"><label for="patientCpf">CPF *</label><input id="patientCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required></div><div class="field"><label for="patientBirth">Data de nascimento</label><input id="patientBirth" type="date"></div><div class="field"><label for="patientAge">Idade</label><input id="patientAge" readonly></div><div class="field"><label for="patientSex">Sexo</label><select id="patientSex"><option value="">Não informado</option><option value="FEMININO">Feminino</option><option value="MASCULINO">Masculino</option><option value="OUTRO">Outro</option></select></div><div class="field"><label for="patientPhone">Telefone</label><input id="patientPhone" type="tel" maxlength="40" autocomplete="tel"></div><div class="field"><label for="patientEmail">E-mail</label><input id="patientEmail" type="email" maxlength="254" autocomplete="email"></div><div class="field"><label for="patientAddress">Endereço completo</label><input id="patientAddress" maxlength="500" autocomplete="street-address"></div></div>
-<div class="catalog-card"><div class="field"><label for="patientInsurance">Convênio</label><input id="patientInsurance" maxlength="180"></div><div class="field"><label for="patientJob">Cargo / função</label><input id="patientJob" maxlength="160"></div><div class="field"><label for="patientEmergencyContact">Contato de emergência</label><input id="patientEmergencyContact" maxlength="180"></div><div class="field"><label for="patientEmergencyPhone">Telefone de emergência</label><input id="patientEmergencyPhone" type="tel" maxlength="40"></div><div class="field"><label for="patientPdf">Documento PDF (até 10 MB)</label><input id="patientPdf" type="file" accept="application/pdf,.pdf"></div><div class="field" style="grid-column:1/-1"><label for="patientAdministrativeNotes">Observações administrativas</label><textarea id="patientAdministrativeNotes" maxlength="2000" rows="3" style="width:100%;border:1px solid #ccd6e1;border-radius:4px;padding:9px;font:12px system-ui;resize:vertical"></textarea></div></div><div class="patient-form-actions"><button id="patientSubmit" class="patient-action primary-action" type="submit">Cadastrar paciente</button><button id="cancelPatientForm" class="patient-action" type="button">Cancelar</button></div></form>
+<div class="catalog-card"><div class="field"><label for="patientInsurance">Convênio cadastrado</label><select id="patientInsurance"><option value="">Particular / sem convênio</option></select></div><div class="field hidden" id="patientInsuranceOtherWrap"><label for="patientInsuranceOther">Outro convênio (registro legado)</label><input id="patientInsuranceOther" maxlength="180" placeholder="Nome do convênio"></div><div class="field"><label for="patientJob">Cargo / função</label><input id="patientJob" maxlength="160"></div><div class="field"><label for="patientEmergencyContact">Contato de emergência</label><input id="patientEmergencyContact" maxlength="180"></div><div class="field"><label for="patientEmergencyPhone">Telefone de emergência</label><input id="patientEmergencyPhone" type="tel" maxlength="40"></div><div class="field"><label for="patientPdf">Documento PDF (até 10 MB)</label><input id="patientPdf" type="file" accept="application/pdf,.pdf"></div><div class="field" style="grid-column:1/-1"><label for="patientAdministrativeNotes">Observações administrativas</label><textarea id="patientAdministrativeNotes" maxlength="2000" rows="3" style="width:100%;border:1px solid #ccd6e1;border-radius:4px;padding:9px;font:12px system-ui;resize:vertical"></textarea></div></div><div class="patient-form-actions"><button id="patientSubmit" class="patient-action primary-action" type="submit">Cadastrar paciente</button><button id="cancelPatientForm" class="patient-action" type="button">Cancelar</button></div></form>
 <section id="patientDetail" class="patient-detail hidden"><div class="patient-form-heading"><h4 id="patientDetailName">Ficha do paciente</h4><button id="closePatientDetail" class="patient-action" type="button">Voltar à lista</button></div><div id="patientDetailData" class="patient-detail-grid"></div><div class="patient-history-columns"><div><h5>Histórico de atendimentos</h5><div id="patientAttendanceHistory"></div></div><div><h5>Consultas / prontuários</h5><div id="patientEncounterHistory"></div></div></div></section></section>
 <section id="professionalWorkspace" class="workspace hidden professional-workspace">
   <div class="patient-heading"><div><h3>Gestão de profissionais</h3><p class="sub">Equipe clínica, registros em conselhos, especialidades e histórico de atuação.</p></div><button id="newProfessionalButton" class="professional-action primary" type="button">+ Vincular profissional</button></div>
@@ -554,6 +586,45 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 </section>
 
 
+
+
+<section id="insuranceWorkspace" class="insurance-workspace hidden" aria-label="Gestão de convênios">
+  <div class="insurance-toolbar">
+    <div class="insurance-field search"><label for="insuranceSearch">OPERADORA / CÓDIGO ANS / CONTATO</label><input id="insuranceSearch" type="search" maxlength="120" placeholder="Pesquisar convênios"></div>
+    <div class="insurance-field"><label for="insuranceStatusFilter">SITUAÇÃO</label><select id="insuranceStatusFilter"><option value="ALL">Todas</option><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option></select></div>
+    <button id="insuranceSearchButton" class="insurance-btn primary" type="button">Filtrar</button>
+    <button id="insuranceNewButton" class="insurance-btn primary" type="button">+ Novo convênio</button>
+    <button id="insuranceRefreshButton" class="insurance-btn" type="button">Atualizar</button>
+  </div>
+  <div class="insurance-kpis">
+    <div class="insurance-kpi"><small>TOTAL CADASTRADO</small><strong id="insuranceTotal">0</strong></div>
+    <div class="insurance-kpi"><small>ATIVOS</small><strong id="insuranceActive">0</strong></div>
+    <div class="insurance-kpi"><small>INATIVOS</small><strong id="insuranceInactive">0</strong></div>
+    <div class="insurance-kpi"><small>PACIENTES EM CONVÊNIOS ATIVOS</small><strong id="insuranceLinkedPatients">0</strong></div>
+  </div>
+  <div id="insuranceMessage" class="insurance-message" role="status" aria-live="polite"></div>
+  <div class="insurance-table-wrap"><table class="insurance-table"><thead><tr><th>OPERADORA / CÓDIGO ANS</th><th>CONTATO</th><th>TELEFONE / E-MAIL</th><th>PACIENTES VINCULADOS</th><th>PRAZO DE PAGAMENTO</th><th>SITUAÇÃO</th><th>AÇÕES</th></tr></thead><tbody id="insuranceRows"><tr><td colspan="7" class="insurance-empty">Carregando convênios...</td></tr></tbody></table></div>
+  <div class="insurance-pager"><span id="insurancePageInfo">0 convênios</span><div><button id="insurancePrev" class="insurance-btn" type="button" disabled>Anterior</button> <span id="insurancePage">Página 1 de 1</span> <button id="insuranceNext" class="insurance-btn" type="button" disabled>Próxima</button></div></div>
+  <form id="insuranceForm" class="insurance-panel hidden">
+    <div class="insurance-panel-heading"><h4 id="insuranceFormTitle">Novo convênio</h4><button id="insuranceFormClose" class="insurance-btn" type="button">Fechar</button></div>
+    <div class="insurance-form-grid">
+      <div><label for="insuranceName">NOME DA OPERADORA *</label><input id="insuranceName" maxlength="180" required></div>
+      <div><label for="insuranceAns">REGISTRO / CÓDIGO ANS</label><input id="insuranceAns" maxlength="24"></div>
+      <div><label for="insuranceContact">RESPONSÁVEL / CONTATO</label><input id="insuranceContact" maxlength="180"></div>
+      <div><label for="insurancePhone">TELEFONE</label><input id="insurancePhone" type="tel" maxlength="40"></div>
+      <div><label for="insuranceEmail">E-MAIL</label><input id="insuranceEmail" type="email" maxlength="254"></div>
+      <div><label for="insuranceBillingEmail">E-MAIL DE FATURAMENTO</label><input id="insuranceBillingEmail" type="email" maxlength="254"></div>
+      <div><label for="insuranceTerms">PRAZO DE PAGAMENTO (DIAS)</label><input id="insuranceTerms" type="number" min="0" max="365" step="1" value="30" required></div>
+      <div class="wide"><label for="insuranceNotes">OBSERVAÇÕES / REGRAS COMERCIAIS</label><textarea id="insuranceNotes" maxlength="1000" placeholder="Informações administrativas do convênio"></textarea></div>
+    </div>
+    <div class="insurance-form-actions"><button id="insuranceFormCancel" class="insurance-btn" type="button">Cancelar</button><button id="insuranceSave" class="insurance-btn primary" type="submit">Salvar convênio</button></div>
+  </form>
+  <section id="insuranceDetailPanel" class="insurance-panel hidden">
+    <div class="insurance-panel-heading"><h4 id="insuranceDetailTitle">Detalhes do convênio</h4><button id="insuranceDetailClose" class="insurance-btn" type="button">Voltar à lista</button></div>
+    <div id="insuranceDetailData" class="insurance-detail-grid"></div>
+    <div class="insurance-panel"><div class="insurance-panel-heading"><h4>Histórico de alterações</h4></div><div id="insuranceHistoryRows"></div></div>
+  </section>
+</section>
 
 <section id="roomWorkspace" class="room-workspace hidden" aria-label="Gestão de consultórios e salas">
   <div class="room-toolbar">
