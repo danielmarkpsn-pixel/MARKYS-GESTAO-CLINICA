@@ -573,7 +573,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 
   <section id="examCatalogPanel" class="exam-panel exam-catalog hidden">
     <div class="exam-panel-heading"><div><h4>Catálogo de exames da clínica</h4><span class="exam-muted">Cadastre os exames disponíveis e associe cada um à sala responsável.</span></div></div>
-    <div id="catalogMessage" class="catalog-message" role="status" aria-live="polite"></div>
+    <div id="examCatalogMessage" class="catalog-message" role="status" aria-live="polite"></div>
     <div class="catalog-grid">
       <div class="catalog-card" style="grid-column:1/-1"><h4>Exame e sala vinculada</h4><form id="examForm" style="flex-wrap:wrap"><select id="examCategory" required><option value="RAIO_X">Raio-X</option><option value="LABORATORIO">Coleta / Laboratório</option><option value="AUDIOMETRIA">Audiometria</option><option value="COMPLEMENTAR">Exames complementares</option><option value="OUTROS">Outros</option></select><input id="examName" maxlength="140" placeholder="Nome do exame" required><select id="examRoom" required><option value="">Selecione a sala</option></select><button type="submit">Adicionar exame</button></form><div id="examList" class="catalog-list"></div></div>
     </div>
@@ -670,7 +670,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   };
 
   const catalogMessage = (message, ok = false) => {
-    const el = $("catalogMessage");
+    const el = $("examWorkspace") && !$("examWorkspace").classList.contains("hidden") ? $("examCatalogMessage") : $("catalogMessage");
     el.textContent = message;
     el.className = "catalog-message" + (ok ? " ok" : "");
   };
