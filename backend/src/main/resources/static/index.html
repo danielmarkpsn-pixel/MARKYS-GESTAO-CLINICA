@@ -647,7 +647,8 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     @media(max-width:760px){#scheduleWorkspace .schedule-calendar-layout{grid-template-columns:1fr}#scheduleWorkspace .schedule-toolbar{position:static;padding:8px}#scheduleWorkspace .schedule-calendar-sidebar{border-right:0;border-bottom:1px solid #e2e4e9}#scheduleWorkspace .schedule-day-timeline{margin-top:8px}}
     #scheduleWorkspace .schedule-toolbar #scheduleConfigToggle{display:block;height:28px;padding:4px 10px;white-space:nowrap;font-size:11px}
     .schedule-shift-config{padding:12px 16px;background:#f6f9fc;border-bottom:1px solid #dce5ee;display:grid;gap:12px}
-    .schedule-shift-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .schedule-config-header,.schedule-config-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .schedule-config-table-wrap{overflow-x:auto}.schedule-config-table{width:100%;border-collapse:collapse;font-size:11px}.schedule-config-table th,.schedule-config-table td{padding:5px;border:1px solid #dce5ee;text-align:center}.schedule-config-table input{width:95px;max-width:100%;padding:5px;border:1px solid #cbd6e1;border-radius:4px}.schedule-config-check{display:flex;align-items:center;gap:6px}
     .schedule-shift-grid label{display:grid;gap:5px;font-size:11px;font-weight:650}
     .schedule-shift-grid input{height:32px;border:1px solid #ccd6e0;border-radius:5px;padding:4px}
     .schedule-shift-heading{font-size:11px;font-weight:800;background:#edf2f7;padding:9px 14px;color:#35546d}
@@ -877,16 +878,11 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <button id="scheduleConfigToggle" class="schedule-btn primary" type="button">Editar configuração da agenda</button>
   </div>
   <form id="scheduleShiftConfig" class="schedule-shift-config hidden">
-    <strong>Configuração da agenda — intervalos de 20 minutos</strong>
-    <div class="schedule-shift-grid">
-      <label>Manhã — entrada<input id="shiftMorningStart" type="time" value="07:00"></label>
-      <label>Manhã — saída<input id="shiftMorningEnd" type="time" value="11:00"></label>
-      <label>Tarde — entrada<input id="shiftAfternoonStart" type="time" value="13:00"></label>
-      <label>Tarde — saída<input id="shiftAfternoonEnd" type="time" value="17:00"></label>
-      <label>Noite — entrada<input id="shiftNightStart" type="time"></label>
-      <label>Noite — saída<input id="shiftNightEnd" type="time"></label>
-    </div>
-    <button class="schedule-btn primary" type="submit">Salvar configuração</button>
+    <div class="schedule-config-header"><strong>Editar configuração da agenda</strong><button id="scheduleConfigClose" class="schedule-btn" type="button">Fechar</button></div>
+    <p>Defina os horários de atendimento por dia da semana. Cada atendimento dura 20 minutos.</p>
+    <label class="schedule-config-check"><input id="scheduleConfigWeekends" type="checkbox"> Mostrar sábado e domingo</label>
+    <div class="schedule-config-table-wrap"><table class="schedule-config-table"><thead><tr><th>Dia</th><th colspan="2">Manhã</th><th colspan="2">Tarde</th><th colspan="2">Noite</th><th>Ação</th></tr><tr><th></th><th>Entrada</th><th>Saída</th><th>Entrada</th><th>Saída</th><th>Entrada</th><th>Saída</th><th></th></tr></thead><tbody id="scheduleConfigDays"></tbody></table></div>
+    <div class="schedule-config-actions"><button id="scheduleConfigReset" class="schedule-btn" type="button">Restaurar padrão</button><button id="scheduleConfigClear" class="schedule-btn" type="button">Limpar todos os campos</button><button class="schedule-btn primary" type="submit">Salvar configuração</button></div>
   </form>
   <div class="schedule-calendar-layout">
     <aside class="schedule-calendar-sidebar">
@@ -2229,28 +2225,60 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       if(scheduleState.role==="CLINIC_ADMIN"){await loadScheduleRules();await loadScheduleBlocks();}
     }catch(error){$("scheduleRows").innerHTML="<tr><td colspan='7' class='schedule-empty'>"+escapeHtml(error.message)+"</td></tr>";scheduleMessage(error.message);}
   };
-  const shiftConfigKey="markys-schedule-shifts-v1";
-  const defaultShifts=[["07:00","11:00"],["13:00","17:00"],["",""]];
-  const shiftIds=[["shiftMorningStart","shiftMorningEnd"],["shiftAfternoonStart","shiftAfternoonEnd"],["shiftNightStart","shiftNightEnd"]];
-  let scheduleShifts=defaultShifts.map(pair=>[...pair]);
+  const shiftConfigKey="markys-schedule-weekly-v2";
+  const scheduleDayNames=["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+  const defaultScheduleDay=()=>[["07:00","11:00"],["13:00","17:00"],["",""]];
+  let scheduleWeek=Array.from({length:7},(_,day)=>day===0||day===6?[["",""],["",""],["",""]]:defaultScheduleDay());
   try{
     const stored=JSON.parse(localStorage.getItem(shiftConfigKey)||"null");
-    if(Array.isArray(stored)&&stored.length===3&&stored.every(pair=>Array.isArray(pair)&&pair.length===2))scheduleShifts=stored;
+    if(Array.isArray(stored)&&stored.length===7&&stored.every(day=>Array.isArray(day)&&day.length===3&&day.every(pair=>Array.isArray(pair)&&pair.length===2)))scheduleWeek=stored;
   }catch(_error){}
-  shiftIds.forEach((pair,index)=>pair.forEach((id,j)=>$(id).value=scheduleShifts[index][j]));
-  $("scheduleConfigToggle").addEventListener("click",()=>$("scheduleShiftConfig").classList.toggle("hidden"));
+  const scheduleConfigBody=$("scheduleConfigDays");
+  const buildScheduleConfig=()=>{
+    scheduleConfigBody.replaceChildren();
+    scheduleWeek.forEach((periods,day)=>{
+      if((day===0||day===6)&&!$("scheduleConfigWeekends").checked)return;
+      const tr=document.createElement("tr");tr.dataset.day=day;
+      const name=document.createElement("th");name.textContent=scheduleDayNames[day];tr.append(name);
+      periods.forEach((pair,period)=>pair.forEach((value,index)=>{
+        const td=document.createElement("td"),input=document.createElement("input");input.type="time";input.value=value;input.dataset.period=period;input.dataset.index=index;input.setAttribute("aria-label",scheduleDayNames[day]+" "+["Manhã","Tarde","Noite"][period]+" "+["entrada","saída"][index]);td.append(input);tr.append(td);
+      }));
+      const action=document.createElement("td"),copy=document.createElement("button");copy.type="button";copy.className="schedule-btn";copy.textContent="Replicar";copy.title="Copiar estes horários para os outros dias visíveis";
+      copy.addEventListener("click",()=>{
+        const source=[...tr.querySelectorAll("input")].map(input=>input.value);
+        [...scheduleConfigBody.querySelectorAll("tr")].forEach(other=>{
+          if(other===tr)return;
+          [...other.querySelectorAll("input")].forEach((input,index)=>input.value=source[index]);
+        });
+      });
+      action.append(copy);tr.append(action);scheduleConfigBody.append(tr);
+    });
+  };
+  $("scheduleConfigToggle").addEventListener("click",()=>{$("scheduleShiftConfig").classList.toggle("hidden");buildScheduleConfig();});
+  $("scheduleConfigClose").addEventListener("click",()=>$("scheduleShiftConfig").classList.add("hidden"));
+  $("scheduleConfigWeekends").addEventListener("change",()=>{
+    [...scheduleConfigBody.querySelectorAll("tr")].forEach(tr=>{
+      const day=Number(tr.dataset.day);const values=[...tr.querySelectorAll("input")].map(input=>input.value);
+      scheduleWeek[day]=[values.slice(0,2),values.slice(2,4),values.slice(4,6)];
+    });buildScheduleConfig();
+  });
+  $("scheduleConfigReset").addEventListener("click",()=>{
+    scheduleWeek=Array.from({length:7},(_,day)=>day===0||day===6?[["",""],["",""],["",""]]:defaultScheduleDay());buildScheduleConfig();
+  });
+  $("scheduleConfigClear").addEventListener("click",()=>scheduleConfigBody.querySelectorAll("input").forEach(input=>input.value=""));
   $("scheduleShiftConfig").addEventListener("submit",event=>{
     event.preventDefault();
-    const next=shiftIds.map(pair=>pair.map(id=>$(id).value));
+    const next=scheduleWeek.map(day=>day.map(pair=>[...pair]));
     const minutes=value=>{const [h,m]=value.split(":").map(Number);return h*60+m;};
-    if(next.some(([start,end])=>(!!start!==!!end)||(start&&minutes(end)<=minutes(start)))){
-      scheduleMessage("Informe entrada e saída válidas para cada turno.");return;
+    for(const tr of scheduleConfigBody.querySelectorAll("tr")){
+      const day=Number(tr.dataset.day),values=[...tr.querySelectorAll("input")].map(input=>input.value);
+      next[day]=[values.slice(0,2),values.slice(2,4),values.slice(4,6)];
     }
-    scheduleShifts=next;
-    localStorage.setItem(shiftConfigKey,JSON.stringify(next));
-    $("scheduleShiftConfig").classList.add("hidden");
-    scheduleMessage("Configuração salva neste navegador.",false);
-    renderScheduleDay();
+    for(const day of next)for(const [start,end] of day){
+      if((!!start!==!!end)||(start&&minutes(end)<=minutes(start))){scheduleMessage("Preencha entrada e saída válidas em cada período.");return;}
+    }
+    scheduleWeek=next;localStorage.setItem(shiftConfigKey,JSON.stringify(next));
+    $("scheduleShiftConfig").classList.add("hidden");scheduleMessage("Configuração semanal salva neste navegador.",false);renderScheduleDay();
   });
   let scheduleCalendarMonth="";
   const renderScheduleMonth=()=>{
@@ -2312,7 +2340,8 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     const format=new Intl.DateTimeFormat("pt-BR",{timeZone:scheduleState.timezone,hour:"2-digit",minute:"2-digit",hour12:false});
     const minutes=value=>{const [h,m]=value.split(":").map(Number);return h*60+m;};
     const hhmm=value=>String(Math.floor(value/60)).padStart(2,"0")+":"+String(value%60).padStart(2,"0");
-    const groups=[["MANHÃ",scheduleShifts[0]],["TARDE",scheduleShifts[1]],["NOITE",scheduleShifts[2]]];
+    const selectedDay=new Date(date+"T12:00:00").getDay();
+    const groups=[["MANHÃ",scheduleWeek[selectedDay][0]],["TARDE",scheduleWeek[selectedDay][1]],["NOITE",scheduleWeek[selectedDay][2]]];
     groups.forEach(([name,range])=>{
       const [start,end]=range;
       if(!start||!end)return;
