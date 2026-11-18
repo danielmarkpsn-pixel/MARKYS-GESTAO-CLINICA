@@ -579,6 +579,11 @@ class DatabaseMigrationIntegrationTest {
             .andExpect(status().isOk());
         assertThat(jdbc.queryForObject("SELECT result_ciphertext IS NOT NULL FROM exam_orders WHERE id=?",
             Boolean.class,labOrderId)).isFalse();
+        mockMvc.perform(get("/api/v1/clinic/laboratory/{id}",specimenId).session(clinicAdminSession))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.exam_notes").value("Coleta para hemograma"))
+            .andExpect(jsonPath("$.collection_notes").value("Coleta realizada"))
+            .andExpect(jsonPath("$.result").value("Hemoglobina 14,2 g/dL; demais parâmetros dentro da referência."));
         mockMvc.perform(patch("/api/v1/clinic/laboratory/{id}/status",specimenId)
                 .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"RELEASED\"}"))
