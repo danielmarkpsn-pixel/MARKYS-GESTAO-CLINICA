@@ -34,6 +34,7 @@ public class EsocialController {
         Map<String,Object> result=new LinkedHashMap<>();
         result.put("role",a.role());
         result.put("employer",jdbc.queryForList("SELECT id,registration_type,legal_name,classification_code,environment,contact_name,contact_email,contact_phone,updated_at FROM esocial_employers WHERE clinic_id=?",clinic).stream().findFirst().orElse(null));
+        result.put("patients",jdbc.queryForList("SELECT id,full_name,birth_date FROM patients WHERE clinic_id=? AND status='ACTIVE' ORDER BY lower(full_name) LIMIT 500",clinic));
         result.put("workers",jdbc.queryForList("""
             SELECT id,full_name,birth_date,registration_code,admission_date,category_code,cbo_code,job_title,department,work_location,status
               FROM esocial_workers WHERE clinic_id=? ORDER BY lower(full_name) LIMIT 500
