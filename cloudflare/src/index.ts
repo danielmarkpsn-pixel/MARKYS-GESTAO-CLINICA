@@ -16,6 +16,8 @@ interface Env {
 
 const PORT = 8080;
 const IDLE_TIMEOUT_MS = 2 * 60 * 1000;
+// Increment on deployments that change the packaged Spring Boot application.
+const CONTAINER_RELEASE = "2026-11-18-agenda-d4a9b8e";
 
 function missingConfiguration(env: Env): string[] {
   // Database and PII protection are required to serve the application.
@@ -97,7 +99,7 @@ export class MarkysApiContainer extends DurableObject<Env> {
     const token = this.env.MARKYS_MASTER_BOOTSTRAP_TOKEN ?? "";
     const digest = await crypto.subtle.digest(
       "SHA-256",
-      new TextEncoder().encode(token),
+      new TextEncoder().encode(CONTAINER_RELEASE + ":" + token),
     );
     const fingerprint = Array.from(new Uint8Array(digest), (byte) =>
       byte.toString(16).padStart(2, "0"),
@@ -109,7 +111,7 @@ export class MarkysApiContainer extends DurableObject<Env> {
 
     const container = this.ctx.container!;
     if (container.running) {
-      console.info("MARKYS container restarting after bootstrap secret rotation");
+      console.info("MARKYS container restarting after release or bootstrap configuration change", { release: CONTAINER_RELEASE });
       await container.destroy();
       const previousMonitor = this.monitoring;
       if (previousMonitor) await previousMonitor.catch(() => undefined);
