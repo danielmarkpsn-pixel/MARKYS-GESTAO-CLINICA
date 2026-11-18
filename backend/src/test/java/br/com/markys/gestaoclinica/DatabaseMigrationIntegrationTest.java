@@ -400,22 +400,15 @@ class DatabaseMigrationIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.incomeReceived").value(250.00));
 
-        UUID receptionUserId=UUID.randomUUID(), receptionMembershipId=UUID.randomUUID();
-        jdbc.update("INSERT INTO app_users (id,full_name,email,password_hash,status) VALUES (?,?,?,?, 'ACTIVE')",
-            receptionUserId,"Recepção Financeiro","recepcao.financeiro@clinica.test","$2a$10$abcdefghijklmnopqrstuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
-        jdbc.update("INSERT INTO clinic_memberships (id,clinic_id,user_id,role,status) VALUES (?,?,?,'RECEPTION','ACTIVE')",
-            receptionMembershipId,clinicId,receptionUserId);
-        MvcResult receptionLogin=mockMvc.perform(post("/api/v1/auth/login")
-                .cookie(csrfCookie).header("X-XSRF-TOKEN",token)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"recepcao.financeiro@clinica.test\",\"password\":\"SenhaRecepcaoSegura123!\"}"))
-            .andExpect(status().isOk()).andReturn();
-        MockHttpSession receptionSession=(MockHttpSession)receptionLogin.getRequest().getSession(false);
+        jdbc.update("""
+            UPDATE clinic_memberships SET role='RECEPTION'
+             WHERE clinic_id=? AND user_id=(SELECT id FROM app_users WHERE lower(email)=lower(?))
+            """,clinicId,"admin@clinica.test");
         UUID expenseCategoryId=jdbc.queryForObject("""
             SELECT id FROM finance_categories WHERE clinic_id=? AND name='Aluguel e condomínio' AND direction='EXPENSE'
             """,UUID.class,clinicId);
         mockMvc.perform(post("/api/v1/clinic/finance/entries")
-                .session(receptionSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"direction":"EXPENSE","description":"Aluguel","categoryId":"%s","amount":1000.00,"dueDate":"%s"}
