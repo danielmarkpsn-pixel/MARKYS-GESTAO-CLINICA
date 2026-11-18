@@ -259,7 +259,7 @@ class DatabaseMigrationIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT insurance_id FROM patients WHERE id=?",UUID.class,patientId))
             .isEqualTo(insuranceId);
         assertThat(jdbc.queryForObject("SELECT insurance_name FROM patients WHERE id=?",String.class,patientId))
-            .isEqualTo("Convênio Integração");
+            .isEqualTo("Convênio Integração Atualizado");
 
         assertThat(jdbc.queryForObject("SELECT count(*) FROM queue_entry_exams WHERE clinic_id=?",
             Integer.class, clinicId)).isEqualTo(1);
