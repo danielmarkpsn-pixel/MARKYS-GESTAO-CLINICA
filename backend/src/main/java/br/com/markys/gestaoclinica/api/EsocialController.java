@@ -38,6 +38,11 @@ public class EsocialController {
             SELECT id,full_name,birth_date,registration_code,admission_date,category_code,cbo_code,job_title,department,work_location,status
               FROM esocial_workers WHERE clinic_id=? ORDER BY lower(full_name) LIMIT 500
             """,clinic));
+        result.put("completedExams",jdbc.queryForList("""
+            SELECT o.id,o.exam_name_snapshot AS exam_name,o.requested_at,p.full_name AS patient_name
+              FROM exam_orders o JOIN patients p ON p.clinic_id=o.clinic_id AND p.id=o.patient_id
+             WHERE o.clinic_id=? AND o.status='COMPLETED' ORDER BY o.completed_at DESC LIMIT 300
+            """,clinic));
         result.put("summary",jdbc.queryForMap("""
             SELECT count(*) AS total,
               count(*) FILTER(WHERE status='DRAFT') AS drafts,
