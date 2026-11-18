@@ -212,6 +212,7 @@ public class AccessController {
             SELECT m.id AS membership_id,u.id AS user_id,u.full_name,u.email,m.role,
                    m.status AS membership_status,u.status AS account_status,u.last_login_at,
                    u.locked_until,u.failed_login_attempts,m.created_at,m.updated_at,
+                   CASE WHEN u.locked_until>now() OR u.status='LOCKED' THEN true ELSE false END AS is_locked,
                    p.id AS professional_id,p.display_name AS professional_name
               FROM clinic_memberships m JOIN app_users u ON u.id=m.user_id
               LEFT JOIN professionals p ON p.clinic_id=m.clinic_id AND p.membership_id=m.id
