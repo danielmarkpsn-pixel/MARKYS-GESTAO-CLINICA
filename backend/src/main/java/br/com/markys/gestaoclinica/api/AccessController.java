@@ -156,6 +156,28 @@ public class AccessController {
         return ResponseEntity.ok(Map.of("membershipId",membershipId,"status",next,"message",body.active()?"Acesso reativado.":"Acesso suspenso."));
     }
 
+    @DeleteMapping("/{membershipId}")
+    @Transactional
+    public ResponseEntity<?> revoke(Authentication auth,@PathVariable UUID membershipId){
+        Access actor=admin(auth);if(actor==null)return forbidden();
+        if(actor.membershipId().equals(membershipId))return conflict("Não é permitido revogar o próprio acesso.");
+        UUID clinic=TenantContext.requireClinicId();
+        List<Map<String,Object>> rows=jdbc.queryForList("""
+            SELECT role,status FROM clinic_memberships WHERE clinic_id=? AND id=? FOR UPDATE
+        """,clinic,membershipId);
+        if(rows.isEmpty())return ResponseEntity.notFound().build();
+        String role=String.valueOf(rows.getFirst().get("role"));
+        String previous=String.valueOf(rows.getFirst().get("status"));
+        if("REVOKED".equals(previous))return ResponseEntity.ok(Map.of("membershipId",membershipId,"status","REVOKED","message","Acesso já estava revogado."));
+        if("CLINIC_ADMIN".equals(role)&&"ACTIVE".equals(previous)
+            &&scalar("SELECT count(*) FROM clinic_memberships WHERE clinic_id=? AND role='CLINIC_ADMIN' AND status='ACTIVE'",clinic)<=1)
+            return conflict("A clínica precisa manter pelo menos um administrador ativo.");
+        jdbc.update("UPDATE clinic_memberships SET status='REVOKED',updated_at=now() WHERE clinic_id=? AND id=?",clinic,membershipId);
+        jdbc.update("UPDATE professionals SET status='INACTIVE',updated_at=now() WHERE clinic_id=? AND membership_id=?",clinic,membershipId);
+        record(clinic,membershipId,"SUSPENDED","Acesso revogado definitivamente pelo administrador da clínica",actor.membershipId());
+        return ResponseEntity.ok(Map.of("membershipId",membershipId,"status","REVOKED","message","Acesso revogado. O histórico foi preservado."));
+    }
+
     @PatchMapping("/{membershipId}/password")
     @Transactional
     public ResponseEntity<?> resetPassword(Authentication auth,@PathVariable UUID membershipId,@Valid @RequestBody PasswordRequest body){

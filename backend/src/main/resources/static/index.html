@@ -984,7 +984,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="access-detail-controls">
       <div><label for="accessDetailRole">PERFIL DA CLÍNICA</label><select id="accessDetailRole"><option value="CLINIC_ADMIN">Administrador</option><option value="RECEPTION">Recepção</option><option value="PROFESSIONAL">Profissional</option><option value="TRIAGE">Triagem</option><option value="AUDITOR">Auditoria</option><option value="LAB_TECHNICIAN">Laboratório</option></select></div>
       <button id="accessSaveRole" class="access-btn primary" type="button">Salvar perfil</button>
-      <button id="accessToggleStatus" class="access-btn danger" type="button">Suspender acesso</button>
+      <button id="accessToggleStatus" class="access-btn danger" type="button">Suspender acesso</button><button id="accessRevokeButton" class="access-btn danger" type="button">Revogar acesso</button>
       <button id="accessUnlock" class="access-btn" type="button">Desbloquear conta</button>
     </div>
     <form id="accessPasswordForm" class="access-panel">
@@ -2672,7 +2672,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       $("accessDetailRole").value=data.role;
       $("accessToggleStatus").textContent=data.membership_status==="ACTIVE"?"Suspender acesso":"Reativar acesso";
       $("accessToggleStatus").classList.toggle("danger",data.membership_status==="ACTIVE");
-      $("accessToggleStatus").disabled=data.membership_status==="REVOKED";
+      $("accessToggleStatus").disabled=data.membership_status==="REVOKED";$("accessRevokeButton").disabled=data.membership_status==="REVOKED";
       $("accessUnlock").classList.toggle("hidden",!(data.account_status==="ACTIVE"&&data.is_locked));
       $("accessPasswordForm").classList.toggle("hidden",data.account_status!=="ACTIVE");
       $("accessNewPassword").value="";
@@ -2703,6 +2703,16 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       accessMessage("Bloqueio temporário removido.",false);await refreshAccessDetail();
     }catch(error){accessMessage(error.message);}
   };
+  const revokeAccess=async()=>{
+    if(!accessState.selected)return;
+    if(!confirm("Revogar definitivamente o acesso de "+accessState.selected.full_name+" a esta clínica? A conta global não será apagada e o histórico será preservado. Esta ação não pode ser revertida."))return;
+    try{
+      const result=await accessRequest("/api/v1/clinic/access/"+accessState.selected.membership_id,{method:"DELETE"});
+      $("accessDetailPanel").classList.add("hidden");accessState.selected=null;
+      accessMessage(result.message||"Acesso revogado.",false);await loadAccess();
+    }catch(error){accessMessage(error.message);}
+  };
+
   $("accessSearchButton").addEventListener("click",()=>{accessState.page=1;loadAccess();});
   $("accessRefreshButton").addEventListener("click",loadAccess);
   $("accessSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();accessState.page=1;loadAccess();}});
@@ -2717,6 +2727,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   $("accessSaveRole").addEventListener("click",saveAccessRole);
   $("accessToggleStatus").addEventListener("click",toggleAccessStatus);
   $("accessUnlock").addEventListener("click",unlockAccess);
+  $("accessRevokeButton").addEventListener("click",revokeAccess);
   $("accessCreateForm").addEventListener("submit",async event=>{
     event.preventDefault();const button=$("accessCreateSave");button.disabled=true;
     try{
