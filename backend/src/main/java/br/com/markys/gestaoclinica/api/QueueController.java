@@ -107,11 +107,14 @@ public class QueueController {
                AND (? = '' OR p.full_name ILIKE ? OR COALESCE(q.service_label,'') ILIKE ?
                     OR COALESCE(pr.display_name,'') ILIKE ? OR COALESCE(r.name,'') ILIKE ?
                     OR (CAST(? AS bytea) IS NOT NULL AND p.document_fingerprint=?))
-               AND ((? = '' AND ? = '' AND
+               AND (
+                    (? = '' AND ? = '' AND
                        ((? = TRUE AND q.arrived_at >= CURRENT_DATE AND q.arrived_at < CURRENT_DATE + INTERVAL '1 day')
                         OR (? = FALSE AND q.arrived_at >= CURRENT_DATE - INTERVAL '30 days')))
-                    OR (? <> '' AND q.arrived_at >= CAST(? AS date))
-                    OR (? <> '' AND q.arrived_at < CAST(? AS date) + INTERVAL '1 day'))
+                    OR ((? <> '' OR ? <> '')
+                        AND (? = '' OR q.arrived_at >= CAST(? AS date))
+                        AND (? = '' OR q.arrived_at < CAST(? AS date) + INTERVAL '1 day'))
+               )
                AND (? = '' OR q.priority=?)
                AND (? = '' OR q.assigned_professional_id::text=?)
                AND (? = FALSE OR (? IS NOT NULL AND q.assigned_professional_id=?))
@@ -123,7 +126,7 @@ public class QueueController {
                  q.arrived_at ASC
              LIMIT 300
             """, clinic, normalizedStatus, normalizedStatus, term, pattern, pattern, pattern, pattern,
-            cpfFingerprint, cpfFingerprint, dateFrom, dateTo, today, today, dateFrom, dateFrom, dateTo, dateTo,
+            cpfFingerprint, cpfFingerprint, dateFrom, dateTo, today, today, dateFrom, dateTo, dateFrom, dateFrom, dateTo, dateTo,
             normalizedPriority, normalizedPriority, professional, professional,
             mine, access.professionalId(), access.professionalId(), access.role(), access.professionalId());
         return ResponseEntity.ok(rows);
