@@ -217,6 +217,37 @@ public class EsocialController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"status","DRAFT","validationErrors",errors));
     }
 
+    @PutMapping("/events/{id}")
+    @Transactional
+    public ResponseEntity<?> updateEvent(Authentication auth,@PathVariable UUID id,@Valid @RequestBody EventRequest body){
+        Access a=access(auth);if(a==null)return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        List<Map<String,Object>> current=jdbc.queryForList(
+            "SELECT status,event_type FROM esocial_events WHERE clinic_id=? AND id=? FOR UPDATE",clinic,id);
+        if(current.isEmpty())return ResponseEntity.notFound().build();
+        if(!"DRAFT".equals(String.valueOf(current.getFirst().get("status"))))
+            return conflict("Somente eventos em rascunho podem ser editados.");
+        String type=body.eventType().trim().toUpperCase(Locale.ROOT);
+        if(!TYPES.contains(type))return badRequest("Tipo de evento SST não suportado.");
+        if("S-2210".equals(type)&&!"CLINIC_ADMIN".equals(a.role()))return forbidden();
+        if(body.sourceExamOrderId()!=null&&!"S-2220".equals(type))return badRequest("Somente o evento S-2220 pode ser vinculado a um exame.");
+        if(body.sourceExamOrderId()!=null){
+            Integer count=jdbc.queryForObject("SELECT count(*) FROM exam_orders WHERE clinic_id=? AND id=? AND status='COMPLETED'",
+                Integer.class,clinic,body.sourceExamOrderId());
+            if(count==null||count==0)return badRequest("O exame vinculado precisa estar concluído nesta clínica.");
+        }
+        if(!workerExists(clinic,body.workerId()))return badRequest("Trabalhador não encontrado ou inativo nesta clínica.");
+        List<String> errors=validatePayload(type,body.payload(),body.eventDate());
+        jdbc.update("""
+            UPDATE esocial_events SET worker_id=?,event_type=?,event_date=?,event_sequence=?,payload_ciphertext=?,
+                validation_errors=?::jsonb,source_exam_order_id=?,updated_by_membership_id=?,updated_at=now()
+             WHERE clinic_id=? AND id=? AND status='DRAFT'
+            """,body.workerId(),type,body.eventDate(),body.eventSequence(),protection.encrypt(json(body.payload())),
+            json(mapper.valueToTree(errors)),body.sourceExamOrderId(),a.membershipId(),clinic,id);
+        audit(clinic,id,"UPDATED","Rascunho atualizado; "+errors.size()+" pendência(s) local(is)",a.membershipId());
+        return ResponseEntity.ok(Map.of("id",id,"status","DRAFT","validationErrors",errors));
+    }
+
     @PostMapping("/events/{id}/validate")
     @Transactional
     public ResponseEntity<?> validateEvent(Authentication auth,@PathVariable UUID id){
