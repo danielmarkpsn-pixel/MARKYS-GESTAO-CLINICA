@@ -2415,7 +2415,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
         ["Sala",data.room_name||"Não definida"],["Solicitado em",clinicDateTime(data.requested_at)],
         ["Coletado em",clinicDateTime(data.collected_at)],["Recebido em",clinicDateTime(data.received_at)],
         ["Processamento iniciado",clinicDateTime(data.processing_started_at)],["Resultado pronto",clinicDateTime(data.result_ready_at)],
-        ["Liberado em",clinicDateTime(data.released_at)],["Observações de coleta",data.collection_notes||"—"],
+        ["Liberado em",clinicDateTime(data.released_at)],["Instruções clínicas da solicitação",data.exam_notes||"—"],["Observações de coleta",data.collection_notes||"—"],
         ["Motivo da rejeição",data.rejection_reason||"—"]];
       if(data.result)fields.push(["Resultado",data.result]);
       const grid=$("labDetailData");grid.replaceChildren();
