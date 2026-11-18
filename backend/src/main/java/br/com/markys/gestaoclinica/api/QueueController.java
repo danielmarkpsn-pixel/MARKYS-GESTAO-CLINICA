@@ -165,7 +165,7 @@ public class QueueController {
 
         if ("PROFESSIONAL".equals(access.role())) {
             Object assigned = current.get("assigned_professional_id");
-            if (assigned == null || !access.professionalId().equals(assigned))
+            if (assigned == null || !java.util.Objects.equals(access.professionalId(), assigned))
                 return forbidden("Você só pode atualizar atendimentos atribuídos a você.");
         } else if (!List.of("CLINIC_ADMIN", "RECEPTION").contains(access.role())) return forbidden();
 
