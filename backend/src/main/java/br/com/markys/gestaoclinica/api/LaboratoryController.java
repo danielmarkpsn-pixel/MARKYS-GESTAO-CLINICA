@@ -91,6 +91,8 @@ public class LaboratoryController {
         byte[] rejection=(byte[])row.remove("rejection_reason_ciphertext");
         byte[] result=(byte[])row.remove("result_ciphertext");
         row.remove("result_entered_by_membership_id");
+        if((notes!=null||rejection!=null||result!=null)&&!protection.isConfigured())
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error","Proteção de dados indisponível no servidor."));
         row.put("collection_notes",notes==null?null:protection.decrypt(notes));
         row.put("rejection_reason",rejection==null?null:protection.decrypt(rejection));
         row.put("result",result==null?null:protection.decrypt(result));
