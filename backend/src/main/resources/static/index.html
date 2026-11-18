@@ -77,12 +77,19 @@
 body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100vh;display:block;border:0;border-radius:0;box-shadow:none;background:#eef1f5}.brand{display:none}.panel{display:block;min-height:100vh;padding:0;background:#eef1f5}#authPanel{min-height:100vh;display:grid;place-items:center;padding:24px}#sessionPanel{min-height:100vh;padding:0 24px 24px 258px;display:block;background:#eef1f5}#sessionPanel.hidden{display:none!important}.app-sidebar{position:fixed;z-index:5;left:0;top:0;bottom:0;width:236px;overflow:auto;background:#fff;border-right:1px solid #d9e1e9;padding:16px 10px}.app-brand{height:52px;display:flex;align-items:center;gap:10px;padding:0 10px 14px;margin-bottom:8px;border-bottom:1px solid #e3e9ef;color:#07549a;font-weight:800;letter-spacing:1.5px}.app-brand img{width:30px;height:30px}.app-brand small{display:block;font-size:9px;letter-spacing:1.4px}.module-nav{display:grid;gap:3px}.module-nav button{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:5px;background:transparent;color:#40566d;text-align:left;padding:10px;font:600 12px system-ui;cursor:pointer}.module-nav button:hover,.module-nav button.active{background:#e8f2fb;color:#07549a}.module-nav button.active{border-left:3px solid #0873bd;padding-left:7px}.module-nav svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.app-topbar{height:58px;margin:0 -24px 22px -258px;padding:0 24px 0 258px;display:flex;align-items:center;justify-content:space-between;background:#07549a;color:white;position:sticky;top:0;z-index:4;box-shadow:0 2px 7px #102b5220}.app-user{font-size:12px}.app-user strong{display:block}.app-user span{opacity:.8}.page-heading{margin-bottom:18px}.page-heading h2{font-size:22px;color:#183b60;margin:0 0 5px}.page-heading p{font-size:12px;color:#738397;margin:0}.session{display:none}.master-tools,.workspace{background:#fff;border:1px solid #dce4ec;border-radius:7px;padding:20px;box-shadow:0 1px 2px #102b5208;margin:0 0 18px}.module-placeholder{background:#fff;border:1px solid #dce4ec;border-radius:7px;padding:28px;min-height:200px}.module-placeholder h3{font-size:16px;color:#1b4269;margin:0 0 8px}.module-placeholder p{font-size:12px;color:#718297;line-height:1.6;margin:0;max-width:680px}.module-status{display:inline-block;margin-top:16px;padding:6px 9px;border-radius:4px;background:#f1f5f8;color:#64788d;font-size:10px;font-weight:700}#logoutButton{position:fixed;right:18px;top:10px;z-index:8;margin:0;padding:7px 10px;font-size:11px;border-color:#ffffff55;background:#ffffff20;color:#fff}@media(max-width:760px){#sessionPanel{padding-left:64px;padding-right:12px}.app-sidebar{width:58px;padding:12px 5px}.app-brand{padding:0 5px 12px}.app-brand div,.module-nav button span{display:none}.module-nav button{justify-content:center;padding:11px 5px}.module-nav button.active{padding-left:2px}.app-topbar{margin-left:-70px;padding-left:82px;margin-right:-12px}.app-main{min-width:0}}
 
     /* Módulo 1 — Lista de atendimentos */
-    .attendance-workspace{background:#f0f1f6;border:1px solid #d9dfe8;border-radius:5px;padding:14px;margin:0 0 18px}
-    .attendance-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-    .attendance-search{display:flex;align-items:center;gap:7px;flex:1;min-width:230px;max-width:430px}
-    .attendance-search input,.attendance-toolbar select{height:34px;border:1px solid #cbd4df;border-radius:3px;background:#fff;padding:0 10px;color:#263d56;font:12px system-ui;min-width:0}
-    .attendance-search input{width:100%}
-    .attendance-toolbar select{min-width:155px}
+    .attendance-workspace{background:#f5f8fc;border:1px solid #dce6f0;border-radius:12px;padding:18px;margin:0 0 18px}
+    .attendance-filter-panel{background:#fff;border:1px solid #e1e9f1;border-radius:10px;padding:14px;margin-bottom:14px;box-shadow:0 3px 12px rgba(20,55,90,.04)}
+    .attendance-search-row{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+    .attendance-search{display:grid;gap:6px;flex:1;min-width:260px;max-width:560px}
+    .attendance-search>label,.attendance-filters>label{font-size:9px;font-weight:850;letter-spacing:.55px;color:#61758b}
+    .attendance-search-control{display:flex;gap:8px}
+    .attendance-search input,.attendance-filters select,.attendance-filters input{height:40px;border:1px solid #d3deea;border-radius:7px;background:#fff;padding:0 11px;color:#263d56;font:12px system-ui;min-width:0;width:100%}
+    .attendance-search input{flex:1}
+    .attendance-filters{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px}
+    .attendance-filters>label{display:grid;gap:6px}
+    .attendance-mine-button{height:40px;border:1px solid #b8d5ec;border-radius:8px;padding:0 15px;background:#edf6ff;color:#07549a;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;transition:.15s}
+    .attendance-mine-button[aria-pressed="true"]{background:#07549a;border-color:#07549a;color:#fff;box-shadow:0 4px 12px #07549a30}
+    .attendance-button.refresh{height:40px;border-radius:8px;background:#f6f8fb;color:#415a72;border-color:#d9e3ec}
     .attendance-button{height:34px;border:1px solid #b8cce0;border-radius:4px;padding:0 12px;background:#fff;color:#07549a;font-size:11px;font-weight:700;cursor:pointer}
     .attendance-button.primary{background:#0867b2;color:#fff;border-color:#0867b2}
     .attendance-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:#40566d;white-space:nowrap}
@@ -95,12 +102,12 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .attendance-table-wrap{overflow:auto;background:transparent}
     .attendance-table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:850px;font-size:11px}
     .attendance-table th{text-align:left;padding:0 9px 3px;color:#52677d;font-size:10px;font-weight:700;white-space:nowrap}
-    .attendance-table td{background:#fff;border-top:1px solid #d7dce5;border-bottom:1px solid #d7dce5;padding:8px 9px;vertical-align:middle}
-    .attendance-table td:first-child{border-left:5px solid #8998a8;width:125px}
-    .attendance-table td:last-child{border-right:1px solid #d7dce5}
+    .attendance-table td{background:#fff;border-top:1px solid #e1e8ef;border-bottom:1px solid #e1e8ef;padding:12px 11px;vertical-align:middle;line-height:1.4}
+    .attendance-table td:first-child{border-left:4px solid #8998a8;width:125px;border-radius:8px 0 0 8px}
+    .attendance-table td:last-child{border-right:1px solid #e1e8ef;border-radius:0 8px 8px 0}
     .attendance-time{font-weight:800;color:#193c60;font-size:12px;white-space:nowrap}
     .attendance-muted{display:block;color:#718196;font-size:10px;margin-top:3px}
-    .attendance-patient{font-weight:800;color:#1b2f46;font-size:11px;text-transform:uppercase}
+    .attendance-patient{font-weight:800;color:#1b2f46;font-size:12px;text-transform:uppercase;line-height:1.35;overflow-wrap:anywhere;max-width:260px}
     .attendance-tags{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
     .attendance-tag{display:inline-flex;align-items:center;gap:4px;border-radius:4px;padding:4px 6px;font-size:10px;font-weight:750;white-space:nowrap;background:#edf1f6;color:#3c536c}
     .attendance-tag.priority{background:#fff0f0;color:#c33242}
@@ -114,7 +121,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .attendance-empty{text-align:center;padding:28px!important;color:#718196;background:#fff;border:1px dashed #cbd4df}
     .attendance-actions{display:flex;gap:4px;flex-wrap:wrap;min-width:130px}.attendance-actions button{border:1px solid #c8d7e5;background:#f5f9fd;color:#07549a;border-radius:3px;padding:5px 7px;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}.attendance-actions button:disabled{opacity:.55;cursor:wait}
     .attendance-message{font-size:11px;color:#a12c27;min-height:17px;margin:6px 0}
-    @media(max-width:760px){.attendance-workspace{padding:9px}.attendance-search{max-width:none;flex-basis:100%}.attendance-toolbar select{flex:1}}
+    @media(max-width:900px){.attendance-filters{grid-template-columns:repeat(2,minmax(0,1fr))}} @media(max-width:600px){.attendance-workspace{padding:9px}.attendance-filter-panel{padding:10px}.attendance-search{max-width:none;flex-basis:100%}.attendance-filters{grid-template-columns:1fr}.attendance-mine-button,.attendance-button.refresh{flex:1}}
 /* Módulo 13 — Tela de chamados */
 .calls-workspace{background:#f3f6fa;border:1px solid #dce4ed;border-radius:6px;padding:15px;margin-bottom:18px}
 .calls-banner{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:#fff;border:1px solid #dce4ed;border-left:4px solid #0867b2;border-radius:5px;padding:12px 14px;margin-bottom:12px}
@@ -139,7 +146,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 .calls-empty{text-align:center;padding:26px!important;color:#718196}
 @media(max-width:850px){.calls-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.calls-banner{display:block}}
 @media(max-width:560px){.calls-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.calls-toolbar .calls-field{min-width:100%}.calls-history-item{grid-template-columns:1fr;gap:3px}}
-/* Módulo 2 — Pacientes */.patient-workspace{padding:16px;background:#f3f5f8}.patient-heading,.patient-form-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.patient-heading h3{margin:0;color:#193e64;font-size:17px}.patient-heading .sub{margin:3px 0 0;font-size:11px}.patient-action{height:33px;padding:0 12px;border:1px solid #c6d3e0;border-radius:4px;background:#fff;color:#245779;font-size:11px;font-weight:750;cursor:pointer}.patient-action.primary-action{background:#0867b2;border-color:#0867b2;color:#fff}.patient-directory,.patient-form,.patient-detail{background:#fff;border:1px solid #dce3eb;border-radius:5px;padding:12px;margin-top:10px}.patient-filters{display:flex;gap:7px;flex-wrap:wrap}.patient-filters input,.patient-filters select{height:34px;border:1px solid #ccd6e1;border-radius:4px;padding:0 10px;font:12px system-ui}.patient-filters input{flex:1;min-width:210px}.patient-list-meta{display:flex;justify-content:space-between;margin:11px 0 7px;color:#748397;font-size:10px}.patient-table-wrap{overflow:auto}.patient-table{width:100%;min-width:780px;border-collapse:collapse;font-size:11px}.patient-table th{padding:9px;text-align:left;background:#f1f5f9;color:#63768a;font-size:10px;border-bottom:1px solid #dce4ec}.patient-table td{padding:9px;border-bottom:1px solid #edf0f4;color:#40566d}.patient-name{font-weight:800;color:#1c3d5d;text-transform:uppercase}.patient-state{padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:10px;font-weight:800}.patient-state.inactive{background:#f0f1f3;color:#718093}.patient-row-actions{display:flex;gap:4px;flex-wrap:wrap}.patient-row-actions button{border:1px solid #d0dbe5;background:#fff;color:#17639c;border-radius:3px;padding:5px 7px;font-size:10px;cursor:pointer}.patient-row-actions button.patient-delete{border-color:#edc8c8;color:#a12626;background:#fff6f6}.patient-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:#718093;font-size:10px}.patient-pagination>div{display:flex;align-items:center;gap:8px}.patient-pagination button:disabled{opacity:.45;cursor:not-allowed}.patient-empty{text-align:center;padding:25px!important;color:#8492a1!important}.patient-form .catalog-card{padding:11px}.patient-form .field{margin-bottom:9px}.patient-form label{font-size:10px;margin-bottom:4px}.patient-form input,.patient-form select{height:34px;font-size:12px;border-radius:4px}.patient-form-heading{grid-column:1/-1}.patient-form-heading h4{margin:0;color:#21486b}.patient-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}.patient-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.patient-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.patient-detail-cell small{display:block;color:#7b8998;font-size:9px}.patient-detail-cell strong{font-size:11px;color:#244766}.patient-history-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.patient-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px}.patient-history-item strong{display:block;color:#244766}@media(max-width:760px){.patient-detail-grid,.patient-history-columns{grid-template-columns:1fr}}  /* Módulo Profissionais — gestão da equipe e vínculos */
+/* Módulo 2 — Pacientes */.patient-workspace{padding:16px;background:#f3f5f8}.patient-heading,.patient-form-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.patient-heading h3{margin:0;color:#193e64;font-size:17px}.patient-heading .sub{margin:3px 0 0;font-size:11px}.patient-action{height:33px;padding:0 12px;border:1px solid #c6d3e0;border-radius:4px;background:#fff;color:#245779;font-size:11px;font-weight:750;cursor:pointer}.patient-action.primary-action{background:#0867b2;border-color:#0867b2;color:#fff}.patient-directory,.patient-form,.patient-detail{background:#fff;border:1px solid #dce3eb;border-radius:5px;padding:12px;margin-top:10px}.patient-filters{display:flex;gap:7px;flex-wrap:wrap}.patient-filters input,.patient-filters select{height:34px;border:1px solid #ccd6e1;border-radius:4px;padding:0 10px;font:12px system-ui}.patient-filters input{flex:1;min-width:210px}.patient-list-meta{display:flex;justify-content:space-between;margin:11px 0 7px;color:#748397;font-size:10px}.patient-table-wrap{overflow:auto}.patient-table{width:100%;min-width:780px;border-collapse:collapse;font-size:11px}.patient-table th{padding:9px;text-align:left;background:#f1f5f9;color:#63768a;font-size:10px;border-bottom:1px solid #dce4ec}.patient-table td{padding:9px;border-bottom:1px solid #edf0f4;color:#40566d}.patient-name{font-weight:800;color:#1c3d5d;text-transform:uppercase}.patient-state{padding:4px 7px;border-radius:3px;background:#eaf6ee;color:#287747;font-size:10px;font-weight:800}.patient-state.inactive{background:#f0f1f3;color:#718093}.patient-row-actions{display:flex;gap:4px;flex-wrap:wrap}.patient-row-actions button{border:1px solid #d0dbe5;background:#edf6ff;color:#17639c;border-radius:7px;padding:7px 10px;font-size:10px;font-weight:800;cursor:pointer;transition:.15s}.patient-row-actions button:hover{filter:brightness(.97);transform:translateY(-1px)}.patient-row-actions button.patient-delete{border-color:#f0caca;color:#a12626;background:#fff1f1}.patient-row-actions button.patient-delete{border-color:#edc8c8;color:#a12626;background:#fff6f6}.patient-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;color:#718093;font-size:10px}.patient-pagination>div{display:flex;align-items:center;gap:8px}.patient-pagination button:disabled{opacity:.45;cursor:not-allowed}.patient-empty{text-align:center;padding:25px!important;color:#8492a1!important}.patient-form .catalog-card{padding:11px}.patient-form .field{margin-bottom:9px}.patient-form label{font-size:10px;margin-bottom:4px}.patient-form input,.patient-form select{height:34px;font-size:12px;border-radius:4px}.patient-form-heading{grid-column:1/-1}.patient-form-heading h4{margin:0;color:#21486b}.patient-form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px}.patient-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.patient-detail-cell{padding:9px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:4px}.patient-detail-cell small{display:block;color:#7b8998;font-size:9px}.patient-detail-cell strong{font-size:11px;color:#244766}.patient-history-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.patient-history-item{padding:8px 0;border-bottom:1px solid #edf0f4;font-size:10px}.patient-history-item strong{display:block;color:#244766}@media(max-width:760px){.patient-detail-grid,.patient-history-columns{grid-template-columns:1fr}}  /* Módulo Profissionais — gestão da equipe e vínculos */
 .professional-workspace{padding:16px;background:#f3f5f8}
 .professional-panel{background:#fff;border:1px solid #dce3eb;border-radius:6px;padding:14px;margin-top:10px}
 .professional-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -537,13 +544,19 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 <button data-module="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7h.01"/></svg><span>Sobre</span></button></nav></aside>
 <header class="app-topbar"><strong>MARKYS | GESTÃO CLÍNICA</strong><div class="app-user"><strong id="topUserName">Usuário</strong><span id="topClinicName">Clínica ativa</span></div></header><div class="page-heading"><h2 id="moduleTitle">Lista de atendimentos</h2><p id="moduleSubtitle">Acompanhe os atendimentos da clínica.</p></div><section id="modulePlaceholder" class="module-placeholder"><h3 id="placeholderTitle">Lista de atendimentos</h3><p id="placeholderText">Este módulo será conectado ao fluxo clínico.</p><span class="module-status">MÓDULO EM IMPLEMENTAÇÃO</span></section>
 <section id="attendanceWorkspace" class="attendance-workspace hidden" aria-label="Lista de atendimentos">
-  <div class="attendance-toolbar">
-    <div class="attendance-search"><input id="attendanceSearch" type="search" maxlength="120" placeholder="Pesquise por nome do paciente, atendimento ou profissional" aria-label="Pesquisar atendimentos"><button id="attendanceSearchButton" class="attendance-button primary" type="button">Pesquisar</button></div>
-    <label class="attendance-toggle"><input id="attendanceToday" type="checkbox" checked> Somente atendimentos de hoje</label>
-    <select id="attendanceStatus" aria-label="Filtrar por situação">
-      <option value="">Todas as situações</option><option value="WAITING">Aguardando atendimento</option><option value="CALLED">Chamado</option><option value="IN_SERVICE">Em atendimento</option><option value="COMPLETED">Finalizado</option><option value="RELEASED">Liberado</option><option value="CANCELLED">Cancelado</option>
-    </select>
-    <button id="attendanceRefresh" class="attendance-button" type="button" title="Atualizar lista">Atualizar</button>
+  <div class="attendance-filter-panel">
+    <div class="attendance-search-row">
+      <div class="attendance-search"><label for="attendanceSearch">PESQUISAR PACIENTE</label><div class="attendance-search-control"><input id="attendanceSearch" type="search" maxlength="120" placeholder="Digite o nome ou CPF do paciente" aria-label="Pesquisar por nome ou CPF"><button id="attendanceSearchButton" class="attendance-button primary" type="button">Pesquisar</button></div></div>
+      <button id="attendanceMine" class="attendance-mine-button" type="button" aria-pressed="false">◉&nbsp; Ver somente meus atendimentos</button>
+      <button id="attendanceRefresh" class="attendance-button refresh" type="button" title="Atualizar lista">↻ Atualizar</button>
+    </div>
+    <div class="attendance-filters">
+      <label>DATA INICIAL<input id="attendanceFrom" type="date"></label>
+      <label>DATA FINAL<input id="attendanceTo" type="date"></label>
+      <label>STATUS<select id="attendancePriority"><option value="">Todos</option><option value="NORMAL">Normal</option><option value="PRIORITY">Prioritário</option><option value="URGENT">Urgente</option></select></label>
+      <label>PROFISSIONAL<select id="attendanceProfessional"><option value="">Todos os profissionais</option></select></label>
+      <label>STATUS DO ATENDIMENTO<select id="attendanceStatus"><option value="">Todos os status</option><option value="WAITING">Aguardando atendimento</option><option value="CALLED">Chamado</option><option value="IN_SERVICE">Em atendimento</option><option value="COMPLETED">Finalizado</option><option value="RELEASED">Liberado</option><option value="CANCELLED">Cancelado</option></select></label>
+    </div>
   </div>
   <div class="attendance-summary" aria-live="polite">
     <span>Exibidos<strong id="attendanceTotal">0</strong></span><span>Aguardando<strong id="attendanceWaiting">0</strong></span><span>Em atendimento<strong id="attendanceInService">0</strong></span><span>Finalizados<strong id="attendanceCompleted">0</strong></span>
@@ -552,7 +565,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <div class="attendance-table-wrap">
     <table class="attendance-table">
       <thead><tr><th>HORÁRIO / SITUAÇÃO</th><th>PACIENTE</th><th>ATENDIMENTO / PRIORIDADE</th><th>PROFISSIONAL</th><th>CONSULTÓRIO</th><th>AÇÕES</th></tr></thead>
-      <tbody id="attendanceRows"><tr><td class="attendance-empty" colspan="5">Carregando atendimentos...</td></tr></tbody>
+      <tbody id="attendanceRows"><tr><td class="attendance-empty" colspan="6">Carregando atendimentos...</td></tr></tbody>
     </table>
   </div>
   <div id="attendanceMessage" class="attendance-message" role="status" aria-live="polite"></div>
@@ -604,8 +617,6 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <section id="signatureHistory" class="signature-history hidden"><h4>Histórico da solicitação</h4><div id="signatureHistoryRows"></div></section>
 </section>
 
-        <h2>Acesso confirmado</h2>
-        <p class="sub">Sua sessão está ativa no MARKYS.</p>
         <div class="session">
           <h3 id="sessionName"></h3>
           <p id="sessionEmail"></p>
@@ -1454,6 +1465,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     const canManagePatients = !!activeMembership && ["CLINIC_ADMIN", "RECEPTION"].includes(activeMembership.role);
     canManagePatientRecords = canManagePatients;
     activateModule(isMaster ? "access" : "attendance");
+    if (!isMaster) loadAttendanceResources();
     $("receptionWorkspace").classList.toggle("hidden", !canUseReception);
     $("patientWorkspace").classList.toggle("hidden", !canUsePatients);
     $("patientForm").classList.toggle("hidden", !canManagePatients);
@@ -1522,6 +1534,17 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     return years ? years+" anos e "+months+" meses" : months+" meses";
   };
   const attendanceMessage = message => { $("attendanceMessage").textContent = message || ""; };
+  const loadAttendanceResources = async () => {
+    try {
+      const response = await fetch("/api/v1/clinic/queue/resources",{credentials:"same-origin",cache:"no-store"});
+      const data = await response.json().catch(()=>({}));
+      if (!response.ok) throw new Error(data.error || "Não foi possível carregar os profissionais.");
+      const select=$("attendanceProfessional"), selected=select.value;
+      select.replaceChildren(new Option("Todos os profissionais",""));
+      (Array.isArray(data.professionals)?data.professionals:[]).forEach(item=>select.add(new Option(item.display_name||item.name,item.id)));
+      if ([...select.options].some(option=>option.value===selected)) select.value=selected;
+    } catch(error) { attendanceMessage(error.message); }
+  };
   const loadAttendance = async () => {
     const rows = $("attendanceRows");
     rows.replaceChildren();
@@ -1534,7 +1557,12 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       const params = new URLSearchParams({
         search: $("attendanceSearch").value.trim(),
         status: $("attendanceStatus").value,
-        today: String($("attendanceToday").checked)
+        today: String(!$("attendanceFrom").value && !$("attendanceTo").value),
+        from: $("attendanceFrom").value,
+        to: $("attendanceTo").value,
+        priority: $("attendancePriority").value,
+        professionalId: $("attendanceProfessional").value,
+        mine: String($("attendanceMine").getAttribute("aria-pressed")==="true")
       });
       const response = await fetch("/api/v1/clinic/queue?"+params.toString(), {credentials:"same-origin",cache:"no-store"});
       const data = await response.json().catch(()=>[]);
@@ -1591,8 +1619,11 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   };
   $("attendanceSearchButton").addEventListener("click",loadAttendance);
   $("attendanceSearch").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();loadAttendance();}});
-  $("attendanceStatus").addEventListener("change",loadAttendance);
-  $("attendanceToday").addEventListener("change",loadAttendance);
+  ["attendanceStatus","attendancePriority","attendanceProfessional","attendanceFrom","attendanceTo"].forEach(id=>$(id).addEventListener("change",loadAttendance));
+  $("attendanceMine").addEventListener("click",()=>{
+    const button=$("attendanceMine"),active=button.getAttribute("aria-pressed")!=="true";
+    button.setAttribute("aria-pressed",String(active));loadAttendance();
+  });
   $("attendanceRefresh").addEventListener("click",loadAttendance);
 
 

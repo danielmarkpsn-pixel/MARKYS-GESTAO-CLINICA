@@ -3,6 +3,9 @@ package br.com.markys.gestaoclinica.api;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
+
+import br.com.markys.gestaoclinica.security.PatientDataProtection;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +22,14 @@ public class QueueController {
     private static final List<String> STATUSES = List.of(
         "WAITING", "CALLED", "IN_SERVICE", "COMPLETED", "RELEASED", "CANCELLED"
     );
+    private static final Pattern CPF_DIGITS = Pattern.compile("\\d{11}");
     private final JdbcTemplate jdbc;
+    private final PatientDataProtection protection;
 
-    public QueueController(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    public QueueController(JdbcTemplate jdbc, PatientDataProtection protection) {
+        this.jdbc = jdbc;
+        this.protection = protection;
+    }
 
     @GetMapping("/resources")
     public ResponseEntity<?> resources(Authentication auth) {
@@ -49,7 +57,12 @@ public class QueueController {
             Authentication auth,
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "") String status,
-            @RequestParam(defaultValue = "true") boolean today) {
+            @RequestParam(defaultValue = "true") boolean today,
+            @RequestParam(defaultValue = "") String from,
+            @RequestParam(defaultValue = "") String to,
+            @RequestParam(defaultValue = "") String priority,
+            @RequestParam(defaultValue = "") String professionalId,
+            @RequestParam(defaultValue = "false") boolean mine) {
         Access access = access(auth);
         if (access == null) return forbidden();
 
@@ -57,9 +70,27 @@ public class QueueController {
         if (!normalizedStatus.isEmpty() && !STATUSES.contains(normalizedStatus))
             return ResponseEntity.badRequest().body(Map.of("error", "Filtro de situação inválido."));
 
+        String normalizedPriority = priority == null ? "" : priority.trim().toUpperCase();
+        if (!normalizedPriority.isEmpty() && !List.of("NORMAL","PRIORITY","URGENT").contains(normalizedPriority))
+            return ResponseEntity.badRequest().body(Map.of("error", "Filtro de prioridade inválido."));
         String term = search == null ? "" : search.trim();
         if (term.length() > 120) term = term.substring(0, 120);
         String pattern = "%" + term + "%";
+        String digits = term.replaceAll("\\D", "");
+        byte[] cpfFingerprint = CPF_DIGITS.matcher(digits).matches() && protection.isConfigured()
+            ? protection.fingerprint(digits) : null;
+        String dateFrom = from == null ? "" : from.trim();
+        String dateTo = to == null ? "" : to.trim();
+        try {
+            if (!dateFrom.isEmpty()) java.time.LocalDate.parse(dateFrom);
+            if (!dateTo.isEmpty()) java.time.LocalDate.parse(dateTo);
+        } catch (java.time.DateTimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Período de datas inválido."));
+        }
+        if (!dateFrom.isEmpty() && !dateTo.isEmpty() && dateFrom.compareTo(dateTo) > 0)
+            return ResponseEntity.badRequest().body(Map.of("error", "A data inicial não pode ser posterior à data final."));
+        String professional = professionalId == null ? "" : professionalId.trim();
+        if (professional.length() > 36) return ResponseEntity.badRequest().body(Map.of("error", "Profissional inválido."));
         UUID clinic = TenantContext.requireClinicId();
         List<Map<String,Object>> rows = jdbc.queryForList("""
             SELECT q.id, q.arrived_at, q.called_at, q.completed_at, q.status,
@@ -74,10 +105,16 @@ public class QueueController {
              WHERE q.clinic_id=?
                AND (? = '' OR q.status=?)
                AND (? = '' OR p.full_name ILIKE ? OR COALESCE(q.service_label,'') ILIKE ?
-                    OR COALESCE(pr.display_name,'') ILIKE ? OR COALESCE(r.name,'') ILIKE ?)
-               AND ((? = TRUE AND q.arrived_at >= CURRENT_DATE
-                                      AND q.arrived_at < CURRENT_DATE + INTERVAL '1 day')
-                    OR (? = FALSE AND q.arrived_at >= CURRENT_DATE - INTERVAL '30 days'))
+                    OR COALESCE(pr.display_name,'') ILIKE ? OR COALESCE(r.name,'') ILIKE ?
+                    OR (CAST(? AS bytea) IS NOT NULL AND p.document_fingerprint=?))
+               AND ((? = '' AND ? = '' AND
+                       ((? = TRUE AND q.arrived_at >= CURRENT_DATE AND q.arrived_at < CURRENT_DATE + INTERVAL '1 day')
+                        OR (? = FALSE AND q.arrived_at >= CURRENT_DATE - INTERVAL '30 days')))
+                    OR (? <> '' AND q.arrived_at >= CAST(? AS date))
+                    OR (? <> '' AND q.arrived_at < CAST(? AS date) + INTERVAL '1 day'))
+               AND (? = '' OR q.priority=?)
+               AND (? = '' OR q.assigned_professional_id::text=?)
+               AND (? = FALSE OR (? IS NOT NULL AND q.assigned_professional_id=?))
                AND (? <> 'PROFESSIONAL' OR q.assigned_professional_id=?)
              ORDER BY CASE q.status
                  WHEN 'IN_SERVICE' THEN 0 WHEN 'CALLED' THEN 1 WHEN 'WAITING' THEN 2
@@ -86,7 +123,9 @@ public class QueueController {
                  q.arrived_at ASC
              LIMIT 300
             """, clinic, normalizedStatus, normalizedStatus, term, pattern, pattern, pattern, pattern,
-            today, today, access.role(), access.professionalId());
+            cpfFingerprint, cpfFingerprint, dateFrom, dateTo, today, today, dateFrom, dateFrom, dateTo, dateTo,
+            normalizedPriority, normalizedPriority, professional, professional,
+            mine, access.professionalId(), access.professionalId(), access.role(), access.professionalId());
         return ResponseEntity.ok(rows);
     }
 
