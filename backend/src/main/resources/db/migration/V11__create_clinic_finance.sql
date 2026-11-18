@@ -85,6 +85,25 @@ CREATE TABLE finance_events (
 CREATE INDEX ix_finance_events_history
     ON finance_events (clinic_id, entry_id, created_at DESC);
 
+-- Give existing clinics a practical starting chart of accounts.
+INSERT INTO finance_categories (clinic_id,name,direction)
+SELECT c.id, seed.name, seed.direction
+  FROM clinics c
+ CROSS JOIN (VALUES
+    ('Consultas particulares','INCOME'),
+    ('Exames e procedimentos','INCOME'),
+    ('ASO e saúde ocupacional','INCOME'),
+    ('Convênios','INCOME'),
+    ('Outros recebimentos','INCOME'),
+    ('Salários e honorários','EXPENSE'),
+    ('Aluguel e condomínio','EXPENSE'),
+    ('Materiais e insumos','EXPENSE'),
+    ('Serviços terceirizados','EXPENSE'),
+    ('Impostos e taxas','EXPENSE'),
+    ('Outros pagamentos','EXPENSE')
+ ) AS seed(name,direction)
+ON CONFLICT DO NOTHING;
+
 DO $$
 DECLARE t TEXT;
 BEGIN
@@ -112,21 +131,3 @@ CREATE TRIGGER trg_finance_events_immutable
     BEFORE UPDATE OR DELETE ON finance_events
     FOR EACH ROW EXECUTE FUNCTION prevent_finance_record_mutation();
 
--- Give existing clinics a practical starting chart of accounts.
-INSERT INTO finance_categories (clinic_id,name,direction)
-SELECT c.id, seed.name, seed.direction
-  FROM clinics c
- CROSS JOIN (VALUES
-    ('Consultas particulares','INCOME'),
-    ('Exames e procedimentos','INCOME'),
-    ('ASO e saúde ocupacional','INCOME'),
-    ('Convênios','INCOME'),
-    ('Outros recebimentos','INCOME'),
-    ('Salários e honorários','EXPENSE'),
-    ('Aluguel e condomínio','EXPENSE'),
-    ('Materiais e insumos','EXPENSE'),
-    ('Serviços terceirizados','EXPENSE'),
-    ('Impostos e taxas','EXPENSE'),
-    ('Outros pagamentos','EXPENSE')
- ) AS seed(name,direction)
-ON CONFLICT DO NOTHING;
