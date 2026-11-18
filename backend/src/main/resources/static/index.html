@@ -1672,9 +1672,10 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       $("attendanceCompleted").textContent=items.filter(x=>x.status==="COMPLETED").length;
       const pendingOld = items.filter(x=>["WAITING","CALLED","IN_SERVICE"].includes(x.status));
       const alert=$("attendanceAlert");
-      alert.classList.toggle("visible",!$("attendanceToday").checked && pendingOld.length>0);
-      alert.textContent=!$("attendanceToday").checked && pendingOld.length>0
-        ? "Atenção: a consulta inclui os últimos 30 dias e encontrou "+pendingOld.length+" atendimento(s) ainda não finalizado(s)." : "";
+      const customPeriod=!!$("attendanceFrom").value||!!$("attendanceTo").value;
+      alert.classList.toggle("visible",customPeriod && pendingOld.length>0);
+      alert.textContent=customPeriod && pendingOld.length>0
+        ? "Atenção: o período selecionado inclui "+pendingOld.length+" atendimento(s) ainda não finalizado(s)." : "";
       rows.replaceChildren();
       if (!items.length) {
         const tr=document.createElement("tr"), td=document.createElement("td");
