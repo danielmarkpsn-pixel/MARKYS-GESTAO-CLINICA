@@ -175,7 +175,7 @@ public class EsocialController {
         if(rows.isEmpty())return ResponseEntity.notFound().build();
         Map<String,Object> row=new LinkedHashMap<>(rows.getFirst());
         byte[] encrypted=(byte[])row.remove("payload_ciphertext");
-        try{row.put("payload",mapper.readTree(protection.decrypt(encrypted)));}catch(Exception ex){return conflict("Não foi possível ler o conteúdo protegido do evento.");}
+        try{row.put("payload",mapper.readTree(protection.decrypt(encrypted)));Object validation=row.get("validation_errors");if(validation!=null)row.put("validation_errors",mapper.readTree(validation.toString()));}catch(Exception ex){return conflict("Não foi possível ler o conteúdo protegido do evento.");}
         return ResponseEntity.ok(row);
     }
 
