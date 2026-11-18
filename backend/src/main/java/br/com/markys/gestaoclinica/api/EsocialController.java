@@ -187,16 +187,19 @@ public class EsocialController {
                 Integer.class,clinic,body.sourceExamOrderId());
             if(count==null||count==0)return badRequest("O exame vinculado precisa estar concluído nesta clínica.");
         }
+        if(jdbc.queryForObject("SELECT count(*) FROM esocial_employers WHERE clinic_id=?",Integer.class,clinic)==0)
+            return conflict("Configure os dados do empregador antes de criar eventos.");
         if(!workerExists(clinic,body.workerId()))return badRequest("Trabalhador não encontrado ou inativo nesta clínica.");
         List<String> errors=validatePayload(type,body.payload(),body.eventDate());
         String payload=json(body.payload());
         UUID id=UUID.randomUUID();
-        jdbc.update("""
+        try{jdbc.update("""
             INSERT INTO esocial_events(id,clinic_id,worker_id,event_type,event_date,event_sequence,payload_ciphertext,
                 validation_errors,source_exam_order_id,created_by_membership_id,updated_by_membership_id)
             VALUES(?,?,?,?,?,?,?,?::jsonb,?,?,?)
             """,id,clinic,body.workerId(),type,body.eventDate(),body.eventSequence(),protection.encrypt(payload),
             json(mapper.valueToTree(errors)),body.sourceExamOrderId(),a.membershipId(),a.membershipId());
+        }catch(DuplicateKeyException ex){return conflict("Já existe evento com esta sequência para o trabalhador.");}
         audit(clinic,id,"CREATED","Rascunho "+type+" criado",a.membershipId());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"status","DRAFT","validationErrors",errors));
     }
@@ -218,7 +221,7 @@ public class EsocialController {
         catch(Exception ex){return conflict("O conteúdo protegido do evento está ilegível.");}
         List<String> errors=validatePayload(String.valueOf(row.get("event_type")),payload,(LocalDate)row.get("event_date"));
         jdbc.update("UPDATE esocial_events SET validation_errors=?::jsonb,updated_at=now(),updated_by_membership_id=? WHERE clinic_id=? AND id=?",
-            mapper.writeValueAsString(errors),a.membershipId(),clinic,id);
+            json(mapper.valueToTree(errors)),a.membershipId(),clinic,id);
         audit(clinic,id,"VALIDATED",errors.isEmpty()?"Validação local aprovada":"Validação local encontrou "+errors.size()+" pendência(s)",a.membershipId());
         if(!errors.isEmpty())return ResponseEntity.unprocessableEntity().body(Map.of("id",id,"valid",false,"errors",errors));
         jdbc.update("UPDATE esocial_events SET status='READY',updated_at=now(),updated_by_membership_id=? WHERE clinic_id=? AND id=?",
