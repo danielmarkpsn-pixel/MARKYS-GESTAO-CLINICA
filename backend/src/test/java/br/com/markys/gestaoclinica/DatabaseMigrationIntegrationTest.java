@@ -58,16 +58,16 @@ class DatabaseMigrationIntegrationTest {
         Integer clinicalTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema()
-               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events', 'clinic_room_events', 'clinic_insurances', 'clinic_insurance_events')
+               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events', 'clinic_room_events', 'clinic_insurances', 'clinic_insurance_events', 'clinic_membership_events')
             """, Integer.class);
         Integer masterTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(14);
+        assertThat(migrationCount).isEqualTo(15);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(22);
+        assertThat(clinicalTables).isEqualTo(23);
         assertThat(masterTables).isEqualTo(1);
     }
 
@@ -125,7 +125,7 @@ class DatabaseMigrationIntegrationTest {
         // Test cleanup is intentionally explicit: TRUNCATE is not filtered by RLS,
         // unlike DELETE, and CASCADE clears tenant-owned rows before parent clinics.
         jdbc.execute("""
-            TRUNCATE TABLE clinic_room_events, clinic_insurance_events, exam_order_events, exam_orders, finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
+            TRUNCATE TABLE clinic_membership_events, clinic_room_events, clinic_insurance_events, exam_order_events, exam_orders, finance_events, finance_payments, finance_entries, finance_categories, appointment_events, appointments, schedule_blocks, professional_schedule_rules, clinical_notes, encounters, triage_records, queue_entries,
                 exam_catalog, service_types, clinic_rooms, clinic_insurances, professionals, patients, platform_admins,
                 clinic_memberships, app_users, clinics CASCADE
             """);
@@ -518,6 +518,89 @@ class DatabaseMigrationIntegrationTest {
             Integer.class,managedRoomId)).isEqualTo(4);
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
             jdbc.update("UPDATE clinic_room_events SET detail='alterado' WHERE room_id=?",managedRoomId))
+            .isInstanceOf(DataAccessException.class);
+
+        UUID adminMembershipId=jdbc.queryForObject("""
+            SELECT id FROM clinic_memberships WHERE clinic_id=?
+              AND user_id=(SELECT id FROM app_users WHERE lower(email)=lower(?))
+            """,UUID.class,clinicId,"admin@clinica.test");
+        mockMvc.perform(patch("/api/v1/clinic/access/{id}/status",adminMembershipId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
+            .andExpect(status().isConflict());
+        mockMvc.perform(patch("/api/v1/clinic/access/{id}/role",adminMembershipId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"RECEPTION\"}"))
+            .andExpect(status().isConflict());
+
+        MvcResult accessResult=mockMvc.perform(post("/api/v1/clinic/access")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"fullName":"Usuário de Acesso","email":"recepcao.acesso@clinica.test",
+                     "role":"RECEPTION","initialPassword":"SenhaInicialForte#2026"}
+                    """))
+            .andExpect(status().isCreated()).andReturn();
+        UUID membershipId=UUID.fromString(com.jayway.jsonpath.JsonPath.read(
+            accessResult.getResponse().getContentAsString(),"$.membershipId"));
+        mockMvc.perform(get("/api/v1/clinic/access").param("search","recepcao.acesso")
+                .session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
+        mockMvc.perform(post("/api/v1/clinic/access")
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"fullName":"Usuário Duplicado","email":"recepcao.acesso@clinica.test",
+                     "role":"RECEPTION","initialPassword":"SenhaInicialForte#2026"}
+                    """))
+            .andExpect(status().isConflict());
+        mockMvc.perform(patch("/api/v1/clinic/access/{id}/role",membershipId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"TRIAGE\"}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/clinic/access/{id}/role",membershipId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"RECEPTION\"}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/clinic/access/{id}/status",membershipId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
+            .andExpect(status().isOk());
+        mockMvc.perform(patch("/api/v1/clinic/access/{id}/status",membershipId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"active\":true}"))
+            .andExpect(status().isOk());
+        String previousPasswordHash=jdbc.queryForObject("""
+            SELECT u.password_hash FROM app_users u JOIN clinic_memberships m ON m.user_id=u.id
+             WHERE m.clinic_id=? AND m.id=?
+            """,String.class,clinicId,membershipId);
+        mockMvc.perform(patch("/api/v1/clinic/access/{id}/password",membershipId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"NovaSenhaSegura#2026\"}"))
+            .andExpect(status().isOk());
+        String updatedPasswordHash=jdbc.queryForObject("""
+            SELECT u.password_hash FROM app_users u JOIN clinic_memberships m ON m.user_id=u.id
+             WHERE m.clinic_id=? AND m.id=?
+            """,String.class,clinicId,membershipId);
+        assertThat(updatedPasswordHash).isNotEqualTo(previousPasswordHash);
+        jdbc.update("""
+            UPDATE app_users SET failed_login_attempts=5,locked_until=now()+interval '20 minutes'
+             WHERE id=(SELECT user_id FROM clinic_memberships WHERE clinic_id=? AND id=?)
+            """,clinicId,membershipId);
+        mockMvc.perform(post("/api/v1/clinic/access/{id}/unlock",membershipId)
+                .session(clinicAdminSession).cookie(csrfCookie).header("X-XSRF-TOKEN",token))
+            .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("""
+            SELECT failed_login_attempts FROM app_users u JOIN clinic_memberships m ON m.user_id=u.id
+             WHERE m.clinic_id=? AND m.id=?
+            """,Integer.class,clinicId,membershipId)).isZero();
+        mockMvc.perform(get("/api/v1/clinic/access/{id}/history",membershipId).session(clinicAdminSession))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(7));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM clinic_membership_events WHERE membership_id=?",
+            Integer.class,membershipId)).isEqualTo(7);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            jdbc.update("UPDATE clinic_membership_events SET detail='alterado' WHERE membership_id=?",membershipId))
             .isInstanceOf(DataAccessException.class);
 
         jdbc.update("""
