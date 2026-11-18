@@ -581,6 +581,23 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .attendance-search-row #attendanceSearchButton{flex:0 0 auto;width:auto;min-width:100px;height:40px;white-space:nowrap}
     .attendance-search-row #attendanceToday,.attendance-search-row #attendanceClear{height:40px;white-space:nowrap}
     @media(max-width:720px){.attendance-search-row .attendance-search{flex-basis:100%}.attendance-search-row #attendanceSearch{min-width:0}.app-topbar #logoutButton{padding:7px 9px;font-size:11px}}
+
+    /* Agenda diária em grade, com seletor lateral conforme referência visual */
+    .schedule-calendar-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;margin:0 0 16px;align-items:start}
+    .schedule-calendar-sidebar,.schedule-day-panel{background:#fff;border:1px solid #dce5ee;border-radius:10px;padding:14px;min-width:0}
+    .schedule-calendar-sidebar{display:grid;gap:12px}
+    .schedule-calendar-sidebar label{font-size:12px;font-weight:800;color:#284c70}
+    .schedule-calendar-sidebar input{width:100%;height:40px;box-sizing:border-box;border:1px solid #d2deea;border-radius:7px;padding:8px}
+    .schedule-calendar-sidebar p{font-size:12px;color:#65798c;margin:0}
+    .schedule-day-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;padding-bottom:12px;color:#294762;font-size:13px}
+    .schedule-day-heading span{color:#697d90;font-size:11px}
+    .schedule-day-timeline{max-height:520px;overflow:auto;border-top:1px solid #e5ebf2}
+    .schedule-hour-slot{display:grid;grid-template-columns:62px minmax(0,1fr);min-height:52px;border-bottom:1px solid #e8edf4}
+    .schedule-hour-slot time{padding:12px 8px;color:#65798c;font-size:12px;border-right:1px solid #e8edf4}
+    .schedule-hour-events{display:grid;gap:5px;padding:5px 9px;align-content:start}
+    .schedule-day-event{display:grid;gap:3px;padding:7px 10px;background:#eaf3fc;border-left:3px solid #1975bb;border-radius:5px;color:#234864;font-size:12px}
+    .schedule-day-event strong{font-size:11px}
+    @media(max-width:760px){.schedule-calendar-layout{grid-template-columns:1fr}.schedule-calendar-sidebar{gap:6px}}
   </style>
 </head>
 <body>
@@ -802,6 +819,17 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     <div class="schedule-field"><label for="scheduleStatusFilter">SITUAÇÃO</label><select id="scheduleStatusFilter"><option value="">Todas as situações</option><option value="SCHEDULED">Agendado</option><option value="CONFIRMED">Confirmado</option><option value="CHECKED_IN">Check-in</option><option value="COMPLETED">Concluído</option><option value="CANCELLED">Cancelado</option><option value="NO_SHOW">Não compareceu</option></select></div>
     <button id="scheduleSearch" class="schedule-btn primary" type="button">Consultar agenda</button>
     <button id="scheduleNew" class="schedule-btn primary" type="button">+ Novo agendamento</button>
+  </div>
+  <div class="schedule-calendar-layout">
+    <aside class="schedule-calendar-sidebar">
+      <label for="scheduleDayPicker">CALENDÁRIO</label>
+      <input id="scheduleDayPicker" type="date" aria-label="Selecionar dia na agenda">
+      <p>Selecione uma data para consultar a agenda diária.</p>
+    </aside>
+    <div class="schedule-day-panel">
+      <div class="schedule-day-heading"><strong id="scheduleDayTitle">Agenda do dia</strong><span id="scheduleDayCount">0 agendamentos</span></div>
+      <div id="scheduleDayTimeline" class="schedule-day-timeline" aria-live="polite"></div>
+    </div>
   </div>
   <div class="schedule-kpis">
     <div class="schedule-kpi"><small>AGENDAMENTOS NO PERÍODO</small><strong id="scheduleTotal">0</strong></div>
@@ -2130,12 +2158,47 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
       if(scheduleState.role==="CLINIC_ADMIN"){await loadScheduleRules();await loadScheduleBlocks();}
     }catch(error){$("scheduleRows").innerHTML="<tr><td colspan='7' class='schedule-empty'>"+escapeHtml(error.message)+"</td></tr>";scheduleMessage(error.message);}
   };
+  const renderScheduleDay=()=>{
+    const date=$("scheduleFrom").value;
+    const singleDay=date&&date===$("scheduleTo").value;
+    $("scheduleDayPicker").value=date||localDateString();
+    const panel=document.querySelector(".schedule-calendar-layout");
+    panel.classList.toggle("hidden",!singleDay);
+    if(!singleDay)return;
+    const items=scheduleState.items.filter(item=>{
+      const start=new Date(item.starts_at);
+      return !Number.isNaN(start.getTime())&&new Intl.DateTimeFormat("en-CA",{timeZone:scheduleState.timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(start)===date;
+    });
+    $("scheduleDayTitle").textContent="Agenda diária • "+date.split("-").reverse().join("/");
+    $("scheduleDayCount").textContent=items.length+" agendamento(s)";
+    const timeline=$("scheduleDayTimeline");timeline.replaceChildren();
+    const format=new Intl.DateTimeFormat("pt-BR",{timeZone:scheduleState.timezone,hour:"2-digit",minute:"2-digit",hour12:false});
+    for(let hour=7;hour<=20;hour++){
+      const slot=document.createElement("div");slot.className="schedule-hour-slot";
+      const label=document.createElement("time");label.textContent=String(hour).padStart(2,"0")+":00";slot.append(label);
+      const events=document.createElement("div");events.className="schedule-hour-events";
+      items.filter(item=>Number(format.format(new Date(item.starts_at)).slice(0,2))===hour).forEach(item=>{
+        const event=document.createElement("div");event.className="schedule-day-event";
+        const time=document.createElement("strong");time.textContent=format.format(new Date(item.starts_at))+" – "+format.format(new Date(item.ends_at));
+        const detail=document.createElement("span");detail.textContent=(item.patient_name||"Paciente")+" • "+(item.professional_name||"Profissional")+" • "+(item.reason||"Consulta");
+        event.append(time,detail);events.append(event);
+      });
+      slot.append(events);timeline.append(slot);
+    }
+  };
+  $("scheduleDayPicker").addEventListener("change",event=>{
+    if(!event.target.value)return;
+    $("scheduleFrom").value=event.target.value;
+    $("scheduleTo").value=event.target.value;
+    loadSchedule();
+  });
   const renderSchedule=()=>{
     const items=scheduleState.items;
     $("scheduleTotal").textContent=items.length;
     $("schedulePending").textContent=items.filter(x=>["SCHEDULED","CONFIRMED"].includes(x.status)).length;
     $("scheduleCheckedIn").textContent=items.filter(x=>x.status==="CHECKED_IN").length;
     $("scheduleCompleted").textContent=items.filter(x=>x.status==="COMPLETED").length;
+    renderScheduleDay();
     const body=$("scheduleRows");body.replaceChildren();
     if(!items.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=7;td.className="schedule-empty";td.textContent="Nenhum agendamento encontrado neste período.";tr.append(td);body.append(tr);return;}
     const labels={SCHEDULED:"AGENDADO",CONFIRMED:"CONFIRMADO",CHECKED_IN:"CHECK-IN",COMPLETED:"CONCLUÍDO",CANCELLED:"CANCELADO",NO_SHOW:"NÃO COMPARECEU"};
