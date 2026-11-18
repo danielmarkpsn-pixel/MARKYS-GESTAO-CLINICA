@@ -1884,8 +1884,15 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     return data;
   };
   const professionalCanManage = () => professionalState.role==="CLINIC_ADMIN";
-  const loadProfessionals = async () => {
+  const loadProfessionals = async (showAll=false) => {
     professionalMessage("");
+    const search=$("professionalSearch").value.trim();
+    if (!search && !showAll) {
+      professionalState.items=[];professionalState.page=1;
+      renderProfessionals();
+      $("professionalRows").innerHTML="<tr><td colspan='7'>Informe o nome, conselho, especialidade ou e-mail para pesquisar profissionais.</td></tr>";
+      return;
+    }
     $("professionalRefresh").disabled=true;
     try {
       const params=new URLSearchParams({search:$("professionalSearch").value.trim(),status:$("professionalStatus").value});
@@ -1984,7 +1991,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   $("newProfessionalButton").addEventListener("click",()=>openProfessionalForm());
   ["professionalCancel","professionalCancelTop","professionalDetailClose"].forEach(id=>$(id).addEventListener("click",closeProfessionalPanels));
   $("professionalSearchButton").addEventListener("click",loadProfessionals);
-  $("professionalRefresh").addEventListener("click",loadProfessionals);
+  $("professionalRefresh").addEventListener("click",()=>loadProfessionals(true));
   $("professionalSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadProfessionals();}});
   $("professionalStatus").addEventListener("change",loadProfessionals);
   $("professionalPrev").addEventListener("click",()=>{if(professionalState.page>1){professionalState.page--;renderProfessionals();}});
