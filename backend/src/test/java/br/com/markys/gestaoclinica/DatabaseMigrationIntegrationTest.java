@@ -58,16 +58,16 @@ class DatabaseMigrationIntegrationTest {
         Integer clinicalTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema()
-               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events', 'clinic_room_events', 'clinic_insurances', 'clinic_insurance_events', 'clinic_membership_events', 'lab_specimens', 'lab_specimen_events', 'esocial_employers', 'esocial_workers', 'esocial_events', 'esocial_event_audit', 'queue_entry_events', 'document_signature_requests', 'document_signature_events', 'insurance_exam_prices', 'service_notes', 'service_note_items', 'service_note_events', 'lab_result_documents')
+               AND table_name IN ('patients', 'queue_entries', 'triage_records', 'encounters', 'clinical_notes', 'service_types', 'exam_catalog', 'queue_entry_exams', 'patient_documents', 'appointments', 'professional_schedule_rules', 'schedule_blocks', 'appointment_events', 'finance_categories', 'finance_entries', 'finance_payments', 'finance_events', 'exam_orders', 'exam_order_events', 'clinic_room_events', 'clinic_insurances', 'clinic_insurance_events', 'clinic_membership_events', 'lab_specimens', 'lab_specimen_events', 'esocial_employers', 'esocial_workers', 'esocial_events', 'esocial_event_audit', 'queue_entry_events', 'document_signature_requests', 'document_signature_events', 'insurance_exam_prices', 'service_notes', 'service_note_items', 'service_note_events', 'lab_result_documents', 'schedule_waitlist')
             """, Integer.class);
         Integer masterTables = jdbc.queryForObject("""
             SELECT count(*) FROM information_schema.tables
              WHERE table_schema = current_schema() AND table_name = 'platform_admins'
             """, Integer.class);
 
-        assertThat(migrationCount).isEqualTo(23);
+        assertThat(migrationCount).isEqualTo(24);
         assertThat(authColumns).isEqualTo(4);
-        assertThat(clinicalTables).isEqualTo(37);
+        assertThat(clinicalTables).isEqualTo(38);
         assertThat(masterTables).isEqualTo(1);
     }
 
