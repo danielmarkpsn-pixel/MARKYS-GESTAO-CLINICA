@@ -655,6 +655,46 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
     .schedule-slot-open{width:100%;height:100%;min-height:30px;text-align:left;background:transparent;border:1px dashed transparent;color:#8393a2;font-size:11px;cursor:pointer}
     .schedule-slot-open:hover{border-color:#80b4dc;background:#f1f8ff;color:#1268a4}
     @media(max-width:760px){.schedule-shift-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* MARKYS UI 2026 — identidade visual e navegação refinadas */
+:root{--markys-radius:18px;--markys-ease:cubic-bezier(.22,1,.36,1)}
+body{font-family:Inter,"Segoe UI",system-ui,sans-serif!important;-webkit-font-smoothing:antialiased}
+#sessionPanel{transition:padding-left .36s var(--markys-ease)}
+.app-sidebar{transition:width .36s var(--markys-ease),transform .36s var(--markys-ease);box-shadow:8px 0 34px #122c4810;z-index:12}
+.app-topbar{transition:padding-left .36s var(--markys-ease),margin-left .36s var(--markys-ease);border-radius:0 0 18px 18px;gap:14px}
+.sidebar-collapse,.sidebar-mobile-toggle{border:0;border-radius:12px;background:#eaf3fc;color:#07549a;min-width:36px;height:36px;font-size:19px;cursor:pointer;transition:transform .25s,background .25s}
+.sidebar-collapse:hover,.sidebar-mobile-toggle:hover{background:#d7eafa;transform:scale(1.05)}.sidebar-mobile-toggle{display:none}
+.module-nav button{border-radius:12px!important;font-size:12px!important;padding:12px 10px!important;transition:background .2s,transform .2s,color .2s}
+.module-nav button:hover{transform:translateX(3px)}.module-nav button.active{border-left:0!important;background:#e8f2fb!important;box-shadow:inset 3px 0 #1681d5}
+#sessionPanel.sidebar-collapsed{padding-left:98px!important}
+#sessionPanel.sidebar-collapsed .app-sidebar{width:76px!important;padding:16px 8px}
+#sessionPanel.sidebar-collapsed .app-brand{justify-content:center;padding:0 0 12px}
+#sessionPanel.sidebar-collapsed .app-brand img,#sessionPanel.sidebar-collapsed .app-brand>div{display:none}
+#sessionPanel.sidebar-collapsed .module-nav button{justify-content:center;padding:13px!important}
+#sessionPanel.sidebar-collapsed .module-nav button span{display:none}
+#sessionPanel.sidebar-collapsed .app-topbar{margin-left:-98px!important;padding-left:98px!important}
+#sessionPanel .app-sidebar .module-nav button svg{transition:transform .25s}
+#sessionPanel .app-sidebar .module-nav button:hover svg{transform:scale(1.12)}
+#sessionPanel .app-topbar .app-user{background:#ffffff18;padding:7px 14px;border-radius:12px;min-width:140px}
+#sessionPanel .app-topbar .app-user strong{font-size:13px}#sessionPanel .app-topbar .app-user span{font-size:11px}
+#sessionPanel .page-heading h2{font-size:25px;letter-spacing:-.6px}
+#sessionPanel .attendance-workspace,#sessionPanel .calls-workspace,#sessionPanel #scheduleWorkspace,#sessionPanel .patients-workspace,#sessionPanel .professionals-workspace{border-radius:var(--markys-radius)!important;overflow:hidden;box-shadow:0 12px 36px #1939560b}
+#sessionPanel button,#sessionPanel input,#sessionPanel select,#sessionPanel textarea{font-family:inherit}
+#sessionPanel input:not([type=checkbox]),#sessionPanel select,#sessionPanel textarea{border-radius:11px!important;transition:border-color .2s,box-shadow .2s}
+#sessionPanel input:focus,#sessionPanel select:focus,#sessionPanel textarea:focus{outline:none;border-color:#2084c8!important;box-shadow:0 0 0 3px #2084c821}
+#sessionPanel button:not(.sidebar-collapse):not(.sidebar-mobile-toggle){transition:background .2s,box-shadow .2s,transform .2s}
+#sessionPanel button:not(.sidebar-collapse):not(.sidebar-mobile-toggle):hover{filter:brightness(.98)}
+#scheduleWorkspace .schedule-calendar-layout{border-radius:18px!important;overflow:hidden}
+#scheduleWorkspace .schedule-calendar-sidebar{background:#f4f8fd!important}
+#scheduleWorkspace .schedule-toolbar{display:flex!important;align-items:center;gap:10px}
+#scheduleWorkspace .schedule-toolbar .schedule-field:has(#scheduleProfessionalFilter){display:flex!important;flex-wrap:wrap;gap:6px}
+#scheduleWorkspace #scheduleProfessionalFilter{flex:1 1 170px!important;min-width:140px!important;height:36px!important;border-radius:10px!important}
+#scheduleWorkspace #scheduleProfessionalSearch{display:block;flex:1 1 150px;min-width:130px;height:36px;padding:5px 10px;font-size:12px;background:#fff;border:1px solid #d5dfe9}
+#scheduleWorkspace .schedule-toolbar #scheduleConfigToggle.schedule-gear{height:38px!important;width:40px!important;min-width:40px;padding:0!important;border-radius:12px!important;font-size:24px!important;display:grid!important;place-items:center}
+#scheduleWorkspace .schedule-hour-slot{border-radius:12px;transition:background .2s,box-shadow .2s}
+#scheduleWorkspace .schedule-hour-slot:hover{background:#edf6ff;box-shadow:inset 0 0 0 1px #9acaf0}
+.calls-banner{border-radius:15px!important}.calls-toolbar{border-radius:14px!important}.calls-banner-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media(max-width:850px){#sessionPanel{padding-left:24px!important}#sessionPanel.sidebar-collapsed{padding-left:24px!important}.app-sidebar{transform:translateX(-110%);width:236px!important}#sessionPanel.mobile-menu-open .app-sidebar{transform:translateX(0)}.sidebar-mobile-toggle{display:inline-grid;place-items:center}.app-topbar,#sessionPanel.sidebar-collapsed .app-topbar{margin-left:-24px!important;padding-left:24px!important}#scheduleWorkspace .schedule-toolbar{position:static!important;padding:10px!important;flex-wrap:wrap}#scheduleWorkspace .schedule-calendar-layout{grid-template-columns:1fr!important}}
   </style>
 </head>
 <body>
@@ -692,7 +732,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
         <p class="hint">A criação do MASTER exige o token secreto configurado no servidor e só pode ser concluída uma vez.</p>
       </div>
       <div id="sessionPanel" class="hidden">
-<aside class="app-sidebar"><div class="app-brand"><img src="/favicon.svg" alt=""> <div>MARKYS<small>GESTÃO CLÍNICA</small></div></div><nav class="module-nav" id="moduleNav" aria-label="Navegação principal">
+<aside class="app-sidebar"><div class="app-brand"><button type="button" id="sidebarCollapse" class="sidebar-collapse" aria-label="Recolher menu" title="Recolher ou expandir menu">☰</button><img src="/favicon.svg" alt=""> <div>MARKYS<small>GESTÃO CLÍNICA</small></div></div><nav class="module-nav" id="moduleNav" aria-label="Navegação principal">
 <button class="active" data-module="attendance"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Lista de atendimentos</span></button>
 <button data-module="patients"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.5-4 3-6 7-6s6.5 2 7 6M18 8h5M20.5 5.5v5"/></svg><span>Pacientes</span></button>
 <button data-module="professionals"><svg viewBox="0 0 24 24"><path d="M9 3h6M12 3v5M5 8h14v12H5zM9 13h6M12 10v6"/></svg><span>Profissionais</span></button>
@@ -707,7 +747,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
 <button data-module="calls"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4zM8 9h8M8 13h5"/></svg><span>Tela de chamados</span></button>
 <button data-module="subscription"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 12l2.5 2.5L16 9"/></svg><span>Assinatura</span></button>
 <button data-module="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7h.01"/></svg><span>Sobre</span></button></nav></aside>
-<header class="app-topbar"><strong>MARKYS | GESTÃO CLÍNICA</strong><div class="app-user"><strong id="topUserName">Usuário</strong><span id="topClinicName">Clínica ativa</span></div><button id="logoutButton" type="button" aria-label="Sair da conta">Sair da conta</button></header><div class="page-heading"><h2 id="moduleTitle">Lista de atendimentos</h2><p id="moduleSubtitle">Acompanhe os atendimentos da clínica.</p></div><section id="modulePlaceholder" class="module-placeholder"><h3 id="placeholderTitle">Lista de atendimentos</h3><p id="placeholderText">Este módulo será conectado ao fluxo clínico.</p><span class="module-status">MÓDULO EM IMPLEMENTAÇÃO</span></section>
+<header class="app-topbar"><button type="button" id="sidebarMobileToggle" class="sidebar-mobile-toggle" aria-label="Abrir menu">☰</button><strong>MARKYS | GESTÃO CLÍNICA</strong><div class="app-user"><strong id="topUserName">Usuário</strong><span id="topClinicName">Clínica ativa</span></div><button id="logoutButton" type="button" aria-label="Sair da conta">Sair da conta</button></header><div class="page-heading"><h2 id="moduleTitle">Lista de atendimentos</h2><p id="moduleSubtitle">Acompanhe os atendimentos da clínica.</p></div><section id="modulePlaceholder" class="module-placeholder"><h3 id="placeholderTitle">Lista de atendimentos</h3><p id="placeholderText">Este módulo será conectado ao fluxo clínico.</p><span class="module-status">MÓDULO EM IMPLEMENTAÇÃO</span></section>
 <section id="aboutWorkspace" class="about-workspace hidden" aria-label="Sobre o MARKYS Gestão Clínica">
   <div class="about-hero">
     <div class="about-brand-mark">M</div>
@@ -764,7 +804,7 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <div id="attendanceMessage" class="attendance-message" role="status" aria-live="polite"></div>
 </section>
 <section id="callsWorkspace" class="calls-workspace hidden" aria-label="Tela de chamados">
-  <div class="calls-banner"><div><strong>Central de chamadas e encaminhamentos</strong><p>Organize a fila, direcione cada atendimento e acompanhe as chamadas realizadas. As alterações são gravadas no histórico da clínica.</p></div><button id="callsRefresh" class="calls-btn" type="button">Atualizar fila</button></div>
+  <div class="calls-banner"><div><strong>Central de chamadas e encaminhamentos</strong><p>Organize a fila, direcione cada atendimento e acompanhe as chamadas realizadas. As alterações são gravadas no histórico da clínica.</p></div><div class="calls-banner-actions"><button id="callsOpenTv" class="calls-btn" type="button">Abrir painel para TV</button><button id="callsCopyTv" class="calls-btn" type="button">Copiar link do painel</button><button id="callsRefresh" class="calls-btn" type="button">Atualizar fila</button></div></div>
   <div class="calls-toolbar">
     <div class="calls-field search"><label for="callsSearch">PESQUISAR PACIENTE / SERVIÇO / DESTINO</label><input id="callsSearch" type="search" maxlength="120" placeholder="Nome do paciente, atendimento, profissional ou consultório"></div>
     <div class="calls-field"><label for="callsStatus">SITUAÇÃO</label><select id="callsStatus"><option value="">Todas as situações</option><option value="WAITING">Aguardando</option><option value="CALLED">Chamado</option><option value="IN_SERVICE">Em atendimento</option><option value="COMPLETED">Finalizado</option><option value="RELEASED">Liberado</option><option value="CANCELLED">Cancelado</option></select></div>
@@ -871,11 +911,11 @@ body{display:block;padding:0;background:#eef1f5}.shell{width:100%;min-height:100
   <div class="schedule-toolbar">
     <div class="schedule-field"><label for="scheduleFrom">DE</label><input id="scheduleFrom" type="date"></div>
     <div class="schedule-field"><label for="scheduleTo">ATÉ</label><input id="scheduleTo" type="date"></div>
-    <div class="schedule-field"><label for="scheduleProfessionalFilter">PROFISSIONAL</label><select id="scheduleProfessionalFilter"><option value="">Todos os profissionais</option></select></div>
+    <div class="schedule-field"><label for="scheduleProfessionalFilter">PROFISSIONAL</label><select id="scheduleProfessionalFilter"><option value="">Todos os profissionais</option></select><input id="scheduleProfessionalSearch" type="search" autocomplete="off" placeholder="Pesquisar profissional pelo nome" aria-label="Pesquisar profissional pelo nome"></div>
     <div class="schedule-field"><label for="scheduleSearchTerm">PACIENTE / FINALIDADE</label><input id="scheduleSearchTerm" type="search" maxlength="100" placeholder="Pesquisar na agenda"></div>
     <div class="schedule-field"><label for="scheduleStatusFilter">SITUAÇÃO</label><select id="scheduleStatusFilter"><option value="">Todas as situações</option><option value="SCHEDULED">Agendado</option><option value="CONFIRMED">Confirmado</option><option value="CHECKED_IN">Check-in</option><option value="COMPLETED">Concluído</option><option value="CANCELLED">Cancelado</option><option value="NO_SHOW">Não compareceu</option></select></div>
     <button id="scheduleSearch" class="schedule-btn primary" type="button">Consultar agenda</button>
-    <button id="scheduleConfigToggle" class="schedule-btn primary" type="button">Editar configuração da agenda</button>
+    <button id="scheduleConfigToggle" class="schedule-btn primary schedule-gear" type="button" title="Editar configuração da agenda" aria-label="Editar configuração da agenda">⚙</button>
   </div>
   <form id="scheduleShiftConfig" class="schedule-shift-config hidden">
     <div class="schedule-config-header"><strong>Editar configuração da agenda</strong><button id="scheduleConfigClose" class="schedule-btn" type="button">Fechar</button></div>
@@ -3726,6 +3766,23 @@ document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("c
     .then(response => response.ok ? response.json() : null)
     .then(data => { if (data) showSession(data); })
     .catch(() => {});
+})();
+</script>
+
+<script>
+/* Aprimoramentos progressivos, isolados das rotinas clínicas existentes. */
+(function(){
+ const panel=document.getElementById('sessionPanel');
+ const collapse=document.getElementById('sidebarCollapse');
+ const mobile=document.getElementById('sidebarMobileToggle');
+ if(collapse&&panel){collapse.addEventListener('click',()=>{const on=panel.classList.toggle('sidebar-collapsed');collapse.setAttribute('aria-label',on?'Expandir menu':'Recolher menu');try{localStorage.setItem('markys-menu-collapsed',on?'1':'0')}catch(e){}});try{if(localStorage.getItem('markys-menu-collapsed')==='1')panel.classList.add('sidebar-collapsed')}catch(e){}}
+ if(mobile&&panel)mobile.addEventListener('click',()=>panel.classList.toggle('mobile-menu-open'));
+ document.getElementById('moduleNav')?.addEventListener('click',()=>panel?.classList.remove('mobile-menu-open'));
+ const search=document.getElementById('scheduleProfessionalSearch');const select=document.getElementById('scheduleProfessionalFilter');
+ if(search&&select){search.addEventListener('input',()=>{const query=search.value.toLocaleLowerCase('pt-BR').trim();for(const option of select.options){option.hidden=!!query&&!option.textContent.toLocaleLowerCase('pt-BR').includes(query)&&option.value!==select.value;}if(query){const match=Array.from(select.options).find(x=>x.value&&!x.hidden);if(match&&select.value!==match.value){select.value=match.value;select.dispatchEvent(new Event('change',{bubbles:true}));}}});}
+ const tvUrl=()=>{const url=new URL(location.href);url.searchParams.set('display','calls');return url.toString()};
+ document.getElementById('callsOpenTv')?.addEventListener('click',()=>window.open(tvUrl(),'_blank','noopener'));
+ document.getElementById('callsCopyTv')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(tvUrl());alert('Link do painel copiado. O monitor precisa estar autenticado na clínica.')}catch(e){prompt('Copie o link do painel:',tvUrl())}});
 })();
 </script>
 </body>
