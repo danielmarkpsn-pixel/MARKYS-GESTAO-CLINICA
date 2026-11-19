@@ -172,6 +172,57 @@ public class ScheduleController {
         return changed==0?ResponseEntity.notFound().build():ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/waitlist")
+    public ResponseEntity<?> waitlist(Authentication auth,@RequestParam(required=false) UUID professionalId) {
+        Access access=access(auth);
+        if(access==null)return forbidden();
+        UUID selected="PROFESSIONAL".equals(access.role())?access.professionalId():professionalId;
+        return ResponseEntity.ok(jdbc.queryForList("""
+            SELECT w.id,w.patient_id,p.full_name AS patient_name,w.professional_id,
+                   pr.display_name AS professional_name,w.preferred_date,w.notes,w.status,w.created_at
+              FROM schedule_waitlist w
+              JOIN patients p ON p.clinic_id=w.clinic_id AND p.id=w.patient_id
+              JOIN professionals pr ON pr.clinic_id=w.clinic_id AND pr.id=w.professional_id
+             WHERE w.clinic_id=? AND (?::uuid IS NULL OR w.professional_id=?)
+               AND w.status IN ('WAITING','CONTACTED')
+             ORDER BY w.created_at ASC LIMIT 500
+            """,TenantContext.requireClinicId(),selected,selected));
+    }
+
+    @PostMapping("/waitlist")
+    @Transactional
+    public ResponseEntity<?> addToWaitlist(Authentication auth,@Valid @RequestBody WaitlistRequest body) {
+        Access access=access(auth);
+        if(access==null || !List.of("CLINIC_ADMIN","RECEPTION").contains(access.role()))return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        if(!professionalActive(clinic,body.professionalId()))return badRequest("Profissional inválido.");
+        if(jdbc.queryForObject("SELECT count(*) FROM patients WHERE clinic_id=? AND id=? AND status='ACTIVE'",Integer.class,clinic,body.patientId())==0)
+            return badRequest("Paciente inválido.");
+        UUID id=UUID.randomUUID();
+        try{
+            jdbc.update("""
+                INSERT INTO schedule_waitlist(id,clinic_id,patient_id,professional_id,preferred_date,notes,created_by_membership_id)
+                VALUES(?,?,?,?,?,?,?)
+                """,id,clinic,body.patientId(),body.professionalId(),body.preferredDate(),clean(body.notes()),access.membershipId());
+        }catch(DuplicateKeyException ex){return conflict("Paciente já está na lista de espera deste profissional.");}
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"status","WAITING","message","Paciente incluído na lista de espera."));
+    }
+
+    @PatchMapping("/waitlist/{id}/status")
+    @Transactional
+    public ResponseEntity<?> updateWaitlist(Authentication auth,@PathVariable UUID id,@Valid @RequestBody WaitlistStatusRequest body) {
+        Access access=access(auth);
+        if(access==null || !List.of("CLINIC_ADMIN","RECEPTION").contains(access.role()))return forbidden();
+        String next=body.status().trim().toUpperCase(Locale.ROOT);
+        if(!List.of("CONTACTED","SCHEDULED","CANCELLED").contains(next))return badRequest("Situação inválida.");
+        int changed=jdbc.update("""
+            UPDATE schedule_waitlist SET status=?,updated_at=now()
+             WHERE clinic_id=? AND id=? AND status IN ('WAITING','CONTACTED')
+            """,next,TenantContext.requireClinicId(),id);
+        if(changed==0)return conflict("Registro não encontrado ou já finalizado.");
+        return ResponseEntity.ok(Map.of("id",id,"status",next,"message","Lista de espera atualizada."));
+    }
+
     @PostMapping("/blocks")
     @Transactional
     public ResponseEntity<?> createBlock(Authentication auth,@Valid @RequestBody BlockRequest body) {
@@ -436,6 +487,8 @@ public class ScheduleController {
     private ResponseEntity<Map<String,String>> badRequest(String message){return ResponseEntity.badRequest().body(Map.of("error",message));}
     private ResponseEntity<Map<String,String>> conflict(String message){return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error",message));}
     private record Access(UUID membershipId,String role,UUID professionalId){}
+    public record WaitlistRequest(@NotNull UUID patientId,@NotNull UUID professionalId,LocalDate preferredDate,@Size(max=240) String notes){}
+    public record WaitlistStatusRequest(@NotBlank String status){}
     public record RuleRequest(@NotNull UUID professionalId,@Min(1) @Max(7) int weekday,
         @NotNull LocalTime startsLocal,@NotNull LocalTime endsLocal,@Min(5) @Max(240) int slotMinutes){}
     public record BlockRequest(UUID professionalId,UUID roomId,@NotNull LocalDateTime startsAt,
