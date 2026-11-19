@@ -2266,14 +2266,16 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
       if(scheduleState.role==="CLINIC_ADMIN"){await loadScheduleRules();await loadScheduleBlocks();}
     }catch(error){$("scheduleRows").innerHTML="<tr><td colspan='7' class='schedule-empty'>"+escapeHtml(error.message)+"</td></tr>";scheduleMessage(error.message);}
   };
-  const shiftConfigKey="markys-schedule-weekly-v2";
+  const shiftConfigKey="markys-schedule-weekly-v3";
+  const scheduleConfigStorageKey=()=>shiftConfigKey+":"+(activeData?.activeClinicId||"default")+":"+($("scheduleProfessionalFilter").value||"all");
   const scheduleDayNames=["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
   const defaultScheduleDay=()=>[["07:00","11:00"],["13:00","17:00"],["",""]];
   let scheduleWeek=Array.from({length:7},(_,day)=>day===0||day===6?[["",""],["",""],["",""]]:defaultScheduleDay());
   try{
-    const stored=JSON.parse(localStorage.getItem(shiftConfigKey)||"null");
+    const stored=JSON.parse(localStorage.getItem(scheduleConfigStorageKey())||"null");
     if(Array.isArray(stored)&&stored.length===7&&stored.every(day=>Array.isArray(day)&&day.length===3&&day.every(pair=>Array.isArray(pair)&&pair.length===2)))scheduleWeek=stored;
   }catch(_error){}
+  const reloadScheduleWeek=()=>{scheduleWeek=Array.from({length:7},(_,day)=>day===0||day===6?[["",""],["",""],["",""]]:defaultScheduleDay());try{const stored=JSON.parse(localStorage.getItem(scheduleConfigStorageKey())||"null");if(Array.isArray(stored)&&stored.length===7&&stored.every(day=>Array.isArray(day)&&day.length===3&&day.every(pair=>Array.isArray(pair)&&pair.length===2)))scheduleWeek=stored;}catch(_error){};buildScheduleConfig();renderScheduleDay();};
   const scheduleConfigBody=$("scheduleConfigDays");
   const buildScheduleConfig=()=>{
     scheduleConfigBody.replaceChildren();
@@ -2318,8 +2320,8 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
     for(const day of next)for(const [start,end] of day){
       if((!!start!==!!end)||(start&&minutes(end)<=minutes(start))){scheduleMessage("Preencha entrada e saída válidas em cada período.");return;}
     }
-    scheduleWeek=next;localStorage.setItem(shiftConfigKey,JSON.stringify(next));
-    $("scheduleShiftConfig").classList.add("hidden");scheduleMessage("Configuração semanal salva neste navegador.",false);renderScheduleDay();
+    scheduleWeek=next;localStorage.setItem(scheduleConfigStorageKey(),JSON.stringify(next));
+    $("scheduleShiftConfig").classList.add("hidden");scheduleMessage("Configuração individual salva neste navegador. Para compartilhar entre computadores, é necessária persistência no servidor.",false);renderScheduleDay();
   });
   let scheduleCalendarMonth="";
   const renderScheduleMonth=()=>{
@@ -2471,9 +2473,9 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
     $("schedulePatient").value=item?.patient_id||"";
     $("scheduleProfessional").value=item?.professional_id||"";
     $("scheduleRoom").value=item?.room_id||"";
-    const base=new Date(Date.now()+30*60*1000);base.setMinutes(Math.ceil(base.getMinutes()/30)*30,0,0);
+    const base=new Date(Date.now()+20*60*1000);base.setMinutes(Math.ceil(base.getMinutes()/20)*20,0,0);
     const start=item?clinicDateParts(item.starts_at):clinicDateParts(base.toISOString());
-    const end=item?clinicDateParts(item.ends_at):clinicDateParts(new Date(base.getTime()+30*60*1000).toISOString());
+    const end=item?clinicDateParts(item.ends_at):clinicDateParts(new Date(base.getTime()+20*60*1000).toISOString());
     $("scheduleDate").value=start.date;$("scheduleStart").value=start.time;$("scheduleEnd").value=end.time;
     $("scheduleReason").value=item?.reason||"";
     $("scheduleSave").textContent=item?"Salvar remarcação":"Criar agendamento";
@@ -2517,7 +2519,7 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
   $("scheduleSearch").addEventListener("click",loadSchedule);
   $("scheduleSearchTerm").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadSchedule();}});
   $("scheduleStatusFilter").addEventListener("change",loadSchedule);
-  $("scheduleProfessionalFilter").addEventListener("change",loadSchedule);
+  $("scheduleProfessionalFilter").addEventListener("change",()=>{reloadScheduleWeek();loadSchedule();});
   $("scheduleRuleProfessional").addEventListener("change",loadScheduleRules);
   $("scheduleRuleForm").addEventListener("submit",async event=>{
     event.preventDefault();const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
@@ -3780,7 +3782,7 @@ document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("c
  if(mobile&&panel)mobile.addEventListener('click',()=>panel.classList.toggle('mobile-menu-open'));
  document.getElementById('moduleNav')?.addEventListener('click',()=>panel?.classList.remove('mobile-menu-open'));
  const search=document.getElementById('scheduleProfessionalSearch');const select=document.getElementById('scheduleProfessionalFilter');
- if(search&&select){search.addEventListener('input',()=>{const query=search.value.toLocaleLowerCase('pt-BR').trim();for(const option of select.options){option.hidden=!!query&&!option.textContent.toLocaleLowerCase('pt-BR').includes(query)&&option.value!==select.value;}if(query){const match=Array.from(select.options).find(x=>x.value&&!x.hidden);if(match&&select.value!==match.value){select.value=match.value;select.dispatchEvent(new Event('change',{bubbles:true}));}}});}
+ if(search&&select){search.addEventListener('input',()=>{const query=search.value.toLocaleLowerCase('pt-BR').trim();for(const option of select.options){option.hidden=!!query&&!option.textContent.toLocaleLowerCase('pt-BR').includes(query)&&option.value!==select.value;}if(query){const matches=Array.from(select.options).filter(x=>x.value&&!x.hidden);if(matches.length===1&&select.value!==matches[0].value){select.value=matches[0].value;select.dispatchEvent(new Event('change',{bubbles:true}));}}});}
  const tvUrl=()=>{const url=new URL(location.href);url.searchParams.set('display','calls');return url.toString()};
  document.getElementById('callsOpenTv')?.addEventListener('click',()=>window.open(tvUrl(),'_blank','noopener'));
  document.getElementById('callsCopyTv')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(tvUrl());alert('Link do painel copiado. O monitor precisa estar autenticado na clínica.')}catch(e){prompt('Copie o link do painel:',tvUrl())}});
