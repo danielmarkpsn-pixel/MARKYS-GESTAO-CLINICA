@@ -2276,6 +2276,17 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
     if(Array.isArray(stored)&&stored.length===7&&stored.every(day=>Array.isArray(day)&&day.length===3&&day.every(pair=>Array.isArray(pair)&&pair.length===2)))scheduleWeek=stored;
   }catch(_error){}
   const reloadScheduleWeek=()=>{scheduleWeek=Array.from({length:7},(_,day)=>day===0||day===6?[["",""],["",""],["",""]]:defaultScheduleDay());try{const stored=JSON.parse(localStorage.getItem(scheduleConfigStorageKey())||"null");if(Array.isArray(stored)&&stored.length===7&&stored.every(day=>Array.isArray(day)&&day.length===3&&day.every(pair=>Array.isArray(pair)&&pair.length===2)))scheduleWeek=stored;}catch(_error){};buildScheduleConfig();renderScheduleDay();};
+  const loadWeeklyRulesFromServer=async()=>{
+    const professionalId=$("scheduleProfessionalFilter").value;
+    if(!professionalId)return;
+    try{
+      const rules=await scheduleRequest("/api/v1/clinic/schedule/rules?professionalId="+encodeURIComponent(professionalId));
+      if(!Array.isArray(rules))return;
+      const next=Array.from({length:7},()=>[["",""],["",""],["",""]]);
+      for(const rule of rules){if(!rule.active)continue;const day=Number(rule.weekday)%7;const slot=next[day].find(pair=>!pair[0]);if(slot){slot[0]=String(rule.starts_local).slice(0,5);slot[1]=String(rule.ends_local).slice(0,5);}}
+      scheduleWeek=next;buildScheduleConfig();renderScheduleDay();
+    }catch(error){scheduleMessage("Não foi possível carregar a disponibilidade compartilhada: "+error.message);}
+  };
   const scheduleConfigBody=$("scheduleConfigDays");
   const buildScheduleConfig=()=>{
     scheduleConfigBody.replaceChildren();
@@ -2297,7 +2308,7 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
       action.append(copy);tr.append(action);scheduleConfigBody.append(tr);
     });
   };
-  $("scheduleConfigToggle").addEventListener("click",()=>{$("scheduleShiftConfig").classList.toggle("hidden");buildScheduleConfig();});
+  $("scheduleConfigToggle").addEventListener("click",()=>{$("scheduleShiftConfig").classList.toggle("hidden");buildScheduleConfig();loadWeeklyRulesFromServer();});
   $("scheduleConfigClose").addEventListener("click",()=>$("scheduleShiftConfig").classList.add("hidden"));
   $("scheduleConfigWeekends").addEventListener("change",()=>{
     [...scheduleConfigBody.querySelectorAll("tr")].forEach(tr=>{
@@ -2309,7 +2320,7 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
     scheduleWeek=Array.from({length:7},(_,day)=>day===0||day===6?[["",""],["",""],["",""]]:defaultScheduleDay());buildScheduleConfig();
   });
   $("scheduleConfigClear").addEventListener("click",()=>scheduleConfigBody.querySelectorAll("input").forEach(input=>input.value=""));
-  $("scheduleShiftConfig").addEventListener("submit",event=>{
+  $("scheduleShiftConfig").addEventListener("submit",async event=>{
     event.preventDefault();
     const next=scheduleWeek.map(day=>day.map(pair=>[...pair]));
     const minutes=value=>{const [h,m]=value.split(":").map(Number);return h*60+m;};
@@ -2320,8 +2331,16 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
     for(const day of next)for(const [start,end] of day){
       if((!!start!==!!end)||(start&&minutes(end)<=minutes(start))){scheduleMessage("Preencha entrada e saída válidas em cada período.");return;}
     }
-    scheduleWeek=next;localStorage.setItem(scheduleConfigStorageKey(),JSON.stringify(next));
-    $("scheduleShiftConfig").classList.add("hidden");scheduleMessage("Configuração individual salva neste navegador. Para compartilhar entre computadores, é necessária persistência no servidor.",false);renderScheduleDay();
+    const professionalId=$("scheduleProfessionalFilter").value;
+    if(!professionalId){scheduleMessage("Selecione um profissional antes de salvar a agenda.");return;}
+    const periods=[];
+    next.forEach((day,index)=>day.forEach(([start,end])=>{if(start&&end)periods.push({professionalId,weekday:index===0?7:index,startsLocal:start,endsLocal:end,slotMinutes:20});}));
+    const submit=event.currentTarget.querySelector('[type="submit"]');if(submit)submit.disabled=true;
+    try{
+      await scheduleRequest("/api/v1/clinic/schedule/rules/weekly/"+encodeURIComponent(professionalId),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(periods)});
+      scheduleWeek=next;localStorage.setItem(scheduleConfigStorageKey(),JSON.stringify(next));
+      $("scheduleShiftConfig").classList.add("hidden");scheduleMessage("Agenda semanal salva no servidor para este profissional.",false);renderScheduleDay();
+    }catch(error){scheduleMessage("Falha ao salvar disponibilidade: "+error.message);}finally{if(submit)submit.disabled=false;}
   });
   let scheduleCalendarMonth="";
   const renderScheduleMonth=()=>{
@@ -2519,7 +2538,7 @@ body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!i
   $("scheduleSearch").addEventListener("click",loadSchedule);
   $("scheduleSearchTerm").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();loadSchedule();}});
   $("scheduleStatusFilter").addEventListener("change",loadSchedule);
-  $("scheduleProfessionalFilter").addEventListener("change",()=>{reloadScheduleWeek();loadSchedule();});
+  $("scheduleProfessionalFilter").addEventListener("change",()=>{reloadScheduleWeek();loadWeeklyRulesFromServer();loadSchedule();});
   $("scheduleRuleProfessional").addEventListener("change",loadScheduleRules);
   $("scheduleRuleForm").addEventListener("submit",async event=>{
     event.preventDefault();const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
