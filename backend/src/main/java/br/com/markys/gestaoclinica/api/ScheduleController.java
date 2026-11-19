@@ -128,6 +128,40 @@ public class ScheduleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",id,"message","Horário semanal cadastrado."));
     }
 
+    /** Replace one professional's weekly availability atomically. */
+    @PutMapping("/rules/weekly/{professionalId}")
+    @Transactional
+    public ResponseEntity<?> replaceWeeklyRules(Authentication auth,@PathVariable UUID professionalId,
+            @RequestBody List<@Valid RuleRequest> periods) {
+        Access access=access(auth);
+        if(access==null || !"CLINIC_ADMIN".equals(access.role()))return forbidden();
+        UUID clinic=TenantContext.requireClinicId();
+        if(!professionalActive(clinic,professionalId))return badRequest("Profissional não encontrado ou inativo.");
+        if(periods==null || periods.size()>42)return badRequest("Informe até 42 períodos semanais.");
+        Map<Integer,List<RuleRequest>> days=new HashMap<>();
+        for(RuleRequest period:periods){
+            if(period==null || !professionalId.equals(period.professionalId()) || period.weekday()<1 || period.weekday()>7
+                || period.startsLocal()==null || period.endsLocal()==null || !period.endsLocal().isAfter(period.startsLocal())
+                || period.slotMinutes()<5 || period.slotMinutes()>240)
+                return badRequest("Período semanal inválido.");
+            days.computeIfAbsent(period.weekday(),ignored->new ArrayList<>()).add(period);
+        }
+        for(List<RuleRequest> day:days.values()){
+            day.sort(Comparator.comparing(RuleRequest::startsLocal));
+            for(int i=1;i<day.size();i++)if(day.get(i-1).endsLocal().isAfter(day.get(i).startsLocal()))
+                return conflict("Há períodos sobrepostos na configuração semanal.");
+        }
+        jdbc.queryForObject("SELECT pg_advisory_xact_lock(hashtextextended(?,0))",Object.class,
+            clinic+":WEEKLY:"+professionalId);
+        jdbc.update("DELETE FROM professional_schedule_rules WHERE clinic_id=? AND professional_id=?",clinic,professionalId);
+        for(RuleRequest period:periods)jdbc.update("""
+            INSERT INTO professional_schedule_rules
+                (id,clinic_id,professional_id,weekday,starts_local,ends_local,slot_minutes)
+            VALUES (?,?,?,?,?,?,?)
+            """,UUID.randomUUID(),clinic,professionalId,period.weekday(),period.startsLocal(),period.endsLocal(),period.slotMinutes());
+        return ResponseEntity.ok(Map.of("message","Agenda semanal salva para o profissional.","periods",periods.size()));
+    }
+
     @DeleteMapping("/rules/{id}")
     @Transactional
     public ResponseEntity<?> deleteRule(Authentication auth,@PathVariable UUID id) {
