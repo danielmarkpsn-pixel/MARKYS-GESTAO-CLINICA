@@ -694,6 +694,7 @@ body{font-family:Inter,"Segoe UI",system-ui,sans-serif!important;-webkit-font-sm
 #scheduleWorkspace .schedule-hour-slot{border-radius:12px;transition:background .2s,box-shadow .2s}
 #scheduleWorkspace .schedule-hour-slot:hover{background:#edf6ff;box-shadow:inset 0 0 0 1px #9acaf0}
 .calls-banner{border-radius:15px!important}.calls-toolbar{border-radius:14px!important}.calls-banner-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+body.markys-tv-display #sessionPanel{padding:24px!important;background:#0b1b34!important;min-height:100vh}body.markys-tv-display .app-sidebar,body.markys-tv-display .app-topbar,body.markys-tv-display .page-heading,body.markys-tv-display #modulePlaceholder,body.markys-tv-display .calls-toolbar,body.markys-tv-display .calls-banner-actions{display:none!important}body.markys-tv-display #callsWorkspace{display:block!important;background:#0b1b34!important;border:0!important;box-shadow:none!important;padding:10px!important}body.markys-tv-display .calls-banner{background:#142c4c!important;color:white!important;border:0!important;padding:20px!important}body.markys-tv-display .calls-banner strong{color:white!important;font-size:30px!important}body.markys-tv-display .calls-banner p{color:#b9cce3!important;font-size:15px!important}body.markys-tv-display .calls-workspace table{font-size:clamp(16px,2vw,28px)!important}body.markys-tv-display .calls-workspace th,body.markys-tv-display .calls-workspace td{padding:16px!important}body.markys-tv-display .calls-workspace button{display:none!important}
 @media(max-width:850px){#sessionPanel{padding-left:24px!important}#sessionPanel.sidebar-collapsed{padding-left:24px!important}.app-sidebar{transform:translateX(-110%);width:236px!important}#sessionPanel.mobile-menu-open .app-sidebar{transform:translateX(0)}.sidebar-mobile-toggle{display:inline-grid;place-items:center}.app-topbar,#sessionPanel.sidebar-collapsed .app-topbar{margin-left:-24px!important;padding-left:24px!important}#scheduleWorkspace .schedule-toolbar{position:static!important;padding:10px!important;flex-wrap:wrap}#scheduleWorkspace .schedule-calendar-layout{grid-template-columns:1fr!important}}
   </style>
 </head>
@@ -3783,6 +3784,14 @@ document.querySelectorAll("[data-esocial-tab]").forEach(b=>b.addEventListener("c
  const tvUrl=()=>{const url=new URL(location.href);url.searchParams.set('display','calls');return url.toString()};
  document.getElementById('callsOpenTv')?.addEventListener('click',()=>window.open(tvUrl(),'_blank','noopener'));
  document.getElementById('callsCopyTv')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(tvUrl());alert('Link do painel copiado. O monitor precisa estar autenticado na clínica.')}catch(e){prompt('Copie o link do painel:',tvUrl())}});
+ if(new URLSearchParams(location.search).get('display')==='calls'){
+   document.body.classList.add('markys-tv-display');
+   const activate=()=>{const session=document.getElementById('sessionPanel');if(!session||session.classList.contains('hidden'))return false;const nav=document.querySelector('#moduleNav [data-module="calls"]');if(nav&&!nav.classList.contains('active'))nav.click();return true};
+   const observer=new MutationObserver(()=>{if(activate())observer.disconnect()});observer.observe(document.getElementById('sessionPanel'),{attributes:true,attributeFilter:['class']});activate();
+   const refresh=()=>{if(!document.getElementById('sessionPanel')?.classList.contains('hidden'))document.getElementById('callsRefresh')?.click()};
+   setInterval(refresh,12000);
+ }
+
 })();
 </script>
 </body>
